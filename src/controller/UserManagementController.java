@@ -276,7 +276,7 @@ public class UserManagementController {
         grid.add(new Label(selectedUser.getEmail() != null ? selectedUser.getEmail() : "Not set"), 1, 2);
         
         grid.add(new Label("Role:"), 0, 3);
-        grid.add(new Label(selectedUser.getRole()), 1, 3);
+        grid.add(new Label(selectedUser.getRole().name()), 1, 3);
         
         grid.add(new Label("Status:"), 0, 4);
         Label statusLabel = new Label(selectedUser.isActive() ? "Active" : "Banned");

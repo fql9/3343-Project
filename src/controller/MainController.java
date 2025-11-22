@@ -71,7 +71,7 @@ public class MainController {
         Label userLabel = new Label("User: " + UserService.getCurrentUser().getUsername());
         userLabel.setStyle("-fx-text-fill: white; -fx-font-size: 14px;");
         
-        Label roleLabel = new Label("Role: " + UserService.getCurrentUser().getRole());
+        Label roleLabel = new Label("Role: " + UserService.getCurrentUser().getRole().name());
         roleLabel.setStyle("-fx-text-fill: #ecf0f1; -fx-font-size: 12px;");
         
         unreadCountLabel = new Label();

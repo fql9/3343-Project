@@ -93,7 +93,7 @@ public class BoardController {
         
         // If seller, show publish item button
         HBox rightButtons = new HBox(10);
-        if (UserRole.SELLER.name().equals(UserService.getCurrentUser().getRole())) {
+        if (UserRole.SELLER.equals(UserService.getCurrentUser().getRole())) {
             Button publishButton = new Button("+ Publish Item");
             publishButton.setStyle("-fx-background-color: #2ecc71; -fx-text-fill: white; -fx-font-size: 14px;");
             publishButton.setOnAction(e -> showPublishDialog());

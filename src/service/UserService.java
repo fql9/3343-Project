@@ -57,7 +57,7 @@ public class UserService {
         user.setUsername(username);
         user.setPasswordHash(PasswordUtils.hashPassword(password));
         user.setEmail(email);
-        user.setRole(role.name());
+        user.setRole(role);
         user.setActive(true);
         
         userDao.save(user);
@@ -117,7 +117,7 @@ public class UserService {
      * @return Whether is admin
      */
     public static boolean isAdmin() {
-        return currentUser != null && UserRole.ADMIN.name().equals(currentUser.getRole());
+        return currentUser != null && UserRole.ADMIN.equals(currentUser.getRole());
     }
     
     /**

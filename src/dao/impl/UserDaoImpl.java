@@ -3,6 +3,7 @@ package dao.impl;
 import config.DatabaseConfig;
 import dao.UserDao;
 import model.User;
+import model.UserRole;
 
 import java.sql.*;
 import java.util.ArrayList; 
@@ -73,7 +74,7 @@ public class UserDaoImpl implements UserDao {
             ps.setString(1, user.getUsername());
             ps.setString(2, user.getPasswordHash());
             ps.setString(3, user.getEmail());
-            ps.setString(4, user.getRole());
+            ps.setString(4, user.getRole().name());
             ps.setInt(5, user.isActive() ? 1 : 0);
 
             ps.executeUpdate();
@@ -97,7 +98,7 @@ public class UserDaoImpl implements UserDao {
             ps.setString(1, user.getUsername());
             ps.setString(2, user.getPasswordHash());
             ps.setString(3, user.getEmail());
-            ps.setString(4, user.getRole());
+            ps.setString(4, user.getRole().name());
             ps.setInt(5, user.isActive() ? 1 : 0);
             ps.setLong(6, user.getId());
 
@@ -133,7 +134,7 @@ public class UserDaoImpl implements UserDao {
         u.setUsername(rs.getString("username"));
         u.setPasswordHash(rs.getString("password_hash"));
         u.setEmail(rs.getString("email"));
-        u.setRole(rs.getString("role"));
+        u.setRole(UserRole.valueOf(rs.getString("role")));
         u.setActive(rs.getInt("active") == 1);
 
         return u;

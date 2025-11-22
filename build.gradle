@@ -14,7 +14,7 @@ java {
 }
 
 application {
-    mainClass = 'com.example.secondhand.MainApp' // 你的 JavaFX Application 入口
+    mainClass = 'MainApp' // 你的 JavaFX Application 入口
 }
 
 repositories {
@@ -22,8 +22,8 @@ repositories {
 }
 
 dependencies {
-    implementation 'org.openjfx:javafx-controls:23.0.2'   // 根据 JDK+系统选择正确版本
-    implementation 'org.openjfx:javafx-fxml:23.0.2'
+    implementation 'org.openjfx:javafx-controls:25.0.1'   // JavaFX 25.0.1
+    implementation 'org.openjfx:javafx-fxml:25.0.1'
     implementation 'org.xerial:sqlite-jdbc:3.46.0.0'
     implementation 'org.slf4j:slf4j-simple:2.0.16'       // 可选：日志
 
@@ -31,7 +31,7 @@ dependencies {
 }
 
 javafx {
-    version = '23.0.2'
+    version = '25.0.1'
     modules = ['javafx.controls', 'javafx.fxml']
 }
 
