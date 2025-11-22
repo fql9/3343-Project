@@ -1,0 +1,16 @@
+{
+    "java.configuration.updateBuildConfiguration": "automatic",
+    "java.project.referencedLibraries": [
+        "/Users/liyuan/Downloads/javafx-sdk-25.0.1/lib/javafx.base.jar",
+        "/Users/liyuan/Downloads/javafx-sdk-25.0.1/lib/javafx.controls.jar",
+        "/Users/liyuan/Downloads/javafx-sdk-25.0.1/lib/javafx.fxml.jar",
+        "/Users/liyuan/Downloads/javafx-sdk-25.0.1/lib/javafx.graphics.jar"
+    ],
+    "java.jdt.ls.java.home": null,
+    "java.compile.nullAnalysis.mode": "automatic",
+    "java.project.sourcePaths": ["src"],
+    "java.project.outputPath": "bin",
+    "java.configuration.runtimes": [],
+    "java.import.gradle.enabled": true,
+    "java.import.gradle.wrapper.enabled": true
+}

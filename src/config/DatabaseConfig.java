@@ -7,6 +7,16 @@ import java.sql.Statement;
 public class DatabaseConfig {
 
     private static final String DB_URL = "jdbc:sqlite:secondhand.db";
+    
+    // 加载 SQLite JDBC 驱动
+    static {
+        try {
+            Class.forName("org.sqlite.JDBC");
+        } catch (ClassNotFoundException e) {
+            System.err.println("SQLite JDBC driver not found!");
+            e.printStackTrace();
+        }
+    }
 
     // 初始化数据库（程序启动时执行）
     public static void initDatabase() {
