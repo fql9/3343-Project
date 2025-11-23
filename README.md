@@ -109,34 +109,34 @@ The system initializes with the following test accounts:
 | charlie  | BUYER | charlie@example.com   | Regular buyer|
 | david    | BUYER | david@example.com     | Regular buyer|
 
-**Note**: Default passwords for normal users are typically `password` and are `admin123` for administrator. Please change default passwords in production environments.
+**Note**: Default passwords for normal users are typically `password` and are `admin123` for administrators. Please change default passwords in production environments.
 
 ## Main Features
 
 ### 1. User Features
-- ✅ User registration and login
-- ✅ Password encryption (SHA-256)
-- ✅ User profile management
-- ✅ Role-based access control (Buyer/Admin)
+- User registration and login
+- Password encryption (SHA-256)
+- User profile management
+- Role-based access control (Buyer/Admin)
 
 ### 2. Item Features
-- ✅ Post items (title, description, price, contact info)
-- ✅ Browse and search items
-- ✅ View item details
-- ✅ Manage my items (edit/delete)
+- Post items (title, description, price, contact info)
+- Browse and search items
+- View item details
+- Manage my items (edit/delete)
 
 ### 3. Favorites Features
-- ✅ Add/remove items to/from favorites
-- ✅ View favorites list
+- Add/remove items to/from favorites
+- View favorites list
 
 ### 4. Messaging Features
-- ✅ Contact sellers via messages
-- ✅ View inbox
-- ✅ Reply to messages
+- Contact sellers via messages
+- View inbox
+- Reply to messages
 
 ### 5. Admin Features
-- ✅ User management (view/enable/disable users)
-- ✅ Item moderation
+- User management (view/enable/disable users)
+- Item moderation
 
 ## Database
 
