@@ -1,0 +1,29 @@
+# Gradle
+.gradle/
+build/
+bin/
+*.class
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Compiled files
+*.jar
+!lib/*.jar
+

@@ -107,7 +107,10 @@ public class MainController {
         Button messagesButton = createMenuButton("My Messages", "#1abc9c");
         messagesButton.setOnAction(e -> showMessages());
         
-        menu.getChildren().addAll(boardButton, myItemsButton, favoritesButton, messagesButton);
+        Button transactionsButton = createMenuButton("My Transactions", "#f39c12");
+        transactionsButton.setOnAction(e -> showTransactions());
+        
+        menu.getChildren().addAll(boardButton, myItemsButton, favoritesButton, messagesButton, transactionsButton);
         
         // If admin, add user management button
         if (UserService.isAdmin()) {
@@ -168,6 +171,14 @@ public class MainController {
     private void showMessages() {
         MessageController messageController = new MessageController(mainLayout, this);
         messageController.showMessagesView();
+    }
+    
+    /**
+     * Show transactions
+     */
+    private void showTransactions() {
+        TransactionController transactionController = new TransactionController(mainLayout);
+        transactionController.showTransactionsView();
     }
     
     /**

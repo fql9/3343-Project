@@ -128,7 +128,7 @@ public class ItemDetailController {
             } else {
                 buyButton = new Button("Buy Now");
                 buyButton.setStyle("-fx-background-color: #2ecc71; -fx-text-fill: white; " +
-                                  "-fx-font-size: 14px; -fx-padding: 10 30; -fx-font-weight: bold;");
+                                  "-fx-font-size: 14px; -fx-padding: 10 30;");
                 buyButton.setOnAction(e -> handleBuy());
             }
             
