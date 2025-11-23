@@ -9,6 +9,7 @@ import model.User;
 import service.FavoriteService;
 import service.ItemService;
 import service.MessageService;
+import service.TransactionService;
 import service.UserService;
 import util.DialogUtils;
 
@@ -22,6 +23,7 @@ public class ItemDetailController {
     private ItemService itemService;
     private FavoriteService favoriteService;
     private MessageService messageService;
+    private TransactionService transactionService;
     private UserService userService;
     private Button favoriteButton;
     
@@ -31,6 +33,7 @@ public class ItemDetailController {
         this.itemService = new ItemService();
         this.favoriteService = new FavoriteService();
         this.messageService = new MessageService();
+        this.transactionService = new TransactionService();
         this.userService = new UserService();
     }
     
@@ -114,13 +117,28 @@ public class ItemDetailController {
                                    "; -fx-text-fill: white; -fx-font-size: 14px; -fx-padding: 10 30;");
             favoriteButton.setOnAction(e -> handleFavorite());
             
+            // Buy button - check if transaction exists
+            model.Transaction activeTransaction = transactionService.getActiveTransaction(currentUserId, item.getId());
+            Button buyButton;
+            if (activeTransaction != null) {
+                buyButton = new Button("View Transaction");
+                buyButton.setStyle("-fx-background-color: #3498db; -fx-text-fill: white; " +
+                                  "-fx-font-size: 14px; -fx-padding: 10 30;");
+                buyButton.setOnAction(e -> handleViewTransaction(activeTransaction));
+            } else {
+                buyButton = new Button("Buy Now");
+                buyButton.setStyle("-fx-background-color: #2ecc71; -fx-text-fill: white; " +
+                                  "-fx-font-size: 14px; -fx-padding: 10 30; -fx-font-weight: bold;");
+                buyButton.setOnAction(e -> handleBuy());
+            }
+            
             // Contact seller button
             Button contactButton = new Button("Contact Seller");
             contactButton.setStyle("-fx-background-color: #1abc9c; -fx-text-fill: white; " +
                                   "-fx-font-size: 14px; -fx-padding: 10 30;");
             contactButton.setOnAction(e -> handleContactSeller());
             
-            actionBox.getChildren().addAll(favoriteButton, contactButton);
+            actionBox.getChildren().addAll(favoriteButton, buyButton, contactButton);
         } else {
             Label ownLabel = new Label("This is your published item");
             ownLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #7f8c8d;");
@@ -192,6 +210,92 @@ public class ItemDetailController {
                 DialogUtils.showSuccess("Message sent successfully");
             }
         });
+    }
+    
+    /**
+     * Handle buy item
+     */
+    private void handleBuy() {
+        // Show dialog to confirm purchase or propose price
+        Dialog<String> dialog = new Dialog<>();
+        dialog.setTitle("Buy Item");
+        dialog.setHeaderText("Confirm purchase or propose a price");
+        
+        ButtonType buyButtonType = new ButtonType("Buy", ButtonBar.ButtonData.OK_DONE);
+        ButtonType proposeButtonType = new ButtonType("Propose Price", ButtonBar.ButtonData.OTHER);
+        dialog.getDialogPane().getButtonTypes().addAll(buyButtonType, proposeButtonType, ButtonType.CANCEL);
+        
+        VBox content = new VBox(15);
+        content.setPadding(new Insets(20));
+        
+        Label priceLabel = new Label("Item Price: ¥" + String.format("%.2f", item.getPrice()));
+        priceLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
+        
+        TextField priceField = new TextField();
+        priceField.setPromptText("Enter your proposed price (leave empty to use item price)");
+        priceField.setText(String.format("%.2f", item.getPrice()));
+        
+        content.getChildren().addAll(priceLabel, new Label("Proposed Price:"), priceField);
+        dialog.getDialogPane().setContent(content);
+        
+        dialog.setResultConverter(buttonType -> {
+            if (buttonType == buyButtonType || buttonType == proposeButtonType) {
+                return priceField.getText();
+            }
+            return null;
+        });
+        
+        dialog.showAndWait().ifPresent(priceText -> {
+            try {
+                Double proposedPrice = null;
+                if (priceText != null && !priceText.trim().isEmpty()) {
+                    proposedPrice = Double.parseDouble(priceText.trim());
+                }
+                
+                String error = transactionService.initiateTransaction(
+                    UserService.getCurrentUser().getId(),
+                    item.getId(),
+                    proposedPrice
+                );
+                
+                if (error != null) {
+                    DialogUtils.showError("Transaction Failed", error);
+                } else {
+                    DialogUtils.showSuccess("Transaction initiated successfully! The seller will be notified.");
+                    // Refresh the view to show "View Transaction" button
+                    showItemDetailView();
+                }
+            } catch (NumberFormatException e) {
+                DialogUtils.showError("Invalid Price", "Please enter a valid price");
+            }
+        });
+    }
+    
+    /**
+     * Handle view transaction
+     */
+    private void handleViewTransaction(model.Transaction transaction) {
+        Dialog<Void> dialog = new Dialog<>();
+        dialog.setTitle("Transaction Details");
+        dialog.setHeaderText("Transaction Information");
+        
+        ButtonType closeButtonType = new ButtonType("Close", ButtonBar.ButtonData.CANCEL_CLOSE);
+        dialog.getDialogPane().getButtonTypes().add(closeButtonType);
+        
+        VBox content = new VBox(10);
+        content.setPadding(new Insets(20));
+        
+        content.getChildren().addAll(
+            new Label("Status: " + transaction.getStatus()),
+            new Label("Agreed Price: ¥" + String.format("%.2f", transaction.getAgreedPrice())),
+            new Label("Delivery Method: " + (transaction.getDeliveryMethod() != null ? transaction.getDeliveryMethod() : "Not set")),
+            new Label("Item Received: " + (transaction.isItemReceived() ? "Yes" : "No")),
+            new Label("Item Verified: " + (transaction.isItemVerified() ? "Yes" : "No")),
+            new Label("Funds Released: " + (transaction.isFundsReleased() ? "Yes" : "No"))
+        );
+        
+        dialog.getDialogPane().setContent(content);
+        dialog.showAndWait();
     }
     
     /**

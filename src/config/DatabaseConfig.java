@@ -77,6 +77,29 @@ public class DatabaseConfig {
                 );
             """);
 
+            // ----- transactions -----
+            stmt.execute("""
+                CREATE TABLE IF NOT EXISTS transactions (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    item_id INTEGER NOT NULL,
+                    buyer_id INTEGER NOT NULL,
+                    seller_id INTEGER NOT NULL,
+                    agreed_price REAL NOT NULL,
+                    status TEXT NOT NULL,
+                    delivery_method TEXT,
+                    shipping_address TEXT,
+                    tracking_number TEXT,
+                    item_received INTEGER NOT NULL,
+                    item_verified INTEGER NOT NULL,
+                    funds_released INTEGER NOT NULL,
+                    created_time TEXT NOT NULL,
+                    updated_time TEXT NOT NULL,
+                    FOREIGN KEY(item_id) REFERENCES items(id),
+                    FOREIGN KEY(buyer_id) REFERENCES users(id),
+                    FOREIGN KEY(seller_id) REFERENCES users(id)
+                );
+            """);
+
             System.out.println("Database initialized.");
         } catch (Exception e) {
             e.printStackTrace();
