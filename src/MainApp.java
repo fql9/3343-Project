@@ -1,5 +1,3 @@
-package com.example.secondhand;
-
 import config.DatabaseConfig;
 import controller.LoginController;
 import javafx.application.Application;

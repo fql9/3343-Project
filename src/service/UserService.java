@@ -57,7 +57,7 @@ public class UserService {
         user.setUsername(username);
         user.setPasswordHash(PasswordUtils.hashPassword(password));
         user.setEmail(email);
-        user.setRole(role.name());
+        user.setRole(role);
         user.setActive(true);
         
         userDao.save(user);

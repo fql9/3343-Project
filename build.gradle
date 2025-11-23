@@ -1,38 +1,49 @@
 plugins {
     id 'java'
     id 'application'
-    id 'org.openjfx.javafxplugin' version '25.0.1'   // 使用最新版本或与你的 JDK 兼容的版本
+    id 'org.openjfx.javafxplugin' version '0.1.0'
 }
 
 group = 'com.example'
-version = '25.0.1'
-
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(25) // 根据你的 JDK 调整（11/17/21）
-    }
-}
-
-application {
-    mainClass = 'com.example.secondhand.MainApp' // 你的 JavaFX Application 入口
-}
+version = '1.0-SNAPSHOT'
 
 repositories {
     mavenCentral()
 }
 
-dependencies {
-    implementation 'org.openjfx:javafx-controls:23.0.2'   // 根据 JDK+系统选择正确版本
-    implementation 'org.openjfx:javafx-fxml:23.0.2'
-    implementation 'org.xerial:sqlite-jdbc:3.46.0.0'
-    implementation 'org.slf4j:slf4j-simple:2.0.16'       // 可选：日志
+sourceSets {
+    main {
+        java {
+            srcDirs = ['src']
+        }
+        resources {
+            srcDirs = ['src']
+        }
+    }
+}
 
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.11.3'
+dependencies {
+    implementation 'org.openjfx:javafx-controls:23.0.1'
+    implementation 'org.openjfx:javafx-fxml:23.0.1'
+    implementation 'org.xerial:sqlite-jdbc:3.46.0.0'
+    implementation 'org.slf4j:slf4j-simple:2.0.16'
+    
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
 }
 
 javafx {
-    version = '23.0.2'
+    version = '23.0.1'
     modules = ['javafx.controls', 'javafx.fxml']
+}
+
+application {
+    mainClass = 'MainApp'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
 }
 
 tasks.withType(Test).configureEach {

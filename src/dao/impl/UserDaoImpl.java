@@ -3,6 +3,7 @@ package dao.impl;
 import config.DatabaseConfig;
 import dao.UserDao;
 import model.User;
+import model.UserRole;
 
 import java.sql.*;
 import java.util.ArrayList; 
@@ -73,7 +74,7 @@ public class UserDaoImpl implements UserDao {
             ps.setString(1, user.getUsername());
             ps.setString(2, user.getPasswordHash());
             ps.setString(3, user.getEmail());
-            ps.setString(4, user.getRole());
+            ps.setString(4, user.getRole().name());
             ps.setInt(5, user.isActive() ? 1 : 0);
 
             ps.executeUpdate();
@@ -97,7 +98,7 @@ public class UserDaoImpl implements UserDao {
             ps.setString(1, user.getUsername());
             ps.setString(2, user.getPasswordHash());
             ps.setString(3, user.getEmail());
-            ps.setString(4, user.getRole());
+            ps.setString(4, user.getRole().name());
             ps.setInt(5, user.isActive() ? 1 : 0);
             ps.setLong(6, user.getId());
 
@@ -133,7 +134,19 @@ public class UserDaoImpl implements UserDao {
         u.setUsername(rs.getString("username"));
         u.setPasswordHash(rs.getString("password_hash"));
         u.setEmail(rs.getString("email"));
-        u.setRole(rs.getString("role"));
+        
+        String roleStr = rs.getString("role");
+        try {
+            u.setRole(UserRole.valueOf(roleStr));
+        } catch (IllegalArgumentException | NullPointerException e) {
+            // 如果数据库中的角色字符串在枚举中找不到（例如 "USER"），则使用默认值防止崩溃
+            System.err.println("Warning: Invalid role '" + roleStr + "' found in database for user " + u.getUsername());
+            // 使用枚举中的第一个值作为默认值（防止 null 导致后续空指针）
+            if (UserRole.values().length > 0) {
+                u.setRole(UserRole.values()[0]); 
+            }
+        }
+        
         u.setActive(rs.getInt("active") == 1);
 
         return u;

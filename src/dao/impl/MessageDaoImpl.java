@@ -104,7 +104,7 @@ public class MessageDaoImpl implements MessageDao {
             ps.setLong(1, id);
             ps.executeUpdate();
 
-        } catch (SQLException e) { e.printTrace(); }
+        } catch (SQLException e) { e.printStackTrace(); }
     }
 
     @Override
