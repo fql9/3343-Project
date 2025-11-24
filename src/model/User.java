@@ -7,6 +7,9 @@ public class User {
     private String email;
     private UserRole role;
     private boolean active; // 是否被管理员封禁/禁用
+    private String avatarUrl;
+    private String bio;
+    private String createdTime;
     
     // Getter & Setter
     public Long getId() { return id; }
@@ -26,4 +29,13 @@ public class User {
 
     public boolean isActive() { return active; }
     public void setActive(boolean active) { this.active = active; }
+
+    public String getAvatarUrl() { return avatarUrl; }
+    public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
+
+    public String getBio() { return bio; }
+    public void setBio(String bio) { this.bio = bio; }
+
+    public String getCreatedTime() { return createdTime; }
+    public void setCreatedTime(String createdTime) { this.createdTime = createdTime; }
 }

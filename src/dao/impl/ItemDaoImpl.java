@@ -80,6 +80,69 @@ public class ItemDaoImpl implements ItemDao {
     }
 
     @Override
+    public List<Item> searchItems(String keyword, Double minPrice, Double maxPrice, String category, String sortBy) {
+        List<Item> list = new ArrayList<>();
+        StringBuilder sql = new StringBuilder("SELECT * FROM items WHERE active = 1");
+        List<Object> params = new ArrayList<>();
+
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sql.append(" AND (title LIKE ? OR description LIKE ?)");
+            String likeKeyword = "%" + keyword.trim() + "%";
+            params.add(likeKeyword);
+            params.add(likeKeyword);
+        }
+
+        if (minPrice != null) {
+            sql.append(" AND price >= ?");
+            params.add(minPrice);
+        }
+
+        if (maxPrice != null) {
+            sql.append(" AND price <= ?");
+            params.add(maxPrice);
+        }
+
+        if (category != null && !category.trim().isEmpty() && !"All Categories".equals(category) && !"All".equals(category)) {
+            sql.append(" AND category = ?");
+            params.add(category);
+        }
+
+        if (sortBy != null) {
+            switch (sortBy) {
+                case "Price: Low to High":
+                    sql.append(" ORDER BY price ASC");
+                    break;
+                case "Price: High to Low":
+                    sql.append(" ORDER BY price DESC");
+                    break;
+                case "Newest First":
+                default:
+                    sql.append(" ORDER BY created_time DESC");
+                    break;
+            }
+        } else {
+            sql.append(" ORDER BY created_time DESC");
+        }
+
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapRow(rs));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    @Override
     public void save(Item item) {
         String sql = """
             INSERT INTO items (seller_id, title, description, price, category, active, created_time, image_url)

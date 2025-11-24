@@ -11,6 +11,8 @@ import service.OrderService;
 import service.ItemService;
 import service.UserService;
 
+import util.DialogUtils;
+
 import java.util.List;
 
 public class SalesHistoryController {
@@ -127,9 +129,30 @@ public class SalesHistoryController {
         statusLabel.setStyle("-fx-background-color: #2ecc71; -fx-text-fill: white; -fx-padding: 3 8; -fx-background-radius: 10;");
 
         statusBox.getChildren().addAll(priceLabel, statusLabel);
+        
+        // Action Buttons
+        if ("PAID".equals(order.getStatus())) {
+            Button shipButton = new Button("Ship Item");
+            shipButton.setStyle("-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-size: 12px; -fx-padding: 5 15; -fx-background-radius: 5;");
+            shipButton.setOnAction(e -> handleShipOrder(order));
+            statusBox.getChildren().add(shipButton);
+        }
 
         card.getChildren().addAll(infoBox, statusBox);
 
         return card;
+    }
+    
+    private void handleShipOrder(Order order) {
+        boolean confirm = DialogUtils.showConfirm("Confirm Shipment", "Are you sure you want to mark this order as SHIPPED?");
+        if (confirm) {
+            String error = orderService.updateOrderStatus(order.getId(), "SHIPPED", UserService.getCurrentUser().getId());
+            if (error != null) {
+                DialogUtils.showError("Operation Failed", error);
+            } else {
+                DialogUtils.showSuccess("Order marked as SHIPPED");
+                loadSales();
+            }
+        }
     }
 }

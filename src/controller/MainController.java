@@ -1,14 +1,21 @@
 package controller;
 
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
+import javafx.util.Duration;
+import model.Notification;
 import service.MessageService;
+import service.NotificationService;
 import service.UserService;
 import util.DialogUtils;
+
+import java.util.List;
 
 /**
  * Main controller - main view navigation
@@ -18,15 +25,38 @@ public class MainController {
     private Stage primaryStage;
     private UserService userService;
     private MessageService messageService;
+    private NotificationService notificationService;
     private BorderPane mainLayout;
     private Label unreadCountLabel;
+    private Label notificationCountLabel;
+    private Timeline notificationPoller;
     
     public MainController(Stage primaryStage) {
         this.primaryStage = primaryStage;
         this.userService = new UserService();
         this.messageService = new MessageService();
+        this.notificationService = new NotificationService();
+        startNotificationPoller();
     }
     
+    private void startNotificationPoller() {
+        notificationPoller = new Timeline(new KeyFrame(Duration.seconds(5), e -> {
+            if (UserService.getCurrentUser() != null) {
+                checkNewNotifications();
+                updateUnreadCount();
+            }
+        }));
+        notificationPoller.setCycleCount(Timeline.INDEFINITE);
+        notificationPoller.play();
+    }
+
+    private void checkNewNotifications() {
+        // In a real app, we would track the last checked time or ID.
+        // Here we just check count for badge, but for "popup" we might need more logic.
+        // For simplicity, we just update the badge count here.
+        // If we wanted a popup, we'd check for notifications created since last check.
+    }
+
     /**
      * Show main view
      */
@@ -76,13 +106,16 @@ public class MainController {
         unreadCountLabel = new Label();
         unreadCountLabel.setStyle("-fx-text-fill: #e74c3c; -fx-font-size: 14px; -fx-font-weight: bold; -fx-background-color: white; -fx-background-radius: 10; -fx-padding: 2 8;");
         
+        notificationCountLabel = new Label();
+        notificationCountLabel.setStyle("-fx-text-fill: #e67e22; -fx-font-size: 14px; -fx-font-weight: bold; -fx-background-color: white; -fx-background-radius: 10; -fx-padding: 2 8;");
+
         Button logoutButton = new Button("Logout");
         logoutButton.setStyle("-fx-background-color: #c0392b; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 5; -fx-cursor: hand;");
         logoutButton.setOnMouseEntered(e -> logoutButton.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 5; -fx-cursor: hand;"));
         logoutButton.setOnMouseExited(e -> logoutButton.setStyle("-fx-background-color: #c0392b; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 5; -fx-cursor: hand;"));
         logoutButton.setOnAction(e -> handleLogout());
         
-        topBar.getChildren().addAll(titleLabel, spacer, unreadCountLabel, userLabel, logoutButton);
+        topBar.getChildren().addAll(titleLabel, spacer, unreadCountLabel, notificationCountLabel, userLabel, logoutButton);
         
         return topBar;
     }
@@ -118,7 +151,13 @@ public class MainController {
         Button messagesButton = createMenuButton("My Messages");
         messagesButton.setOnAction(e -> showMessages());
         
-        menu.getChildren().addAll(boardButton, myItemsButton, myOrdersButton, mySalesButton, favoritesButton, messagesButton);
+        Button notificationsButton = createMenuButton("Notifications");
+        notificationsButton.setOnAction(e -> showNotifications());
+
+        Button profileButton = createMenuButton("My Profile");
+        profileButton.setOnAction(e -> showProfile());
+
+        menu.getChildren().addAll(boardButton, myItemsButton, myOrdersButton, mySalesButton, favoritesButton, messagesButton, notificationsButton, profileButton);
         
         // If admin, add user management button
         if (UserService.isAdmin()) {
@@ -207,6 +246,22 @@ public class MainController {
     }
     
     /**
+     * Show notifications
+     */
+    private void showNotifications() {
+        NotificationController notificationController = new NotificationController(mainLayout, this);
+        notificationController.showNotificationView();
+    }
+
+    /**
+     * Show user profile
+     */
+    private void showProfile() {
+        UserProfileController userProfileController = new UserProfileController(mainLayout);
+        userProfileController.showUserProfileView();
+    }
+    
+    /**
      * Show user management
      */
     private void showUserManagement() {
@@ -218,11 +273,28 @@ public class MainController {
      * Update unread message count
      */
     public void updateUnreadCount() {
-        long unreadCount = messageService.getUnreadCount(UserService.getCurrentUser().getId());
-        if (unreadCount > 0) {
-            unreadCountLabel.setText("Unread: " + unreadCount);
+        long unreadMsg = messageService.getUnreadCount(UserService.getCurrentUser().getId());
+        if (unreadMsg > 0) {
+            unreadCountLabel.setText("Msg: " + unreadMsg);
+            unreadCountLabel.setVisible(true);
+            unreadCountLabel.setManaged(true);
+            unreadCountLabel.setStyle("-fx-text-fill: #e74c3c; -fx-font-size: 14px; -fx-font-weight: bold; -fx-background-color: white; -fx-background-radius: 10; -fx-padding: 2 8;");
         } else {
             unreadCountLabel.setText("");
+            unreadCountLabel.setVisible(false);
+            unreadCountLabel.setManaged(false);
+        }
+        
+        List<Notification> unreadNotifs = notificationService.getUnreadNotifications(UserService.getCurrentUser().getId());
+        if (!unreadNotifs.isEmpty()) {
+            notificationCountLabel.setText("Notif: " + unreadNotifs.size());
+            notificationCountLabel.setVisible(true);
+            notificationCountLabel.setManaged(true);
+            notificationCountLabel.setStyle("-fx-text-fill: #e67e22; -fx-font-size: 14px; -fx-font-weight: bold; -fx-background-color: white; -fx-background-radius: 10; -fx-padding: 2 8;");
+        } else {
+            notificationCountLabel.setText("");
+            notificationCountLabel.setVisible(false);
+            notificationCountLabel.setManaged(false);
         }
     }
     
@@ -232,6 +304,9 @@ public class MainController {
     private void handleLogout() {
         boolean confirm = DialogUtils.showConfirm("Confirm Logout", "Are you sure you want to logout?");
         if (confirm) {
+            if (notificationPoller != null) {
+                notificationPoller.stop();
+            }
             userService.logout();
             LoginController loginController = new LoginController(primaryStage);
             loginController.showLoginView();

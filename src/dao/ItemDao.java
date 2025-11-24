@@ -13,6 +13,17 @@ public interface ItemDao {
 
     List<Item> search(String keyword);
 
+    /**
+     * Search items with multiple criteria
+     * @param keyword Keyword for title/description (can be null)
+     * @param minPrice Minimum price (can be null)
+     * @param maxPrice Maximum price (can be null)
+     * @param category Category (can be null)
+     * @param sortBy Sort order (e.g., "price_asc", "price_desc", "newest")
+     * @return List of items matching criteria
+     */
+    List<Item> searchItems(String keyword, Double minPrice, Double maxPrice, String category, String sortBy);
+
     void save(Item item);
 
     void update(Item item);

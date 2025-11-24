@@ -1,6 +1,8 @@
 package controller;
 
+import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
+import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
@@ -25,7 +27,10 @@ public class BoardController {
     private ItemService itemService;
     private VBox itemListContainer;
     private TextField searchField;
+    private TextField minPriceField;
+    private TextField maxPriceField;
     private ComboBox<String> categoryComboBox;
+    private ComboBox<String> sortBox;
     
     public BoardController(BorderPane mainLayout) {
         this.mainLayout = mainLayout;
@@ -38,9 +43,13 @@ public class BoardController {
     public void showBoardView() {
         VBox root = new VBox(15);
         root.setPadding(new Insets(20));
+        root.setStyle("-fx-background-color: #f5f6fa;");
         
-        // Title and search bar
+        // Top bar (Title + Publish)
         HBox topBar = createTopBar();
+        
+        // Search Section
+        VBox searchSection = createSearchSection();
         
         // Item list
         ScrollPane scrollPane = new ScrollPane();
@@ -53,7 +62,7 @@ public class BoardController {
         
         VBox.setVgrow(scrollPane, Priority.ALWAYS);
         
-        root.getChildren().addAll(topBar, scrollPane);
+        root.getChildren().addAll(topBar, searchSection, scrollPane);
         
         // Load items
         loadItems();
@@ -62,64 +71,162 @@ public class BoardController {
     }
     
     /**
-     * Create top bar (title, search, filter)
+     * Create top bar (title, publish button)
      */
     private HBox createTopBar() {
         HBox topBar = new HBox(15);
         topBar.setAlignment(Pos.CENTER_LEFT);
         topBar.setPadding(new Insets(10));
-        topBar.setStyle("-fx-background-color: white; -fx-background-radius: 5;");
         
         Label titleLabel = new Label("Item Market");
-        titleLabel.setStyle("-fx-font-size: 20px; -fx-font-weight: bold;");
-        
-        searchField = new TextField();
-        searchField.setPromptText("Search items...");
-        searchField.setPrefWidth(300);
-        
-        Button searchButton = new Button("Search");
-        searchButton.setStyle("-fx-background-color: #3498db; -fx-text-fill: white;");
-        searchButton.setOnAction(e -> handleSearch());
-        
-        Label categoryLabel = new Label("Category:");
-        categoryComboBox = new ComboBox<>();
-        categoryComboBox.getItems().addAll("All", "Electronics", "Books", "Clothing", "Furniture", "Other");
-        categoryComboBox.setValue("All");
-        categoryComboBox.setOnAction(e -> handleCategoryFilter());
-        
-        Button refreshButton = new Button("Refresh");
-        refreshButton.setStyle("-fx-background-color: #95a5a6; -fx-text-fill: white;");
-        refreshButton.setOnAction(e -> loadItems());
+        titleLabel.setStyle("-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
         
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
         
-        // Show publish item button for all users (since everyone is a SELLER now)
-        HBox rightButtons = new HBox(10);
-        Button publishButton = new Button("+ Publish Item");
-        publishButton.setStyle("-fx-background-color: #2ecc71; -fx-text-fill: white; -fx-font-size: 14px;");
-        publishButton.setOnAction(e -> showPublishDialog());
-        rightButtons.getChildren().add(publishButton);
+        Button refreshButton = new Button("Refresh");
+        refreshButton.setStyle("-fx-background-color: #95a5a6; -fx-text-fill: white; -fx-font-weight: bold;");
+        refreshButton.setOnAction(e -> loadItems());
         
-        topBar.getChildren().addAll(titleLabel, searchField, searchButton, 
-                                     categoryLabel, categoryComboBox, refreshButton, spacer, rightButtons);
+        Button publishButton = new Button("+ Publish Item");
+        publishButton.setStyle("-fx-background-color: #2ecc71; -fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold;");
+        publishButton.setOnAction(e -> showPublishDialog());
+        
+        topBar.getChildren().addAll(titleLabel, spacer, refreshButton, publishButton);
+        
+        return topBar;
+    }
+
+    /**
+     * Create search section
+     */
+    private VBox createSearchSection() {
+        VBox searchContainer = new VBox(15);
+        searchContainer.setPadding(new Insets(20));
+        searchContainer.setStyle("-fx-background-color: white; -fx-background-radius: 10; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 5, 0, 0, 2);");
+
+        // Row 1: Keyword search
+        HBox row1 = new HBox(15);
+        row1.setAlignment(Pos.CENTER_LEFT);
+        
+        Label searchLabel = new Label("Search:");
+        searchLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
+        
+        searchField = new TextField();
+        searchField.setPromptText("Search by title or description...");
+        searchField.setPrefWidth(400);
+        searchField.setStyle("-fx-padding: 8; -fx-background-radius: 5; -fx-border-color: #bdc3c7; -fx-border-radius: 5;");
+        HBox.setHgrow(searchField, Priority.ALWAYS);
+        
+        Button searchButton = new Button("Search");
+        searchButton.setStyle("-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 20; -fx-background-radius: 5; -fx-cursor: hand;");
+        searchButton.setOnAction(e -> handleSearch());
+        
+        Button clearButton = new Button("Clear");
+        clearButton.setStyle("-fx-background-color: #95a5a6; -fx-text-fill: white; -fx-padding: 8 20; -fx-background-radius: 5; -fx-cursor: hand;");
+        clearButton.setOnAction(e -> clearSearch());
+
+        row1.getChildren().addAll(searchLabel, searchField, searchButton, clearButton);
+
+        // Row 2: Filters
+        HBox row2 = new HBox(20);
+        row2.setAlignment(Pos.CENTER_LEFT);
+
+        // Price Range
+        Label priceLabel = new Label("Price:");
+        priceLabel.setStyle("-fx-font-weight: bold;");
+        
+        minPriceField = new TextField();
+        minPriceField.setPromptText("Min");
+        minPriceField.setPrefWidth(80);
+        minPriceField.setStyle("-fx-padding: 5;");
+        
+        Label toLabel = new Label("-");
+        
+        maxPriceField = new TextField();
+        maxPriceField.setPromptText("Max");
+        maxPriceField.setPrefWidth(80);
+        maxPriceField.setStyle("-fx-padding: 5;");
+
+        // Category
+        Label catLabel = new Label("Category:");
+        catLabel.setStyle("-fx-font-weight: bold;");
+        
+        categoryComboBox = new ComboBox<>();
+        categoryComboBox.setItems(FXCollections.observableArrayList(
+            "All Categories", "Electronics", "Books", "Clothing", "Furniture", "Other"
+        ));
+        categoryComboBox.setValue("All Categories");
+        categoryComboBox.setStyle("-fx-padding: 2;");
+
+        // Sort
+        Label sortLabel = new Label("Sort By:");
+        sortLabel.setStyle("-fx-font-weight: bold;");
+        
+        sortBox = new ComboBox<>();
+        sortBox.setItems(FXCollections.observableArrayList(
+            "Newest First", "Price: Low to High", "Price: High to Low"
+        ));
+        sortBox.setValue("Newest First");
+        sortBox.setStyle("-fx-padding: 2;");
+        
+        // Add listener to auto-search when sort/category changes
+        sortBox.valueProperty().addListener((obs, oldVal, newVal) -> handleSearch());
+        categoryComboBox.valueProperty().addListener((obs, oldVal, newVal) -> handleSearch());
+
+        row2.getChildren().addAll(priceLabel, minPriceField, toLabel, maxPriceField, 
+                                  new Separator(Orientation.VERTICAL),
+                                  catLabel, categoryComboBox,
+                                  new Separator(Orientation.VERTICAL),
+                                  sortLabel, sortBox);
+
+        searchContainer.getChildren().addAll(row1, new Separator(), row2);
         
         // Enter to search
         searchField.setOnAction(e -> handleSearch());
         
-        return topBar;
+        return searchContainer;
     }
     
     /**
      * Load item list
      */
     private void loadItems() {
+        handleSearch();
+    }
+    
+    /**
+     * Handle search
+     */
+    private void handleSearch() {
+        String keyword = searchField.getText().trim();
+        String category = categoryComboBox.getValue();
+        String sortBy = sortBox.getValue();
+        
+        Double minPrice = null;
+        try {
+            if (minPriceField.getText() != null && !minPriceField.getText().trim().isEmpty()) {
+                minPrice = Double.parseDouble(minPriceField.getText().trim());
+            }
+        } catch (NumberFormatException e) {
+            // Ignore invalid input
+        }
+        
+        Double maxPrice = null;
+        try {
+            if (maxPriceField.getText() != null && !maxPriceField.getText().trim().isEmpty()) {
+                maxPrice = Double.parseDouble(maxPriceField.getText().trim());
+            }
+        } catch (NumberFormatException e) {
+            // Ignore invalid input
+        }
+        
         itemListContainer.getChildren().clear();
         
-        List<Item> items = itemService.getAllActiveItems();
+        List<Item> items = itemService.searchItems(keyword, minPrice, maxPrice, category, sortBy);
         
         if (items.isEmpty()) {
-            Label emptyLabel = new Label("No items available");
+            Label emptyLabel = new Label("No items found matching your criteria");
             emptyLabel.setStyle("-fx-font-size: 16px; -fx-text-fill: #7f8c8d;");
             itemListContainer.getChildren().add(emptyLabel);
             return;
@@ -130,6 +237,17 @@ public class BoardController {
         }
     }
     
+    /**
+     * Clear search filters
+     */
+    private void clearSearch() {
+        searchField.clear();
+        minPriceField.clear();
+        maxPriceField.clear();
+        categoryComboBox.setValue("All Categories");
+        sortBox.setValue("Newest First");
+        handleSearch();
+    }
     /**
      * Create item card
      */
@@ -214,52 +332,7 @@ public class BoardController {
         return card;
     }
     
-    /**
-     * Handle search
-     */
-    private void handleSearch() {
-        String keyword = searchField.getText().trim();
-        itemListContainer.getChildren().clear();
-        
-        List<Item> items = itemService.searchItems(keyword);
-        
-        if (items.isEmpty()) {
-            Label emptyLabel = new Label("No items found");
-            emptyLabel.setStyle("-fx-font-size: 16px; -fx-text-fill: #7f8c8d;");
-            itemListContainer.getChildren().add(emptyLabel);
-            return;
-        }
-        
-        for (Item item : items) {
-            itemListContainer.getChildren().add(createItemCard(item));
-        }
-    }
-    
-    /**
-     * Handle category filter
-     */
-    private void handleCategoryFilter() {
-        String category = categoryComboBox.getValue();
-        itemListContainer.getChildren().clear();
-        
-        List<Item> items;
-        if ("All".equals(category)) {
-            items = itemService.getAllActiveItems();
-        } else {
-            items = itemService.getItemsByCategory(category);
-        }
-        
-        if (items.isEmpty()) {
-            Label emptyLabel = new Label("No items in this category");
-            emptyLabel.setStyle("-fx-font-size: 16px; -fx-text-fill: #7f8c8d;");
-            itemListContainer.getChildren().add(emptyLabel);
-            return;
-        }
-        
-        for (Item item : items) {
-            itemListContainer.getChildren().add(createItemCard(item));
-        }
-    }
+
     
     /**
      * Show item detail

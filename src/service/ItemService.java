@@ -111,6 +111,19 @@ public class ItemService {
     }
     
     /**
+     * Search items with advanced filters
+     * @param keyword Keyword
+     * @param minPrice Min price
+     * @param maxPrice Max price
+     * @param category Category
+     * @param sortBy Sort order
+     * @return Item list
+     */
+    public List<Item> searchItems(String keyword, Double minPrice, Double maxPrice, String category, String sortBy) {
+        return itemDao.searchItems(keyword, minPrice, maxPrice, category, sortBy);
+    }
+
+    /**
      * Filter items by category
      * @param category Category
      * @return Item list

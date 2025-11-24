@@ -66,7 +66,7 @@ public class UserDaoImpl implements UserDao {
 
     @Override
     public void save(User user) {
-        String sql = "INSERT INTO users (username, password_hash, email, role, active) VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO users (username, password_hash, email, role, active, avatar_url, bio, created_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = DatabaseConfig.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -76,6 +76,9 @@ public class UserDaoImpl implements UserDao {
             ps.setString(3, user.getEmail());
             ps.setString(4, user.getRole().name());
             ps.setInt(5, user.isActive() ? 1 : 0);
+            ps.setString(6, user.getAvatarUrl());
+            ps.setString(7, user.getBio());
+            ps.setString(8, user.getCreatedTime());
 
             ps.executeUpdate();
 
@@ -88,7 +91,7 @@ public class UserDaoImpl implements UserDao {
     public void update(User user) {
         String sql = """
                 UPDATE users 
-                SET username = ?, password_hash = ?, email = ?, role = ?, active = ?
+                SET username = ?, password_hash = ?, email = ?, role = ?, active = ?, avatar_url = ?, bio = ?
                 WHERE id = ?
                 """;
 
@@ -100,7 +103,9 @@ public class UserDaoImpl implements UserDao {
             ps.setString(3, user.getEmail());
             ps.setString(4, user.getRole().name());
             ps.setInt(5, user.isActive() ? 1 : 0);
-            ps.setLong(6, user.getId());
+            ps.setString(6, user.getAvatarUrl());
+            ps.setString(7, user.getBio());
+            ps.setLong(8, user.getId());
 
             ps.executeUpdate();
 
@@ -148,6 +153,9 @@ public class UserDaoImpl implements UserDao {
         }
         
         u.setActive(rs.getInt("active") == 1);
+        u.setAvatarUrl(rs.getString("avatar_url"));
+        u.setBio(rs.getString("bio"));
+        u.setCreatedTime(rs.getString("created_time"));
 
         return u;
     }

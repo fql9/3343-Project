@@ -17,12 +17,14 @@ public class OrderService {
 
     private final OrderDao orderDao;
     private final ItemDao itemDao;
+    private final NotificationService notificationService;
     private static final DateTimeFormatter DATE_FORMATTER = 
         DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     public OrderService() {
         this.orderDao = new OrderDaoImpl();
         this.itemDao = new ItemDaoImpl();
+        this.notificationService = new NotificationService();
     }
 
     /**
@@ -59,7 +61,63 @@ public class OrderService {
         item.setActive(false);
         itemDao.update(item);
 
+        // Notify Seller
+        notificationService.createNotification(
+            item.getSellerId(), 
+            "New Order Received", 
+            "You have a new order for item: " + item.getTitle()
+        );
+
         return null; // Success
+    }
+
+    /**
+     * Update order status
+     */
+    public String updateOrderStatus(Long orderId, String newStatus, Long operatorId) {
+        Order order = orderDao.findById(orderId);
+        if (order == null) {
+            return "Order not found";
+        }
+
+        String oldStatus = order.getStatus();
+        if (oldStatus.equals(newStatus)) {
+            return null; // No change
+        }
+
+        // Validate transition (simplified)
+        // PAID -> SHIPPED (Seller only)
+        // SHIPPED -> COMPLETED (Buyer only)
+        // * -> CANCELLED (Both, with restrictions)
+
+        boolean isSeller = order.getSellerId().equals(operatorId);
+        boolean isBuyer = order.getBuyerId().equals(operatorId);
+
+        if (!isSeller && !isBuyer) {
+            return "Permission denied";
+        }
+
+        if ("SHIPPED".equals(newStatus)) {
+            if (!isSeller) return "Only seller can ship the order";
+            if (!"PAID".equals(oldStatus)) return "Order must be PAID before shipping";
+        } else if ("COMPLETED".equals(newStatus)) {
+            if (!isBuyer) return "Only buyer can complete the order";
+            if (!"SHIPPED".equals(oldStatus)) return "Order must be SHIPPED before completion";
+        } else if ("CANCELLED".equals(newStatus)) {
+            if ("COMPLETED".equals(oldStatus)) return "Cannot cancel completed order";
+        }
+
+        order.setStatus(newStatus);
+        orderDao.update(order);
+
+        // Notify the other party
+        Long targetUserId = isSeller ? order.getBuyerId() : order.getSellerId();
+        String title = "Order Status Updated";
+        String content = "Order " + order.getOrderNo() + " status changed to " + newStatus;
+        
+        notificationService.createNotification(targetUserId, title, content);
+
+        return null;
     }
 
     public List<Order> getOrdersByBuyer(Long buyerId) {

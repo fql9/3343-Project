@@ -11,8 +11,7 @@ import javafx.scene.layout.*;
 import model.Item;
 import model.User;
 import service.FavoriteService;
-import service.ItemService;
-import service.MessageService;
+import service.ReviewService;
 import service.UserService;
 import util.DialogUtils;
 
@@ -23,19 +22,17 @@ public class ItemDetailController {
 
     private BorderPane mainLayout;
     private Item item;
-    private ItemService itemService;
     private FavoriteService favoriteService;
-    private MessageService messageService;
     private UserService userService;
+    private ReviewService reviewService;
     private Button favoriteButton;
     
     public ItemDetailController(BorderPane mainLayout, Item item) {
         this.mainLayout = mainLayout;
         this.item = item;
-        this.itemService = new ItemService();
         this.favoriteService = new FavoriteService();
-        this.messageService = new MessageService();
         this.userService = new UserService();
+        this.reviewService = new ReviewService();
     }
     
     /**
@@ -132,7 +129,12 @@ public class ItemDetailController {
         Label sellerLabel = new Label("Seller: " + (seller != null ? seller.getUsername() : "Unknown"));
         sellerLabel.setStyle("-fx-font-size: 16px; -fx-text-fill: #2c3e50;");
         
-        sellerBox.getChildren().addAll(sellerTitle, sellerLabel);
+        // Seller Rating
+        double avgRating = reviewService.getSellerAverageRating(item.getSellerId());
+        Label ratingLabel = new Label(String.format("Rating: %.1f / 5.0", avgRating));
+        ratingLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #f39c12; -fx-font-weight: bold;");
+        
+        sellerBox.getChildren().addAll(sellerTitle, sellerLabel, ratingLabel);
         
         // Other info
         Label timeLabel = new Label("Posted: " + item.getCreatedTime());

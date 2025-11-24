@@ -36,6 +36,10 @@ This project is a complete second-hand trading platform application that provide
 │   │   ├── MyItemsController.java   # My items controller
 │   │   ├── FavoritesController.java # Favorites controller
 │   │   ├── MessageController.java   # Message controller
+│   │   ├── OrderHistoryController.java # Buyer order history
+│   │   ├── SalesHistoryController.java # Seller sales history
+│   │   ├── NotificationController.java # Notification center
+│   │   ├── UserProfileController.java # User profile center
 │   │   └── UserManagementController.java # User management controller
 │   ├── dao/                         # Data access layer
 │   │   └── impl/                    # DAO implementations
@@ -43,12 +47,18 @@ This project is a complete second-hand trading platform application that provide
 │   │   ├── User.java
 │   │   ├── Item.java
 │   │   ├── Message.java
-│   │   └── Favorite.java
+│   │   ├── Favorite.java
+│   │   ├── Order.java
+│   │   ├── Review.java
+│   │   └── Notification.java
 │   ├── service/                     # Business logic layer
 │   │   ├── UserService.java
 │   │   ├── ItemService.java
 │   │   ├── MessageService.java
-│   │   └── FavoriteService.java
+│   │   ├── FavoriteService.java
+│   │   ├── OrderService.java
+│   │   ├── ReviewService.java
+│   │   └── NotificationService.java
 │   └── util/                        # Utility classes
 │       ├── DialogUtils.java         # Dialog utilities
 │       ├── PasswordUtils.java       # Password encryption utilities
@@ -116,25 +126,34 @@ The system initializes with the following test accounts:
 ### 1. User Features
 - User registration and login
 - Password encryption (SHA-256)
-- User profile management
+- **User Profile Center**:
+  - Avatar upload and display
+  - Bio and personal information editing
+  - Statistics (Total Sales, Total Purchases, Join Date)
 - Role-based access control (Buyer/Admin)
 
 ### 2. Item Features
 - Post items (title, description, price, contact info)
-- Browse and search items
-- View item details
+- **Advanced Search**: Filter by keyword, price range, category, and sort by price/date
+- View item details with seller rating
 - Manage my items (edit/delete)
 
-### 3. Favorites Features
-- Add/remove items to/from favorites
-- View favorites list
+### 3. Transaction & Order System
+- **Order Lifecycle**: Purchase -> Paid -> Shipped -> Received -> Completed
+- **Order History**: View past purchases and sales
+- **Review System**: Rate and review sellers after transaction completion
 
-### 4. Messaging Features
+### 4. Favorites & Notifications
+- Add/remove items to/from favorites
+- **Real-time Notifications**: Get alerts for order status changes (Shipped, Received)
+- Notification Center to view all alerts
+
+### 5. Messaging Features
 - Contact sellers via messages
 - View inbox
 - Reply to messages
 
-### 5. Admin Features
+### 6. Admin Features
 - User management (view/enable/disable users)
 - Item moderation
 
@@ -142,12 +161,15 @@ The system initializes with the following test accounts:
 
 The project uses SQLite database with the file `secondhand.db`, containing the following tables:
 
-- `users` - User table
+- `users` - User table (updated with avatar, bio, stats)
 - `items` - Item table
 - `favorites` - Favorites table
 - `messages` - Messages table
+- `orders` - Order transaction records
+- `reviews` - User ratings and reviews
+- `notifications` - System notifications
 
-The database is automatically created on first run.
+The database is automatically created on first run. Schema migrations are handled automatically.
 
 ## Development Tools
 

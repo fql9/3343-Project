@@ -94,8 +94,56 @@ public class DatabaseConfig {
                 );
             """);
             
+            // ----- reviews -----
+            stmt.execute("""
+                CREATE TABLE IF NOT EXISTS reviews (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    order_id INTEGER NOT NULL,
+                    reviewer_id INTEGER NOT NULL,
+                    reviewee_id INTEGER NOT NULL,
+                    item_id INTEGER NOT NULL,
+                    rating INTEGER NOT NULL,
+                    comment TEXT,
+                    created_time TEXT,
+                    FOREIGN KEY(order_id) REFERENCES orders(id),
+                    FOREIGN KEY(reviewer_id) REFERENCES users(id),
+                    FOREIGN KEY(reviewee_id) REFERENCES users(id),
+                    FOREIGN KEY(item_id) REFERENCES items(id)
+                );
+            """);
+
+            // ----- notifications -----
+            stmt.execute("""
+                CREATE TABLE IF NOT EXISTS notifications (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER NOT NULL,
+                    title TEXT NOT NULL,
+                    content TEXT NOT NULL,
+                    is_read INTEGER DEFAULT 0,
+                    created_time TEXT,
+                    FOREIGN KEY(user_id) REFERENCES users(id)
+                );
+            """);
+            
             // 修复数据：将不合法的 'USER' 角色更新为 'BUYER'
             stmt.executeUpdate("UPDATE users SET role = 'BUYER' WHERE role = 'USER'");
+
+            // 检查 users 表是否有 avatar_url 和 bio 列
+            try {
+                stmt.execute("ALTER TABLE users ADD COLUMN avatar_url TEXT");
+            } catch (Exception e) {
+                // 列已存在，忽略错误
+            }
+            try {
+                stmt.execute("ALTER TABLE users ADD COLUMN bio TEXT");
+            } catch (Exception e) {
+                // 列已存在，忽略错误
+            }
+            try {
+                stmt.execute("ALTER TABLE users ADD COLUMN created_time TEXT");
+            } catch (Exception e) {
+                // 列已存在，忽略错误
+            }
 
         } catch (Exception e) {
             e.printStackTrace();

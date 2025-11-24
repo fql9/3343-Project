@@ -7,6 +7,8 @@ import model.UserRole;
 import util.PasswordUtils;
 import util.ValidationUtils;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 /**
@@ -15,12 +17,16 @@ import java.util.List;
 public class UserService {
 
     private final UserDao userDao;
+    private final OrderService orderService;
+    private static final DateTimeFormatter DATE_FORMATTER = 
+        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     
     // Currently logged in user
     private static User currentUser;
     
     public UserService() {
         this.userDao = new UserDaoImpl();
+        this.orderService = new OrderService();
     }
     
     /**
@@ -59,6 +65,7 @@ public class UserService {
         user.setEmail(email);
         user.setRole(role);
         user.setActive(true);
+        user.setCreatedTime(LocalDateTime.now().format(DATE_FORMATTER));
         
         userDao.save(user);
         return null; // Success returns null
@@ -180,5 +187,51 @@ public class UserService {
         currentUser.setPasswordHash(PasswordUtils.hashPassword(newPassword));
         userDao.update(currentUser);
         return null;
+    }
+    
+    /**
+     * Update user profile (email, bio, avatar)
+     * @param email New email
+     * @param bio New bio
+     * @param avatarUrl New avatar URL
+     * @return Update result message
+     */
+    public String updateProfile(String email, String bio, String avatarUrl) {
+        if (currentUser == null) {
+            return "Not logged in";
+        }
+        
+        if (!ValidationUtils.isValidEmail(email)) {
+            return "Invalid email format";
+        }
+        
+        currentUser.setEmail(email);
+        currentUser.setBio(bio);
+        currentUser.setAvatarUrl(avatarUrl);
+        
+        userDao.update(currentUser);
+        return null;
+    }
+    
+    /**
+     * Get total sales amount for current user
+     */
+    public double getTotalSalesAmount() {
+        if (currentUser == null) return 0.0;
+        return orderService.getOrdersBySeller(currentUser.getId()).stream()
+                .filter(o -> "COMPLETED".equals(o.getStatus()) || "SHIPPED".equals(o.getStatus()) || "PAID".equals(o.getStatus()))
+                .mapToDouble(model.Order::getAmount)
+                .sum();
+    }
+
+    /**
+     * Get total purchase amount for current user
+     */
+    public double getTotalPurchaseAmount() {
+        if (currentUser == null) return 0.0;
+        return orderService.getOrdersByBuyer(currentUser.getId()).stream()
+                .filter(o -> "COMPLETED".equals(o.getStatus()) || "SHIPPED".equals(o.getStatus()) || "PAID".equals(o.getStatus()))
+                .mapToDouble(model.Order::getAmount)
+                .sum();
     }
 }
