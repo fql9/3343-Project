@@ -15,10 +15,6 @@ java {
 
 application {
     mainClass = 'MainApp' // 你的 JavaFX Application 入口
-    applicationDefaultJvmArgs = [
-        '--module-path', '/Users/liyuan/Downloads/javafx-sdk-25.0.1/lib',
-        '--add-modules', 'javafx.controls,javafx.fxml'
-    ]
 }
 
 repositories {
@@ -26,14 +22,13 @@ repositories {
 }
 
 dependencies {
-    // 使用本地 JavaFX SDK
-    implementation files('/Users/liyuan/Downloads/javafx-sdk-25.0.1/lib/javafx.base.jar')
-    implementation files('/Users/liyuan/Downloads/javafx-sdk-25.0.1/lib/javafx.controls.jar')
-    implementation files('/Users/liyuan/Downloads/javafx-sdk-25.0.1/lib/javafx.fxml.jar')
-    implementation files('/Users/liyuan/Downloads/javafx-sdk-25.0.1/lib/javafx.graphics.jar')
+    // JavaFX dependencies (automatically downloaded from Maven)
+    implementation 'org.openjfx:javafx-controls:25.0.1'
+    implementation 'org.openjfx:javafx-fxml:25.0.1'
     
     implementation 'org.xerial:sqlite-jdbc:3.46.0.0'
-    implementation 'org.slf4j:slf4j-simple:2.0.16'       // 可选：日志
+    implementation 'org.slf4j:slf4j-api:2.0.16'
+    implementation 'org.slf4j:slf4j-simple:2.0.16'
 
     testImplementation 'org.junit.jupiter:junit-jupiter:5.11.3'
 }

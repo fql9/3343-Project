@@ -2,16 +2,10 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "compile",
+            "label": "gradle build",
             "type": "shell",
-            "command": "javac",
-            "args": [
-                "-cp",
-                "/Users/liyuan/Downloads/javafx-sdk-25.0.1/lib/*:lib/sqlite-jdbc.jar:lib/slf4j-api.jar:lib/slf4j-simple.jar:src",
-                "-d",
-                "bin",
-                "src/**/*.java"
-            ],
+            "command": "gradle",
+            "args": ["build"],
             "problemMatcher": ["$tsc"],
             "group": {
                 "kind": "build",
@@ -19,21 +13,12 @@
             }
         },
         {
-            "label": "run",
+            "label": "gradle run",
             "type": "shell",
-            "command": "java",
-            "args": [
-                "--module-path",
-                "/Users/liyuan/Downloads/javafx-sdk-25.0.1/lib",
-                "--add-modules",
-                "javafx.controls,javafx.fxml",
-                "-cp",
-                "/Users/liyuan/Downloads/javafx-sdk-25.0.1/lib/*:lib/sqlite-jdbc.jar:lib/slf4j-api.jar:lib/slf4j-simple.jar:bin",
-                "MainApp"
-            ],
-            "dependsOn": "compile",
+            "command": "gradle",
+            "args": ["run"],
+            "dependsOn": "gradle build",
             "problemMatcher": []
         }
     ]
 }
-
