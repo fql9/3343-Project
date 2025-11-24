@@ -3,13 +3,17 @@ package controller;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
+import javafx.stage.FileChooser;
 import model.Item;
 import service.ItemService;
 import service.UserService;
 import util.DialogUtils;
 import util.ValidationUtils;
 
+import java.io.File;
 import java.util.List;
 
 /**
@@ -109,32 +113,57 @@ public class MyItemsController {
      */
     private HBox createItemCard(Item item) {
         HBox card = new HBox(20);
-        card.setPadding(new Insets(15));
-        card.setStyle("-fx-background-color: white; -fx-background-radius: 8; " +
-                     "-fx-border-color: #bdc3c7; -fx-border-radius: 8; -fx-border-width: 1;");
+        card.setPadding(new Insets(20));
+        card.setStyle("-fx-background-color: white; -fx-background-radius: 10; " +
+                     "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 5, 0, 0, 2);");
+        
+        // Image thumbnail
+        ImageView imageView = new ImageView();
+        imageView.setFitWidth(100);
+        imageView.setFitHeight(100);
+        imageView.setPreserveRatio(true);
+        
+        if (item.getImageUrl() != null && !item.getImageUrl().isEmpty()) {
+            try {
+                String imageUrl = item.getImageUrl();
+                Image image;
+                if (imageUrl.startsWith("http")) {
+                    image = new Image(imageUrl, true);
+                } else {
+                    image = new Image(new File(imageUrl).toURI().toString());
+                }
+                imageView.setImage(image);
+            } catch (Exception e) {
+                // Failed to load image
+            }
+        }
         
         // Item info
-        VBox infoBox = new VBox(8);
+        VBox infoBox = new VBox(10);
         HBox.setHgrow(infoBox, Priority.ALWAYS);
         
         Label titleLabel = new Label(item.getTitle());
-        titleLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+        titleLabel.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
         
         Label descLabel = new Label(item.getDescription() != null ? item.getDescription() : "No description");
-        descLabel.setStyle("-fx-text-fill: #7f8c8d;");
+        descLabel.setStyle("-fx-text-fill: #7f8c8d; -fx-font-size: 14px;");
         descLabel.setWrapText(true);
         
         Label statusLabel = new Label("Status: " + (item.isActive() ? "Active" : "Inactive"));
-        statusLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: " + 
-                            (item.isActive() ? "#2ecc71" : "#e74c3c") + ";");
+        statusLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: white; -fx-background-color: " + 
+                            (item.isActive() ? "#2ecc71" : "#e74c3c") + "; -fx-padding: 3 8; -fx-background-radius: 10;");
         
         Label timeLabel = new Label("Posted: " + item.getCreatedTime());
-        timeLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #95a5a6;");
+        timeLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #bdc3c7;");
         
-        infoBox.getChildren().addAll(titleLabel, descLabel, statusLabel, timeLabel);
+        HBox metaBox = new HBox(10);
+        metaBox.getChildren().addAll(statusLabel, timeLabel);
+        metaBox.setAlignment(Pos.CENTER_LEFT);
+        
+        infoBox.getChildren().addAll(titleLabel, descLabel, metaBox);
         
         // Price and actions
-        VBox actionBox = new VBox(10);
+        VBox actionBox = new VBox(15);
         actionBox.setAlignment(Pos.CENTER_RIGHT);
         
         Label priceLabel = new Label("¥" + String.format("%.2f", item.getPrice()));
@@ -144,23 +173,23 @@ public class MyItemsController {
         buttonBox.setAlignment(Pos.CENTER);
         
         Button editButton = new Button("Edit");
-        editButton.setStyle("-fx-background-color: #3498db; -fx-text-fill: white;");
+        editButton.setStyle("-fx-background-color: #3498db; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;");
         editButton.setOnAction(e -> showEditDialog(item));
         
         Button toggleButton = new Button(item.isActive() ? "Deactivate" : "Activate");
         toggleButton.setStyle("-fx-background-color: " + (item.isActive() ? "#e67e22" : "#2ecc71") + 
-                             "; -fx-text-fill: white;");
+                             "; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;");
         toggleButton.setOnAction(e -> handleToggleActive(item));
         
         Button deleteButton = new Button("Delete");
-        deleteButton.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white;");
+        deleteButton.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;");
         deleteButton.setOnAction(e -> handleDelete(item));
         
         buttonBox.getChildren().addAll(editButton, toggleButton, deleteButton);
         
         actionBox.getChildren().addAll(priceLabel, buttonBox);
         
-        card.getChildren().addAll(infoBox, actionBox);
+        card.getChildren().addAll(imageView, infoBox, actionBox);
         
         return card;
     }
@@ -196,6 +225,27 @@ public class MyItemsController {
         ComboBox<String> categoryBox = new ComboBox<>();
         categoryBox.getItems().addAll("Electronics", "Books", "Clothing", "Furniture", "Other");
         categoryBox.setValue("Other");
+
+        // Image input
+        TextField imageUrlField = new TextField();
+        imageUrlField.setPromptText("Image URL or File Path");
+        
+        Button fileButton = new Button("Choose File");
+        fileButton.setOnAction(e -> {
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Select Image");
+            fileChooser.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.jpeg", "*.gif")
+            );
+            File selectedFile = fileChooser.showOpenDialog(dialog.getOwner());
+            if (selectedFile != null) {
+                imageUrlField.setText(selectedFile.getAbsolutePath());
+            }
+        });
+        
+        HBox imageBox = new HBox(10);
+        imageBox.getChildren().addAll(imageUrlField, fileButton);
+        HBox.setHgrow(imageUrlField, Priority.ALWAYS);
         
         grid.add(new Label("Title:"), 0, 0);
         grid.add(titleField, 1, 0);
@@ -205,13 +255,15 @@ public class MyItemsController {
         grid.add(priceField, 1, 2);
         grid.add(new Label("Category:"), 0, 3);
         grid.add(categoryBox, 1, 3);
+        grid.add(new Label("Image:"), 0, 4);
+        grid.add(imageBox, 1, 4);
         
         dialog.getDialogPane().setContent(grid);
         
         dialog.showAndWait().ifPresent(result -> {
             if (result == publishButtonType) {
                 handlePublish(titleField.getText(), descArea.getText(), 
-                            priceField.getText(), categoryBox.getValue());
+                            priceField.getText(), categoryBox.getValue(), imageUrlField.getText());
             }
         });
     }
@@ -244,6 +296,27 @@ public class MyItemsController {
         ComboBox<String> categoryBox = new ComboBox<>();
         categoryBox.getItems().addAll("Electronics", "Books", "Clothing", "Furniture", "Other");
         categoryBox.setValue(item.getCategory() != null ? item.getCategory() : "Other");
+
+        // Image input
+        TextField imageUrlField = new TextField(item.getImageUrl() != null ? item.getImageUrl() : "");
+        imageUrlField.setPromptText("Image URL or File Path");
+        
+        Button fileButton = new Button("Choose File");
+        fileButton.setOnAction(e -> {
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Select Image");
+            fileChooser.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.jpeg", "*.gif")
+            );
+            File selectedFile = fileChooser.showOpenDialog(dialog.getOwner());
+            if (selectedFile != null) {
+                imageUrlField.setText(selectedFile.getAbsolutePath());
+            }
+        });
+        
+        HBox imageBox = new HBox(10);
+        imageBox.getChildren().addAll(imageUrlField, fileButton);
+        HBox.setHgrow(imageUrlField, Priority.ALWAYS);
         
         grid.add(new Label("Title:"), 0, 0);
         grid.add(titleField, 1, 0);
@@ -253,13 +326,15 @@ public class MyItemsController {
         grid.add(priceField, 1, 2);
         grid.add(new Label("Category:"), 0, 3);
         grid.add(categoryBox, 1, 3);
+        grid.add(new Label("Image:"), 0, 4);
+        grid.add(imageBox, 1, 4);
         
         dialog.getDialogPane().setContent(grid);
         
         dialog.showAndWait().ifPresent(result -> {
             if (result == saveButtonType) {
                 handleEdit(item, titleField.getText(), descArea.getText(), 
-                         priceField.getText(), categoryBox.getValue());
+                         priceField.getText(), categoryBox.getValue(), imageUrlField.getText());
             }
         });
     }
@@ -267,7 +342,7 @@ public class MyItemsController {
     /**
      * Handle publish item
      */
-    private void handlePublish(String title, String description, String priceText, String category) {
+    private void handlePublish(String title, String description, String priceText, String category, String imageUrl) {
         if (!ValidationUtils.isNotEmpty(title)) {
             DialogUtils.showWarning("Input Error", "Item title cannot be empty");
             return;
@@ -283,7 +358,7 @@ public class MyItemsController {
         
         String error = itemService.publishItem(
             UserService.getCurrentUser().getId(),
-            title, description, price, category
+            title, description, price, category, imageUrl
         );
         
         if (error != null) {
@@ -297,7 +372,7 @@ public class MyItemsController {
     /**
      * Handle edit item
      */
-    private void handleEdit(Item item, String title, String description, String priceText, String category) {
+    private void handleEdit(Item item, String title, String description, String priceText, String category, String imageUrl) {
         if (!ValidationUtils.isNotEmpty(title)) {
             DialogUtils.showWarning("Input Error", "Item title cannot be empty");
             return;
@@ -315,6 +390,7 @@ public class MyItemsController {
         item.setDescription(description);
         item.setPrice(price);
         item.setCategory(category);
+        item.setImageUrl(imageUrl);
         
         String error = itemService.updateItem(item);
         if (error != null) {

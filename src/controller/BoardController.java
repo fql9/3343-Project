@@ -5,12 +5,15 @@ import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import model.Item;
-import model.UserRole;
 import service.ItemService;
 import service.UserService;
 import util.DialogUtils;
 import util.ValidationUtils;
 
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.stage.FileChooser;
+import java.io.File;
 import java.util.List;
 
 /**
@@ -91,14 +94,12 @@ public class BoardController {
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
         
-        // If seller, show publish item button
+        // Show publish item button for all users (since everyone is a SELLER now)
         HBox rightButtons = new HBox(10);
-        if (UserRole.SELLER.name().equals(UserService.getCurrentUser().getRole())) {
-            Button publishButton = new Button("+ Publish Item");
-            publishButton.setStyle("-fx-background-color: #2ecc71; -fx-text-fill: white; -fx-font-size: 14px;");
-            publishButton.setOnAction(e -> showPublishDialog());
-            rightButtons.getChildren().add(publishButton);
-        }
+        Button publishButton = new Button("+ Publish Item");
+        publishButton.setStyle("-fx-background-color: #2ecc71; -fx-text-fill: white; -fx-font-size: 14px;");
+        publishButton.setOnAction(e -> showPublishDialog());
+        rightButtons.getChildren().add(publishButton);
         
         topBar.getChildren().addAll(titleLabel, searchField, searchButton, 
                                      categoryLabel, categoryComboBox, refreshButton, spacer, rightButtons);
@@ -134,49 +135,81 @@ public class BoardController {
      */
     private HBox createItemCard(Item item) {
         HBox card = new HBox(20);
-        card.setPadding(new Insets(15));
-        card.setStyle("-fx-background-color: white; -fx-background-radius: 8; " +
-                     "-fx-border-color: #bdc3c7; -fx-border-radius: 8; -fx-border-width: 1;");
+        card.setPadding(new Insets(20));
+        card.setStyle("-fx-background-color: white; -fx-background-radius: 10; " +
+                     "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 5, 0, 0, 2);");
         
+        // Image thumbnail
+        ImageView imageView = new ImageView();
+        imageView.setFitWidth(120);
+        imageView.setFitHeight(120);
+        imageView.setPreserveRatio(true);
+        
+        if (item.getImageUrl() != null && !item.getImageUrl().isEmpty()) {
+            try {
+                String imageUrl = item.getImageUrl();
+                Image image;
+                if (imageUrl.startsWith("http")) {
+                    image = new Image(imageUrl, true);
+                } else {
+                    image = new Image(new File(imageUrl).toURI().toString());
+                }
+                imageView.setImage(image);
+            } catch (Exception e) {
+                // Failed to load image, keep empty or set placeholder
+            }
+        }
+        
+        // If no image loaded, set a placeholder color/text
+        if (imageView.getImage() == null) {
+            // Optional: set a placeholder image
+        }
+
         // Item info
-        VBox infoBox = new VBox(8);
+        VBox infoBox = new VBox(10);
         HBox.setHgrow(infoBox, Priority.ALWAYS);
         
         Label titleLabel = new Label(item.getTitle());
-        titleLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+        titleLabel.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
         
         Label descLabel = new Label(item.getDescription() != null ? item.getDescription() : "No description");
-        descLabel.setStyle("-fx-text-fill: #7f8c8d;");
+        descLabel.setStyle("-fx-text-fill: #7f8c8d; -fx-font-size: 14px;");
         descLabel.setWrapText(true);
         
-        Label categoryLabel = new Label("Category: " + (item.getCategory() != null ? item.getCategory() : "Uncategorized"));
-        categoryLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #95a5a6;");
+        Label categoryLabel = new Label(item.getCategory() != null ? item.getCategory() : "Uncategorized");
+        categoryLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: white; -fx-background-color: #95a5a6; -fx-padding: 3 8; -fx-background-radius: 10;");
         
         Label timeLabel = new Label("Posted: " + item.getCreatedTime());
-        timeLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #95a5a6;");
+        timeLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #bdc3c7;");
         
-        infoBox.getChildren().addAll(titleLabel, descLabel, categoryLabel, timeLabel);
+        HBox metaBox = new HBox(10);
+        metaBox.getChildren().addAll(categoryLabel, timeLabel);
+        metaBox.setAlignment(Pos.CENTER_LEFT);
+        
+        infoBox.getChildren().addAll(titleLabel, descLabel, metaBox);
         
         // Price and actions
-        VBox actionBox = new VBox(10);
+        VBox actionBox = new VBox(15);
         actionBox.setAlignment(Pos.CENTER_RIGHT);
         
         Label priceLabel = new Label("¥" + String.format("%.2f", item.getPrice()));
         priceLabel.setStyle("-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #e74c3c;");
         
         Button detailButton = new Button("View Details");
-        detailButton.setStyle("-fx-background-color: #3498db; -fx-text-fill: white;");
+        detailButton.setStyle("-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 5; -fx-padding: 8 15; -fx-cursor: hand;");
+        detailButton.setOnMouseEntered(e -> detailButton.setStyle("-fx-background-color: #2980b9; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 5; -fx-padding: 8 15; -fx-cursor: hand;"));
+        detailButton.setOnMouseExited(e -> detailButton.setStyle("-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 5; -fx-padding: 8 15; -fx-cursor: hand;"));
         detailButton.setOnAction(e -> showItemDetail(item));
         
         actionBox.getChildren().addAll(priceLabel, detailButton);
         
-        card.getChildren().addAll(infoBox, actionBox);
+        card.getChildren().addAll(imageView, infoBox, actionBox);
         
         // Hover effect
-        card.setOnMouseEntered(e -> card.setStyle("-fx-background-color: #f8f9fa; -fx-background-radius: 8; " +
-                                                  "-fx-border-color: #3498db; -fx-border-radius: 8; -fx-border-width: 2;"));
-        card.setOnMouseExited(e -> card.setStyle("-fx-background-color: white; -fx-background-radius: 8; " +
-                                                "-fx-border-color: #bdc3c7; -fx-border-radius: 8; -fx-border-width: 1;"));
+        card.setOnMouseEntered(e -> card.setStyle("-fx-background-color: white; -fx-background-radius: 10; " +
+                                                  "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 8, 0, 0, 4);"));
+        card.setOnMouseExited(e -> card.setStyle("-fx-background-color: white; -fx-background-radius: 10; " +
+                                                "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 5, 0, 0, 2);"));
         
         return card;
     }
@@ -265,6 +298,27 @@ public class BoardController {
         ComboBox<String> categoryBox = new ComboBox<>();
         categoryBox.getItems().addAll("Electronics", "Books", "Clothing", "Furniture", "Other");
         categoryBox.setValue("Other");
+
+        // Image input
+        TextField imageUrlField = new TextField();
+        imageUrlField.setPromptText("Image URL or File Path");
+        
+        Button fileButton = new Button("Choose File");
+        fileButton.setOnAction(e -> {
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Select Image");
+            fileChooser.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.jpeg", "*.gif")
+            );
+            File selectedFile = fileChooser.showOpenDialog(dialog.getOwner());
+            if (selectedFile != null) {
+                imageUrlField.setText(selectedFile.getAbsolutePath());
+            }
+        });
+        
+        HBox imageBox = new HBox(10);
+        imageBox.getChildren().addAll(imageUrlField, fileButton);
+        HBox.setHgrow(imageUrlField, Priority.ALWAYS);
         
         grid.add(new Label("Title:"), 0, 0);
         grid.add(titleField, 1, 0);
@@ -274,6 +328,8 @@ public class BoardController {
         grid.add(priceField, 1, 2);
         grid.add(new Label("Category:"), 0, 3);
         grid.add(categoryBox, 1, 3);
+        grid.add(new Label("Image:"), 0, 4);
+        grid.add(imageBox, 1, 4);
         
         dialog.getDialogPane().setContent(grid);
         
@@ -282,6 +338,7 @@ public class BoardController {
             String description = descArea.getText().trim();
             String priceText = priceField.getText().trim();
             String category = categoryBox.getValue();
+            String imageUrl = imageUrlField.getText().trim();
             
             if (!ValidationUtils.isNotEmpty(title)) {
                 DialogUtils.showWarning("Input Error", "Item title cannot be empty");
@@ -298,7 +355,7 @@ public class BoardController {
             
             String error = itemService.publishItem(
                 UserService.getCurrentUser().getId(),
-                title, description, price, category
+                title, description, price, category, imageUrl
             );
             
             if (error != null) {

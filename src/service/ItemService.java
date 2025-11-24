@@ -30,10 +30,11 @@ public class ItemService {
      * @param description Description
      * @param price Price
      * @param category Category
+     * @param imageUrl Image URL
      * @return Publish result message
      */
     public String publishItem(Long sellerId, String title, String description, 
-                              double price, String category) {
+                              double price, String category, String imageUrl) {
         // Validate title
         if (!ValidationUtils.isNotEmpty(title)) {
             return "Item title cannot be empty";
@@ -51,6 +52,7 @@ public class ItemService {
         item.setDescription(description);
         item.setPrice(price);
         item.setCategory(category);
+        item.setImageUrl(imageUrl);
         item.setActive(true);
         item.setCreatedTime(LocalDateTime.now().format(DATE_FORMATTER));
         

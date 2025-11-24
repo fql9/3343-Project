@@ -7,6 +7,7 @@ public class Item {
     private String description;
     private double price;
     private String category;
+    private String imageUrl;     // 图片URL或路径
     private boolean active;      // 是否仍在售
     private String createdTime;  // 可用 LocalDateTime
 
@@ -28,6 +29,9 @@ public class Item {
 
     public String getCategory() { return category; }
     public void setCategory(String category) { this.category = category; }
+
+    public String getImageUrl() { return imageUrl; }
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
 
     public boolean isActive() { return active; }
     public void setActive(boolean active) { this.active = active; }

@@ -1,8 +1,12 @@
 package controller;
 
+import java.io.File;
+
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import model.Item;
 import model.User;
@@ -49,9 +53,13 @@ public class ItemDetailController {
         
         // Item detail card
         VBox detailCard = new VBox(20);
-        detailCard.setPadding(new Insets(30));
-        detailCard.setStyle("-fx-background-color: white; -fx-background-radius: 10;");
-        detailCard.setMaxWidth(800);
+        detailCard.setPadding(new Insets(40));
+        detailCard.setStyle("-fx-background-color: white; -fx-background-radius: 10; " +
+                           "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 5);");
+        // detailCard.setMaxWidth(800); // Removed fixed max width
+        
+        // Make detailCard grow to fill width
+        HBox.setHgrow(detailCard, Priority.ALWAYS);
         
         // Title and price
         HBox headerBox = new HBox(20);
@@ -61,10 +69,10 @@ public class ItemDetailController {
         HBox.setHgrow(titleBox, Priority.ALWAYS);
         
         Label titleLabel = new Label(item.getTitle());
-        titleLabel.setStyle("-fx-font-size: 28px; -fx-font-weight: bold;");
+        titleLabel.setStyle("-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
         
         Label categoryLabel = new Label("Category: " + (item.getCategory() != null ? item.getCategory() : "Uncategorized"));
-        categoryLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #7f8c8d;");
+        categoryLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: white; -fx-background-color: #95a5a6; -fx-padding: 3 10; -fx-background-radius: 15;");
         
         titleBox.getChildren().addAll(titleLabel, categoryLabel);
         
@@ -73,14 +81,45 @@ public class ItemDetailController {
         
         headerBox.getChildren().addAll(titleBox, priceLabel);
         
+        // Image display
+        VBox imageBox = new VBox();
+        imageBox.setAlignment(Pos.CENTER);
+        imageBox.setStyle("-fx-background-color: #f9f9f9; -fx-padding: 20; -fx-background-radius: 5;");
+        // Make image box grow
+        VBox.setVgrow(imageBox, Priority.ALWAYS);
+        
+        if (item.getImageUrl() != null && !item.getImageUrl().isEmpty()) {
+            try {
+                String imageUrl = item.getImageUrl();
+                Image image;
+                if (imageUrl.startsWith("http")) {
+                    image = new Image(imageUrl, true); // Load in background
+                } else {
+                    image = new Image(new File(imageUrl).toURI().toString());
+                }
+                ImageView imageView = new ImageView(image);
+                
+                // Bind image size to window size
+                imageView.fitWidthProperty().bind(mainLayout.widthProperty().multiply(0.6)); // 60% of window width
+                imageView.fitHeightProperty().bind(mainLayout.heightProperty().multiply(0.5)); // 50% of window height
+                imageView.setPreserveRatio(true);
+                
+                imageBox.getChildren().add(imageView);
+            } catch (Exception e) {
+                Label errorLabel = new Label("Image failed to load");
+                errorLabel.setStyle("-fx-text-fill: #e74c3c;");
+                imageBox.getChildren().add(errorLabel);
+            }
+        }
+
         // Description
         VBox descBox = new VBox(10);
         Label descTitle = new Label("Item Description");
-        descTitle.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
+        descTitle.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #34495e;");
         
         Label descLabel = new Label(item.getDescription() != null ? item.getDescription() : "No description available");
         descLabel.setWrapText(true);
-        descLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #2c3e50;");
+        descLabel.setStyle("-fx-font-size: 16px; -fx-text-fill: #2c3e50; -fx-line-spacing: 5;");
         
         descBox.getChildren().addAll(descTitle, descLabel);
         
@@ -88,19 +127,19 @@ public class ItemDetailController {
         User seller = userService.getUserById(item.getSellerId());
         VBox sellerBox = new VBox(10);
         Label sellerTitle = new Label("Seller Information");
-        sellerTitle.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
+        sellerTitle.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #34495e;");
         
         Label sellerLabel = new Label("Seller: " + (seller != null ? seller.getUsername() : "Unknown"));
-        sellerLabel.setStyle("-fx-font-size: 14px;");
+        sellerLabel.setStyle("-fx-font-size: 16px; -fx-text-fill: #2c3e50;");
         
         sellerBox.getChildren().addAll(sellerTitle, sellerLabel);
         
         // Other info
         Label timeLabel = new Label("Posted: " + item.getCreatedTime());
-        timeLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #95a5a6;");
+        timeLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #95a5a6;");
         
         // Action buttons
-        HBox actionBox = new HBox(15);
+        HBox actionBox = new HBox(20);
         actionBox.setAlignment(Pos.CENTER);
         
         Long currentUserId = UserService.getCurrentUser().getId();
@@ -110,31 +149,41 @@ public class ItemDetailController {
             // Favorite button
             boolean isFavorite = favoriteService.isFavorite(currentUserId, item.getId());
             favoriteButton = new Button(isFavorite ? "Favorited" : "Add to Favorites");
-            favoriteButton.setStyle("-fx-background-color: " + (isFavorite ? "#95a5a6" : "#e67e22") + 
-                                   "; -fx-text-fill: white; -fx-font-size: 14px; -fx-padding: 10 30;");
+            String favStyle = isFavorite ? "-fx-background-color: #95a5a6;" : "-fx-background-color: #e67e22;";
+            favoriteButton.setStyle(favStyle + " -fx-text-fill: white; -fx-font-size: 14px; -fx-padding: 12 30; -fx-background-radius: 5; -fx-cursor: hand;");
             favoriteButton.setOnAction(e -> handleFavorite());
             
             // Contact seller button
             Button contactButton = new Button("Contact Seller");
             contactButton.setStyle("-fx-background-color: #1abc9c; -fx-text-fill: white; " +
-                                  "-fx-font-size: 14px; -fx-padding: 10 30;");
+                                  "-fx-font-size: 14px; -fx-padding: 12 30; -fx-background-radius: 5; -fx-cursor: hand;");
             contactButton.setOnAction(e -> handleContactSeller());
+
+            // Buy Now button
+            Button buyButton = new Button("Buy Now");
+            buyButton.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white; " +
+                               "-fx-font-size: 14px; -fx-padding: 12 30; -fx-background-radius: 5; -fx-cursor: hand;");
+            buyButton.setOnAction(e -> handleBuyNow());
             
-            actionBox.getChildren().addAll(favoriteButton, contactButton);
+            actionBox.getChildren().addAll(favoriteButton, contactButton, buyButton);
         } else {
             Label ownLabel = new Label("This is your published item");
-            ownLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #7f8c8d;");
+            ownLabel.setStyle("-fx-font-size: 16px; -fx-text-fill: #7f8c8d; -fx-font-style: italic;");
             actionBox.getChildren().add(ownLabel);
         }
         
-        detailCard.getChildren().addAll(headerBox, new Separator(), descBox, 
+        detailCard.getChildren().addAll(headerBox, new Separator(), imageBox, new Separator(), descBox, 
                                         new Separator(), sellerBox, timeLabel, 
                                         new Separator(), actionBox);
+        
+        // Make detailCard fill the width
+        VBox.setVgrow(detailCard, Priority.ALWAYS);
         
         root.getChildren().addAll(backButton, detailCard);
         
         ScrollPane scrollPane = new ScrollPane(root);
         scrollPane.setFitToWidth(true);
+        scrollPane.setFitToHeight(true); // Allow height to grow
         scrollPane.setStyle("-fx-background-color: #ecf0f1;");
         
         mainLayout.setCenter(scrollPane);
@@ -169,29 +218,17 @@ public class ItemDetailController {
      * Handle contact seller
      */
     private void handleContactSeller() {
-        TextInputDialog dialog = new TextInputDialog();
-        dialog.setTitle("Contact Seller");
-        dialog.setHeaderText("Send a message to the seller");
-        dialog.setContentText("Message:");
-        
-        dialog.showAndWait().ifPresent(message -> {
-            if (message.trim().isEmpty()) {
-                DialogUtils.showWarning("Input Error", "Message cannot be empty");
-                return;
-            }
-            
-            String error = messageService.sendMessage(
-                UserService.getCurrentUser().getId(),
-                item.getSellerId(),
-                "About item \"" + item.getTitle() + "\": " + message
-            );
-            
-            if (error != null) {
-                DialogUtils.showError("Send Failed", error);
-            } else {
-                DialogUtils.showSuccess("Message sent successfully");
-            }
-        });
+        // Open the full messages view and show the conversation with the seller
+        MessageController messageController = new MessageController(mainLayout, null);
+        messageController.openConversation(item.getSellerId());
+    }
+
+    /**
+     * Handle buy now
+     */
+    private void handleBuyNow() {
+        CheckoutController checkoutController = new CheckoutController(mainLayout, item);
+        checkoutController.showCheckoutView();
     }
     
     /**

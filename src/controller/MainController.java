@@ -58,30 +58,31 @@ public class MainController {
      */
     private HBox createTopBar() {
         HBox topBar = new HBox(20);
-        topBar.setPadding(new Insets(15, 20, 15, 20));
+        topBar.setPadding(new Insets(15, 30, 15, 30));
         topBar.setAlignment(Pos.CENTER_LEFT);
-        topBar.setStyle("-fx-background-color: #2c3e50;");
+        topBar.setStyle("-fx-background-color: #2c3e50; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 0, 0, 0, 2);");
         
         Label titleLabel = new Label("Second-hand Trading Platform");
-        titleLabel.setStyle("-fx-text-fill: white; -fx-font-size: 20px; -fx-font-weight: bold;");
+        titleLabel.setStyle("-fx-text-fill: white; -fx-font-size: 22px; -fx-font-weight: bold;");
         
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
         
         Label userLabel = new Label("User: " + UserService.getCurrentUser().getUsername());
-        userLabel.setStyle("-fx-text-fill: white; -fx-font-size: 14px;");
+        userLabel.setStyle("-fx-text-fill: #ecf0f1; -fx-font-size: 14px; -fx-font-weight: bold;");
         
-        Label roleLabel = new Label("Role: " + UserService.getCurrentUser().getRole());
-        roleLabel.setStyle("-fx-text-fill: #ecf0f1; -fx-font-size: 12px;");
+        // Role label removed as everyone is a SELLER/USER now
         
         unreadCountLabel = new Label();
-        unreadCountLabel.setStyle("-fx-text-fill: #e74c3c; -fx-font-size: 14px; -fx-font-weight: bold;");
+        unreadCountLabel.setStyle("-fx-text-fill: #e74c3c; -fx-font-size: 14px; -fx-font-weight: bold; -fx-background-color: white; -fx-background-radius: 10; -fx-padding: 2 8;");
         
         Button logoutButton = new Button("Logout");
-        logoutButton.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white;");
+        logoutButton.setStyle("-fx-background-color: #c0392b; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 5; -fx-cursor: hand;");
+        logoutButton.setOnMouseEntered(e -> logoutButton.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 5; -fx-cursor: hand;"));
+        logoutButton.setOnMouseExited(e -> logoutButton.setStyle("-fx-background-color: #c0392b; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 5; -fx-cursor: hand;"));
         logoutButton.setOnAction(e -> handleLogout());
         
-        topBar.getChildren().addAll(titleLabel, spacer, unreadCountLabel, userLabel, roleLabel, logoutButton);
+        topBar.getChildren().addAll(titleLabel, spacer, unreadCountLabel, userLabel, logoutButton);
         
         return topBar;
     }
@@ -90,30 +91,46 @@ public class MainController {
      * Create left menu
      */
     private VBox createLeftMenu() {
-        VBox menu = new VBox(10);
-        menu.setPadding(new Insets(20));
+        VBox menu = new VBox(5);
+        menu.setPadding(new Insets(20, 10, 20, 10));
         menu.setStyle("-fx-background-color: #34495e;");
-        menu.setPrefWidth(200);
+        menu.setPrefWidth(220);
         
-        Button boardButton = createMenuButton("Item Market", "#3498db");
+        Label menuLabel = new Label("MENU");
+        menuLabel.setStyle("-fx-text-fill: #95a5a6; -fx-font-size: 12px; -fx-font-weight: bold; -fx-padding: 0 0 10 10;");
+        menu.getChildren().add(menuLabel);
+        
+        Button boardButton = createMenuButton("Item Market");
         boardButton.setOnAction(e -> showBoard());
         
-        Button myItemsButton = createMenuButton("My Items", "#9b59b6");
+        Button myItemsButton = createMenuButton("My Items");
         myItemsButton.setOnAction(e -> showMyItems());
         
-        Button favoritesButton = createMenuButton("My Favorites", "#e67e22");
+        Button myOrdersButton = createMenuButton("My Orders");
+        myOrdersButton.setOnAction(e -> showMyOrders());
+        
+        Button mySalesButton = createMenuButton("My Sales");
+        mySalesButton.setOnAction(e -> showMySales());
+        
+        Button favoritesButton = createMenuButton("My Favorites");
         favoritesButton.setOnAction(e -> showFavorites());
         
-        Button messagesButton = createMenuButton("My Messages", "#1abc9c");
+        Button messagesButton = createMenuButton("My Messages");
         messagesButton.setOnAction(e -> showMessages());
         
-        menu.getChildren().addAll(boardButton, myItemsButton, favoritesButton, messagesButton);
+        menu.getChildren().addAll(boardButton, myItemsButton, myOrdersButton, mySalesButton, favoritesButton, messagesButton);
         
         // If admin, add user management button
         if (UserService.isAdmin()) {
-            Button userManagementButton = createMenuButton("User Management", "#e74c3c");
+            Separator separator = new Separator();
+            separator.setPadding(new Insets(10, 0, 10, 0));
+            
+            Label adminLabel = new Label("ADMIN");
+            adminLabel.setStyle("-fx-text-fill: #95a5a6; -fx-font-size: 12px; -fx-font-weight: bold; -fx-padding: 0 0 10 10;");
+            
+            Button userManagementButton = createMenuButton("User Management");
             userManagementButton.setOnAction(e -> showUserManagement());
-            menu.getChildren().add(userManagementButton);
+            menu.getChildren().addAll(separator, adminLabel, userManagementButton);
         }
         
         return menu;
@@ -122,18 +139,21 @@ public class MainController {
     /**
      * Create menu button
      */
-    private Button createMenuButton(String text, String color) {
+    private Button createMenuButton(String text) {
         Button button = new Button(text);
         button.setMaxWidth(Double.MAX_VALUE);
-        button.setStyle("-fx-background-color: " + color + "; -fx-text-fill: white; " +
-                       "-fx-font-size: 14px; -fx-padding: 12 20;");
+        button.setAlignment(Pos.CENTER_LEFT);
         
-        button.setOnMouseEntered(e -> 
-            button.setStyle("-fx-background-color: derive(" + color + ", -10%); -fx-text-fill: white; " +
-                          "-fx-font-size: 14px; -fx-padding: 12 20;"));
-        button.setOnMouseExited(e -> 
-            button.setStyle("-fx-background-color: " + color + "; -fx-text-fill: white; " +
-                          "-fx-font-size: 14px; -fx-padding: 12 20;"));
+        String defaultStyle = "-fx-background-color: transparent; -fx-text-fill: #ecf0f1; " +
+                       "-fx-font-size: 14px; -fx-padding: 12 15; -fx-background-radius: 5; -fx-cursor: hand;";
+        
+        String hoverStyle = "-fx-background-color: #2c3e50; -fx-text-fill: white; " +
+                          "-fx-font-size: 14px; -fx-padding: 12 15; -fx-background-radius: 5; -fx-cursor: hand;";
+                          
+        button.setStyle(defaultStyle);
+        
+        button.setOnMouseEntered(e -> button.setStyle(hoverStyle));
+        button.setOnMouseExited(e -> button.setStyle(defaultStyle));
         
         return button;
     }
@@ -152,6 +172,22 @@ public class MainController {
     private void showMyItems() {
         MyItemsController myItemsController = new MyItemsController(mainLayout);
         myItemsController.showMyItemsView();
+    }
+
+    /**
+     * Show my orders
+     */
+    private void showMyOrders() {
+        OrderHistoryController orderHistoryController = new OrderHistoryController(mainLayout);
+        orderHistoryController.showOrderHistoryView();
+    }
+
+    /**
+     * Show my sales
+     */
+    private void showMySales() {
+        SalesHistoryController salesHistoryController = new SalesHistoryController(mainLayout);
+        salesHistoryController.showSalesHistoryView();
     }
     
     /**

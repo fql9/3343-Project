@@ -82,8 +82,8 @@ public class ItemDaoImpl implements ItemDao {
     @Override
     public void save(Item item) {
         String sql = """
-            INSERT INTO items (seller_id, title, description, price, category, active, created_time)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO items (seller_id, title, description, price, category, active, created_time, image_url)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """;
 
         try (Connection conn = DatabaseConfig.getConnection();
@@ -96,6 +96,7 @@ public class ItemDaoImpl implements ItemDao {
             ps.setString(5, item.getCategory());
             ps.setInt(6, item.isActive() ? 1 : 0);
             ps.setString(7, item.getCreatedTime());
+            ps.setString(8, item.getImageUrl());
 
             ps.executeUpdate();
 
@@ -106,7 +107,7 @@ public class ItemDaoImpl implements ItemDao {
     public void update(Item item) {
         String sql = """
             UPDATE items SET
-            seller_id=?, title=?, description=?, price=?, category=?, active=?
+            seller_id=?, title=?, description=?, price=?, category=?, active=?, image_url=?
             WHERE id=?
         """;
 
@@ -119,7 +120,8 @@ public class ItemDaoImpl implements ItemDao {
             ps.setDouble(4, item.getPrice());
             ps.setString(5, item.getCategory());
             ps.setInt(6, item.isActive() ? 1 : 0);
-            ps.setLong(7, item.getId());
+            ps.setString(7, item.getImageUrl());
+            ps.setLong(8, item.getId());
 
             ps.executeUpdate();
 
@@ -149,6 +151,11 @@ public class ItemDaoImpl implements ItemDao {
         item.setCategory(rs.getString("category"));
         item.setActive(rs.getInt("active") == 1);
         item.setCreatedTime(rs.getString("created_time"));
+        try {
+            item.setImageUrl(rs.getString("image_url"));
+        } catch (SQLException e) {
+            // Ignore if column doesn't exist (backward compatibility)
+        }
         return item;
     }
 }

@@ -107,32 +107,36 @@ public class FavoritesController {
      */
     private HBox createItemCard(Item item) {
         HBox card = new HBox(20);
-        card.setPadding(new Insets(15));
-        card.setStyle("-fx-background-color: white; -fx-background-radius: 8; " +
-                     "-fx-border-color: #bdc3c7; -fx-border-radius: 8; -fx-border-width: 1;");
+        card.setPadding(new Insets(20));
+        card.setStyle("-fx-background-color: white; -fx-background-radius: 10; " +
+                     "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 5, 0, 0, 2);");
         
         // Item info
-        VBox infoBox = new VBox(8);
+        VBox infoBox = new VBox(10);
         HBox.setHgrow(infoBox, Priority.ALWAYS);
         
         Label titleLabel = new Label(item.getTitle());
-        titleLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+        titleLabel.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
         
         Label descLabel = new Label(item.getDescription() != null ? item.getDescription() : "No description");
-        descLabel.setStyle("-fx-text-fill: #7f8c8d;");
+        descLabel.setStyle("-fx-text-fill: #7f8c8d; -fx-font-size: 14px;");
         descLabel.setWrapText(true);
         
         Label statusLabel = new Label("Status: " + (item.isActive() ? "Active" : "Inactive"));
-        statusLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: " + 
-                            (item.isActive() ? "#2ecc71" : "#e74c3c") + ";");
+        statusLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: white; -fx-background-color: " + 
+                            (item.isActive() ? "#2ecc71" : "#e74c3c") + "; -fx-padding: 3 8; -fx-background-radius: 10;");
         
         Label categoryLabel = new Label("Category: " + (item.getCategory() != null ? item.getCategory() : "Uncategorized"));
         categoryLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #95a5a6;");
         
-        infoBox.getChildren().addAll(titleLabel, descLabel, statusLabel, categoryLabel);
+        HBox metaBox = new HBox(10);
+        metaBox.getChildren().addAll(statusLabel, categoryLabel);
+        metaBox.setAlignment(Pos.CENTER_LEFT);
+        
+        infoBox.getChildren().addAll(titleLabel, descLabel, metaBox);
         
         // Price and actions
-        VBox actionBox = new VBox(10);
+        VBox actionBox = new VBox(15);
         actionBox.setAlignment(Pos.CENTER_RIGHT);
         
         Label priceLabel = new Label("¥" + String.format("%.2f", item.getPrice()));
@@ -142,11 +146,11 @@ public class FavoritesController {
         buttonBox.setAlignment(Pos.CENTER);
         
         Button detailButton = new Button("View Details");
-        detailButton.setStyle("-fx-background-color: #3498db; -fx-text-fill: white;");
+        detailButton.setStyle("-fx-background-color: #3498db; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;");
         detailButton.setOnAction(e -> showItemDetail(item));
         
         Button removeButton = new Button("Remove");
-        removeButton.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white;");
+        removeButton.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;");
         removeButton.setOnAction(e -> handleRemoveFavorite(item));
         
         buttonBox.getChildren().addAll(detailButton, removeButton);

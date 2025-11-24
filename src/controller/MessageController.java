@@ -133,8 +133,10 @@ public class MessageController {
             }
         }
         
-        // Update main view unread message count
-        mainController.updateUnreadCount();
+        // Update main view unread message count (if available)
+        if (mainController != null) {
+            mainController.updateUnreadCount();
+        }
     }
     
     /**
@@ -252,6 +254,16 @@ public class MessageController {
             // Refresh conversation
             showConversation(toUserId);
         }
+    }
+
+    /**
+     * Open messages view and directly show conversation with a specific user
+     */
+    public void openConversation(Long otherUserId) {
+        // Show the messages view first (sets up left and right panes)
+        showMessagesView();
+        // Then display the conversation with the given user
+        showConversation(otherUserId);
     }
     
     /**

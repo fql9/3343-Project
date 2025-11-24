@@ -21,7 +21,6 @@ public class LoginController {
     private TextField usernameField;
     private PasswordField passwordField;
     private TextField emailField;
-    private ComboBox<UserRole> roleComboBox;
     
     public LoginController(Stage primaryStage) {
         this.primaryStage = primaryStage;
@@ -32,35 +31,42 @@ public class LoginController {
      * Show login view
      */
     public void showLoginView() {
-        VBox root = new VBox(15);
+        VBox root = new VBox(20);
         root.setPadding(new Insets(30));
         root.setAlignment(Pos.CENTER);
-        root.setStyle("-fx-background-color: #f5f5f5;");
+        root.setStyle("-fx-background-color: linear-gradient(to bottom right, #3498db, #2c3e50);");
         
         // Title
         Label titleLabel = new Label("Second-hand Trading Platform");
-        titleLabel.setStyle("-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
+        titleLabel.setStyle("-fx-font-size: 32px; -fx-font-weight: bold; -fx-text-fill: white; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 5, 0, 0, 2);");
         
-        Label subtitleLabel = new Label("Welcome to Login");
-        subtitleLabel.setStyle("-fx-font-size: 16px; -fx-text-fill: #7f8c8d;");
+        Label subtitleLabel = new Label("Welcome Back");
+        subtitleLabel.setStyle("-fx-font-size: 18px; -fx-text-fill: #ecf0f1;");
         
         // Login form
         GridPane loginForm = new GridPane();
-        loginForm.setHgap(10);
-        loginForm.setVgap(15);
+        loginForm.setHgap(15);
+        loginForm.setVgap(20);
         loginForm.setAlignment(Pos.CENTER);
         loginForm.setMaxWidth(400);
-        loginForm.setStyle("-fx-background-color: white; -fx-padding: 30; -fx-background-radius: 10;");
+        loginForm.setStyle("-fx-background-color: white; -fx-padding: 40; -fx-background-radius: 10; " +
+                          "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 20, 0, 0, 10);");
         
-        Label usernameLabel = new Label("Username:");
+        String fieldStyle = "-fx-background-radius: 5; -fx-border-color: #bdc3c7; -fx-border-radius: 5; -fx-padding: 8; -fx-font-size: 14px;";
+        
+        Label usernameLabel = new Label("Username");
+        usernameLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: #34495e;");
         usernameField = new TextField();
-        usernameField.setPromptText("Enter username");
+        usernameField.setPromptText("Enter your username");
         usernameField.setPrefWidth(250);
+        usernameField.setStyle(fieldStyle);
         
-        Label passwordLabel = new Label("Password:");
+        Label passwordLabel = new Label("Password");
+        passwordLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: #34495e;");
         passwordField = new PasswordField();
-        passwordField.setPromptText("Enter password");
+        passwordField.setPromptText("Enter your password");
         passwordField.setPrefWidth(250);
+        passwordField.setStyle(fieldStyle);
         
         loginForm.add(usernameLabel, 0, 0);
         loginForm.add(usernameField, 1, 0);
@@ -71,12 +77,18 @@ public class LoginController {
         HBox buttonBox = new HBox(15);
         buttonBox.setAlignment(Pos.CENTER);
         
+        String btnBaseStyle = "-fx-font-size: 14px; -fx-font-weight: bold; -fx-padding: 10 25; -fx-background-radius: 5; -fx-cursor: hand;";
+        
         Button loginButton = new Button("Login");
-        loginButton.setStyle("-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-size: 14px; -fx-padding: 10 30;");
+        loginButton.setStyle(btnBaseStyle + "-fx-background-color: #3498db; -fx-text-fill: white;");
+        loginButton.setOnMouseEntered(e -> loginButton.setStyle(btnBaseStyle + "-fx-background-color: #2980b9; -fx-text-fill: white;"));
+        loginButton.setOnMouseExited(e -> loginButton.setStyle(btnBaseStyle + "-fx-background-color: #3498db; -fx-text-fill: white;"));
         loginButton.setOnAction(e -> handleLogin());
         
         Button registerButton = new Button("Register");
-        registerButton.setStyle("-fx-background-color: #2ecc71; -fx-text-fill: white; -fx-font-size: 14px; -fx-padding: 10 30;");
+        registerButton.setStyle(btnBaseStyle + "-fx-background-color: #2ecc71; -fx-text-fill: white;");
+        registerButton.setOnMouseEntered(e -> registerButton.setStyle(btnBaseStyle + "-fx-background-color: #27ae60; -fx-text-fill: white;"));
+        registerButton.setOnMouseExited(e -> registerButton.setStyle(btnBaseStyle + "-fx-background-color: #2ecc71; -fx-text-fill: white;"));
         registerButton.setOnAction(e -> showRegisterView());
         
         buttonBox.getChildren().addAll(loginButton, registerButton);
@@ -86,7 +98,7 @@ public class LoginController {
         
         root.getChildren().addAll(titleLabel, subtitleLabel, loginForm, buttonBox);
         
-        Scene scene = new Scene(root, 600, 500);
+        Scene scene = new Scene(root, 800, 600);
         primaryStage.setScene(scene);
         primaryStage.setTitle("Login - Second-hand Trading Platform");
         primaryStage.show();
@@ -128,20 +140,12 @@ public class LoginController {
         emailField.setPromptText("Optional");
         emailField.setPrefWidth(280);
         
-        Label roleLabel = new Label("Role:");
-        roleComboBox = new ComboBox<>();
-        roleComboBox.getItems().addAll(UserRole.BUYER, UserRole.SELLER);
-        roleComboBox.setValue(UserRole.BUYER);
-        roleComboBox.setPrefWidth(280);
-        
         registerForm.add(usernameLabel, 0, 0);
         registerForm.add(usernameField, 1, 0);
         registerForm.add(passwordLabel, 0, 1);
         registerForm.add(passwordField, 1, 1);
         registerForm.add(emailLabel, 0, 2);
         registerForm.add(emailField, 1, 2);
-        registerForm.add(roleLabel, 0, 3);
-        registerForm.add(roleComboBox, 1, 3);
         
         // Button area
         HBox buttonBox = new HBox(15);
@@ -196,7 +200,8 @@ public class LoginController {
         String username = usernameField.getText().trim();
         String password = passwordField.getText();
         String email = emailField.getText().trim();
-        UserRole role = roleComboBox.getValue();
+        // Default role is SELLER (which includes BUYER capabilities)
+        UserRole role = UserRole.SELLER;
         
         if (username.isEmpty() || password.isEmpty()) {
             DialogUtils.showWarning("Input Error", "Username and password cannot be empty");
