@@ -273,11 +273,33 @@ public class TransactionController {
             (transaction.getDeliveryMethod() != null ? transaction.getDeliveryMethod() : "Not set")));
         
         if (transaction.getShippingAddress() != null && !transaction.getShippingAddress().isEmpty()) {
-            detailsBox.getChildren().add(new Label("Shipping Address: " + transaction.getShippingAddress()));
+            Label addressLabel = new Label("Shipping Address: " + transaction.getShippingAddress());
+            addressLabel.setWrapText(true);
+            detailsBox.getChildren().add(addressLabel);
         }
         
         if (transaction.getTrackingNumber() != null && !transaction.getTrackingNumber().isEmpty()) {
-            detailsBox.getChildren().add(new Label("Tracking Number: " + transaction.getTrackingNumber()));
+            Label trackingLabel = new Label("Tracking Number: " + transaction.getTrackingNumber());
+            trackingLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: #3498db;");
+            detailsBox.getChildren().add(trackingLabel);
+        } else if (transaction.getStatus().equals(TransactionStatus.SHIPPED.name()) || 
+                   transaction.getStatus().equals(TransactionStatus.DELIVERED.name()) ||
+                   transaction.getStatus().equals(TransactionStatus.COMPLETED.name())) {
+            Label trackingLabel = new Label("Tracking Number: Not provided");
+            trackingLabel.setStyle("-fx-text-fill: #95a5a6;");
+            detailsBox.getChildren().add(trackingLabel);
+        }
+        
+        // Show item received and verified status for shipped/delivered transactions
+        if (transaction.getStatus().equals(TransactionStatus.DELIVERED.name()) ||
+            transaction.getStatus().equals(TransactionStatus.COMPLETED.name())) {
+            detailsBox.getChildren().add(new Label("Item Received: " + (transaction.isItemReceived() ? "Yes" : "No")));
+            detailsBox.getChildren().add(new Label("Item Verified: " + (transaction.isItemVerified() ? "Yes" : "No")));
+            if (transaction.isFundsReleased()) {
+                Label fundsLabel = new Label("Funds Released: Yes");
+                fundsLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: #2ecc71;");
+                detailsBox.getChildren().add(fundsLabel);
+            }
         }
         
         detailsBox.getChildren().add(new Label("Created: " + transaction.getCreatedTime()));
@@ -382,6 +404,13 @@ public class TransactionController {
             shipButton.setStyle("-fx-background-color: #2ecc71; -fx-text-fill: white; -fx-font-size: 12px; -fx-padding: 8 15;");
             shipButton.setOnAction(e -> handleMarkAsShipped(transaction));
             actionBox.getChildren().add(shipButton);
+        } else if (status.equals(TransactionStatus.SHIPPED.name()) || 
+                   status.equals(TransactionStatus.DELIVERED.name()) ||
+                   status.equals(TransactionStatus.COMPLETED.name())) {
+            // Show view details button for shipped/delivered/completed transactions
+            Label infoLabel = new Label("Transaction in progress - Track shipping status above");
+            infoLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #7f8c8d;");
+            actionBox.getChildren().add(infoLabel);
         }
     }
     
