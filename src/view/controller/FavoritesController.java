@@ -13,7 +13,8 @@ import view.util.DialogUtils;
 import java.util.List;
 
 /**
- * Favorites controller - manages user's favorite items
+ * Favorites controller - manages user's favorite items.
+ * Displays favorited items and provides remove functionality.
  */
 public class FavoritesController {
 
@@ -29,7 +30,8 @@ public class FavoritesController {
     }
     
     /**
-     * Show favorites list view
+     * Show favorites list view.
+     * Creates and displays user's favorited items list.
      */
     public void showFavoritesView() {
         VBox root = new VBox(15);
@@ -58,7 +60,8 @@ public class FavoritesController {
     }
     
     /**
-     * Create top bar
+     * Create top bar.
+     * @return HBox containing title and refresh button.
      */
     private HBox createTopBar() {
         HBox topBar = new HBox(15);
@@ -82,7 +85,8 @@ public class FavoritesController {
     }
     
     /**
-     * Load favorites list
+     * Load favorites list.
+     * Fetches and displays favorited items from database.
      */
     private void loadFavorites() {
         itemListContainer.getChildren().clear();
@@ -103,7 +107,9 @@ public class FavoritesController {
     }
     
     /**
-     * Create item card
+     * Create item card.
+     * @param item The favorited item to display.
+     * @return HBox containing the item card UI elements.
      */
     private HBox createItemCard(Item item) {
         HBox card = new HBox(20);
@@ -163,7 +169,8 @@ public class FavoritesController {
     }
     
     /**
-     * Show item detail
+     * Show item detail.
+     * @param item The item to show details for.
      */
     private void showItemDetail(Item item) {
         ItemDetailController detailController = new ItemDetailController(mainLayout, item);
@@ -171,7 +178,8 @@ public class FavoritesController {
     }
     
     /**
-     * Handle remove favorite
+     * Handle remove favorite action.
+     * @param item The item to remove from favorites.
      */
     private void handleRemoveFavorite(Item item) {
         boolean confirm = DialogUtils.showConfirm("Confirm Remove", 

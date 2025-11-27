@@ -8,6 +8,10 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Favorite Data Access Object implementation.
+ * Provides database operations for Favorite entity.
+ */
 public class FavoriteDaoImpl implements FavoriteDao {
 
     @Override

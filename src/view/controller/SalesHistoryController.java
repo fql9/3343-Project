@@ -15,6 +15,10 @@ import view.util.DialogUtils;
 
 import java.util.List;
 
+/**
+ * Sales history controller - displays seller's sales history.
+ * Shows sold items, buyer info, and shipping functionality.
+ */
 public class SalesHistoryController {
 
     private BorderPane mainLayout;

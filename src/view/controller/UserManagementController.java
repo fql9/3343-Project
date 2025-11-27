@@ -12,7 +12,8 @@ import view.util.DialogUtils;
 import java.util.List;
 
 /**
- * User management controller - admin manages all users
+ * User management controller - admin manages all users.
+ * Provides user listing, banning, unbanning, and deletion functions.
  */
 public class UserManagementController {
 
@@ -26,7 +27,8 @@ public class UserManagementController {
     }
     
     /**
-     * Show user management view
+     * Show user management view.
+     * Creates and displays the admin user management interface.
      */
     public void showUserManagementView() {
         VBox root = new VBox(15);
@@ -51,7 +53,8 @@ public class UserManagementController {
     }
     
     /**
-     * Create top bar
+     * Create top bar.
+     * @return HBox containing title and refresh button.
      */
     private HBox createTopBar() {
         HBox topBar = new HBox(15);
@@ -75,7 +78,8 @@ public class UserManagementController {
     }
     
     /**
-     * Create user table
+     * Create user table.
+     * @return TableView configured with user data columns.
      */
     private TableView<User> createUserTable() {
         TableView<User> table = new TableView<>();
@@ -125,7 +129,8 @@ public class UserManagementController {
     }
     
     /**
-     * Create button bar
+     * Create button bar.
+     * @return HBox containing action buttons for user management.
      */
     private HBox createButtonBar() {
         HBox buttonBar = new HBox(15);
@@ -154,7 +159,8 @@ public class UserManagementController {
     }
     
     /**
-     * Load user list
+     * Load user list.
+     * Fetches all users from database and populates the table.
      */
     private void loadUsers() {
         userTable.getItems().clear();
@@ -164,7 +170,8 @@ public class UserManagementController {
     }
     
     /**
-     * Handle ban user
+     * Handle ban user action.
+     * Disables the selected user's account.
      */
     private void handleBanUser() {
         User selectedUser = userTable.getSelectionModel().getSelectedItem();
@@ -195,7 +202,8 @@ public class UserManagementController {
     }
     
     /**
-     * Handle unban user
+     * Handle unban user action.
+     * Re-enables the selected user's account.
      */
     private void handleUnbanUser() {
         User selectedUser = userTable.getSelectionModel().getSelectedItem();
@@ -221,7 +229,8 @@ public class UserManagementController {
     }
     
     /**
-     * Handle delete user
+     * Handle delete user action.
+     * Permanently removes the selected user from database.
      */
     private void handleDeleteUser() {
         User selectedUser = userTable.getSelectionModel().getSelectedItem();
@@ -247,7 +256,8 @@ public class UserManagementController {
     }
     
     /**
-     * Handle view details
+     * Handle view details action.
+     * Displays detailed information about the selected user.
      */
     private void handleViewDetails() {
         User selectedUser = userTable.getSelectionModel().getSelectedItem();

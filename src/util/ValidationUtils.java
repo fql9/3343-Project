@@ -3,7 +3,8 @@ package util;
 import java.util.regex.Pattern;
 
 /**
- * Data validation utility class
+ * Data validation utility class.
+ * Provides common validation methods for user input.
  */
 public class ValidationUtils {
 

@@ -16,7 +16,9 @@ import service.UserService;
 import view.util.DialogUtils;
 
 /**
- * Item detail controller - displays item detailed information
+ * Item detail controller - displays item detailed information.
+ * Shows item images, description, seller info, and action buttons.
+ * Handles favorite, contact seller, and purchase actions.
  */
 public class ItemDetailController {
 
@@ -36,7 +38,8 @@ public class ItemDetailController {
     }
     
     /**
-     * Show item detail view
+     * Show item detail view.
+     * Creates and displays the detailed item information page.
      */
     public void showItemDetailView() {
         VBox root = new VBox(20);
@@ -192,7 +195,8 @@ public class ItemDetailController {
     }
     
     /**
-     * Handle favorite/unfavorite
+     * Handle favorite/unfavorite action.
+     * Toggles the favorite status of the current item.
      */
     private void handleFavorite() {
         Long userId = UserService.getCurrentUser().getId();
@@ -217,7 +221,8 @@ public class ItemDetailController {
     }
     
     /**
-     * Handle contact seller
+     * Handle contact seller action.
+     * Opens the messaging interface with the seller.
      */
     private void handleContactSeller() {
         // Open the full messages view and show the conversation with the seller
@@ -226,7 +231,8 @@ public class ItemDetailController {
     }
 
     /**
-     * Handle buy now
+     * Handle buy now action.
+     * Navigates to the checkout page.
      */
     private void handleBuyNow() {
         CheckoutController checkoutController = new CheckoutController(mainLayout, item);
@@ -234,7 +240,8 @@ public class ItemDetailController {
     }
     
     /**
-     * Go back to item list
+     * Go back to item list.
+     * Returns to the marketplace view.
      */
     private void goBack() {
         BoardController boardController = new BoardController(mainLayout);

@@ -19,7 +19,9 @@ import java.io.File;
 import java.util.List;
 
 /**
- * Board controller - displays and searches items
+ * Board controller - displays and searches items.
+ * Provides item listing, searching, filtering, and publishing functionality.
+ * This is the main marketplace view controller.
  */
 public class BoardController {
 
@@ -38,7 +40,8 @@ public class BoardController {
     }
     
     /**
-     * Show board view
+     * Show board view.
+     * Creates and displays the main marketplace interface.
      */
     public void showBoardView() {
         VBox root = new VBox(15);
@@ -71,7 +74,8 @@ public class BoardController {
     }
     
     /**
-     * Create top bar (title, publish button)
+     * Create top bar with title and action buttons.
+     * @return HBox containing the top bar components.
      */
     private HBox createTopBar() {
         HBox topBar = new HBox(15);
@@ -98,7 +102,8 @@ public class BoardController {
     }
 
     /**
-     * Create search section
+     * Create search section with filters and sorting options.
+     * @return VBox containing the search components.
      */
     private VBox createSearchSection() {
         VBox searchContainer = new VBox(15);
@@ -189,14 +194,16 @@ public class BoardController {
     }
     
     /**
-     * Load item list
+     * Load item list from database.
+     * Triggers the search handler to fetch and display items.
      */
     private void loadItems() {
         handleSearch();
     }
     
     /**
-     * Handle search
+     * Handle search action.
+     * Applies filters and displays matching items.
      */
     private void handleSearch() {
         String keyword = searchField.getText().trim();
@@ -238,7 +245,8 @@ public class BoardController {
     }
     
     /**
-     * Clear search filters
+     * Clear search filters.
+     * Resets all search criteria and reloads items.
      */
     private void clearSearch() {
         searchField.clear();
@@ -249,7 +257,9 @@ public class BoardController {
         handleSearch();
     }
     /**
-     * Create item card
+     * Create item card.
+     * @param item The item to display.
+     * @return HBox containing the item card UI.
      */
     private HBox createItemCard(Item item) {
         HBox card = new HBox(20);
@@ -335,7 +345,8 @@ public class BoardController {
 
     
     /**
-     * Show item detail
+     * Show item detail view.
+     * @param item The item to show details for.
      */
     private void showItemDetail(Item item) {
         ItemDetailController detailController = new ItemDetailController(mainLayout, item);
@@ -343,7 +354,8 @@ public class BoardController {
     }
     
     /**
-     * Show publish item dialog
+     * Show publish item dialog.
+     * Displays a form for creating a new item listing.
      */
     private void showPublishDialog() {
         Dialog<Item> dialog = new Dialog<>();

@@ -15,7 +15,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Message controller - manages user messages
+ * Message controller - manages user messages.
+ * Provides inbox, conversation view, and messaging functions.
  */
 public class MessageController {
 
@@ -35,7 +36,8 @@ public class MessageController {
     }
     
     /**
-     * Show messages view
+     * Show messages view.
+     * Creates and displays the messaging interface with inbox and conversation panels.
      */
     public void showMessagesView() {
         BorderPane root = new BorderPane();
@@ -65,7 +67,8 @@ public class MessageController {
     }
     
     /**
-     * Create message list panel
+     * Create message list panel.
+     * @return VBox containing the inbox message list.
      */
     private VBox createMessageListPanel() {
         VBox panel = new VBox(10);
@@ -97,7 +100,8 @@ public class MessageController {
     }
     
     /**
-     * Load message list
+     * Load message list.
+     * Fetches and displays received messages grouped by sender.
      */
     private void loadMessageList() {
         messageListView.getItems().clear();
@@ -140,7 +144,8 @@ public class MessageController {
     }
     
     /**
-     * Show conversation
+     * Show conversation.
+     * @param otherUserId The ID of the user to show conversation with.
      */
     private void showConversation(Long otherUserId) {
         selectedUserId = otherUserId;
@@ -205,7 +210,10 @@ public class MessageController {
     }
     
     /**
-     * Create message bubble
+     * Create message bubble.
+     * @param msg The message to display.
+     * @param isFromMe Whether the message is from current user.
+     * @return HBox containing the styled message bubble.
      */
     private HBox createMessageBubble(Message msg, boolean isFromMe) {
         HBox bubble = new HBox();
@@ -239,7 +247,9 @@ public class MessageController {
     }
     
     /**
-     * Handle send message
+     * Handle send message action.
+     * @param toUserId The recipient user ID.
+     * @param content The message content.
      */
     private void handleSendMessage(Long toUserId, String content) {
         String error = messageService.sendMessage(
@@ -257,7 +267,8 @@ public class MessageController {
     }
 
     /**
-     * Open messages view and directly show conversation with a specific user
+     * Open messages view and directly show conversation with a specific user.
+     * @param otherUserId The ID of the user to start conversation with.
      */
     public void openConversation(Long otherUserId) {
         // Show the messages view first (sets up left and right panes)
@@ -267,7 +278,8 @@ public class MessageController {
     }
     
     /**
-     * Message list item
+     * Message list item.
+     * Represents a conversation summary in the inbox list.
      */
     private static class MessageItem {
         Long userId;
@@ -284,7 +296,8 @@ public class MessageController {
     }
     
     /**
-     * Message list cell
+     * Message list cell.
+     * Custom cell renderer for the inbox message list.
      */
     private static class MessageListCell extends ListCell<MessageItem> {
         @Override

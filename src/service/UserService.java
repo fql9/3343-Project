@@ -12,7 +12,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 /**
- * User service class - handles user-related business logic
+ * User service class - handles user-related business logic.
+ * Provides authentication, registration, and user management functions.
  */
 public class UserService {
 

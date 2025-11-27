@@ -17,7 +17,8 @@ import java.io.File;
 import java.util.List;
 
 /**
- * My items controller - manages user's published items
+ * My items controller - manages user's published items.
+ * Provides item listing, editing, activation, and deletion functions.
  */
 public class MyItemsController {
 
@@ -31,7 +32,8 @@ public class MyItemsController {
     }
     
     /**
-     * Show my items view
+     * Show my items view.
+     * Creates and displays the user's published items list.
      */
     public void showMyItemsView() {
         VBox root = new VBox(15);
@@ -60,7 +62,8 @@ public class MyItemsController {
     }
     
     /**
-     * Create top bar
+     * Create top bar.
+     * @return HBox containing title and action buttons.
      */
     private HBox createTopBar() {
         HBox topBar = new HBox(15);
@@ -88,7 +91,8 @@ public class MyItemsController {
     }
     
     /**
-     * Load my items
+     * Load my items.
+     * Fetches and displays user's published items from database.
      */
     private void loadMyItems() {
         itemListContainer.getChildren().clear();
@@ -109,7 +113,9 @@ public class MyItemsController {
     }
     
     /**
-     * Create item card
+     * Create item card.
+     * @param item The item to display.
+     * @return HBox containing the item card UI elements.
      */
     private HBox createItemCard(Item item) {
         HBox card = new HBox(20);
@@ -195,7 +201,8 @@ public class MyItemsController {
     }
     
     /**
-     * Show publish item dialog
+     * Show publish item dialog.
+     * Displays a form for creating a new item listing.
      */
     private void showPublishDialog() {
         Dialog<ButtonType> dialog = new Dialog<>();
@@ -269,7 +276,8 @@ public class MyItemsController {
     }
     
     /**
-     * Show edit item dialog
+     * Show edit item dialog.
+     * @param item The item to edit.
      */
     private void showEditDialog(Item item) {
         Dialog<ButtonType> dialog = new Dialog<>();
@@ -340,7 +348,8 @@ public class MyItemsController {
     }
     
     /**
-     * Handle publish item
+     * Handle publish item action.
+     * Validates input and creates a new item listing.
      */
     private void handlePublish(String title, String description, String priceText, String category, String imageUrl) {
         if (!ValidationUtils.isNotEmpty(title)) {
@@ -370,7 +379,8 @@ public class MyItemsController {
     }
     
     /**
-     * Handle edit item
+     * Handle edit item action.
+     * Validates input and updates the item information.
      */
     private void handleEdit(Item item, String title, String description, String priceText, String category, String imageUrl) {
         if (!ValidationUtils.isNotEmpty(title)) {
@@ -402,7 +412,8 @@ public class MyItemsController {
     }
     
     /**
-     * Handle activate/deactivate
+     * Handle activate/deactivate action.
+     * Toggles the item's active status.
      */
     private void handleToggleActive(Item item) {
         if (item.isActive()) {
@@ -420,7 +431,8 @@ public class MyItemsController {
     }
     
     /**
-     * Handle delete
+     * Handle delete action.
+     * Confirms and deletes the item from database.
      */
     private void handleDelete(Item item) {
         boolean confirm = DialogUtils.showConfirm("Confirm Delete", 

@@ -1,5 +1,9 @@
 package model;
 
+/**
+ * Favorite entity class representing a user's favorite item.
+ * Links users to their bookmarked items for quick access.
+ */
 public class Favorite {
     private Long id;
     private Long userId;

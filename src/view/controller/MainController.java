@@ -18,7 +18,9 @@ import view.util.DialogUtils;
 import java.util.List;
 
 /**
- * Main controller - main view navigation
+ * Main controller - main view navigation.
+ * Handles the main application layout and navigation between views.
+ * Includes sidebar menu, top bar, and content area management.
  */
 public class MainController {
 
@@ -58,7 +60,8 @@ public class MainController {
     }
 
     /**
-     * Show main view
+     * Show main view.
+     * Creates and displays the main application interface.
      */
     public void showMainView() {
         mainLayout = new BorderPane();
@@ -84,7 +87,8 @@ public class MainController {
     }
     
     /**
-     * Create top navigation bar
+     * Create top navigation bar.
+     * @return HBox containing the navigation bar components.
      */
     private HBox createTopBar() {
         HBox topBar = new HBox(20);
@@ -121,7 +125,8 @@ public class MainController {
     }
     
     /**
-     * Create left menu
+     * Create left menu.
+     * @return VBox containing the sidebar menu buttons.
      */
     private VBox createLeftMenu() {
         VBox menu = new VBox(5);
@@ -176,7 +181,9 @@ public class MainController {
     }
     
     /**
-     * Create menu button
+     * Create menu button.
+     * @param text The button label text.
+     * @return Button with consistent styling.
      */
     private Button createMenuButton(String text) {
         Button button = new Button(text);
@@ -198,7 +205,8 @@ public class MainController {
     }
     
     /**
-     * Show item market
+     * Show item market.
+     * Navigates to the marketplace view.
      */
     private void showBoard() {
         BoardController boardController = new BoardController(mainLayout);
@@ -206,7 +214,8 @@ public class MainController {
     }
     
     /**
-     * Show my items
+     * Show my items.
+     * Navigates to the user's published items view.
      */
     private void showMyItems() {
         MyItemsController myItemsController = new MyItemsController(mainLayout);
@@ -214,7 +223,8 @@ public class MainController {
     }
 
     /**
-     * Show my orders
+     * Show my orders.
+     * Navigates to the user's purchase history view.
      */
     private void showMyOrders() {
         OrderHistoryController orderHistoryController = new OrderHistoryController(mainLayout);
@@ -222,7 +232,8 @@ public class MainController {
     }
 
     /**
-     * Show my sales
+     * Show my sales.
+     * Navigates to the user's sales history view.
      */
     private void showMySales() {
         SalesHistoryController salesHistoryController = new SalesHistoryController(mainLayout);
@@ -230,7 +241,8 @@ public class MainController {
     }
     
     /**
-     * Show my favorites
+     * Show my favorites.
+     * Navigates to the user's favorite items view.
      */
     private void showFavorites() {
         FavoritesController favoritesController = new FavoritesController(mainLayout);
@@ -238,7 +250,8 @@ public class MainController {
     }
     
     /**
-     * Show my messages
+     * Show my messages.
+     * Navigates to the messaging interface.
      */
     private void showMessages() {
         MessageController messageController = new MessageController(mainLayout, this);
@@ -246,7 +259,8 @@ public class MainController {
     }
     
     /**
-     * Show notifications
+     * Show notifications.
+     * Navigates to the notifications list view.
      */
     private void showNotifications() {
         NotificationController notificationController = new NotificationController(mainLayout, this);
@@ -254,7 +268,8 @@ public class MainController {
     }
 
     /**
-     * Show user profile
+     * Show user profile.
+     * Navigates to the profile editing view.
      */
     private void showProfile() {
         UserProfileController userProfileController = new UserProfileController(mainLayout);
@@ -262,7 +277,8 @@ public class MainController {
     }
     
     /**
-     * Show user management
+     * Show user management.
+     * Navigates to the admin user management view.
      */
     private void showUserManagement() {
         UserManagementController userManagementController = new UserManagementController(mainLayout);
@@ -270,7 +286,8 @@ public class MainController {
     }
     
     /**
-     * Update unread message count
+     * Update unread message count.
+     * Updates the badge counters in the top bar.
      */
     public void updateUnreadCount() {
         long unreadMsg = messageService.getUnreadCount(UserService.getCurrentUser().getId());
@@ -299,7 +316,8 @@ public class MainController {
     }
     
     /**
-     * Handle logout
+     * Handle logout action.
+     * Confirms and performs user logout.
      */
     private void handleLogout() {
         boolean confirm = DialogUtils.showConfirm("Confirm Logout", "Are you sure you want to logout?");

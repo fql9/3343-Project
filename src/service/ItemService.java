@@ -11,7 +11,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Item service class - handles item-related business logic
+ * Item service class - handles item-related business logic.
+ * Provides item publishing, searching, and management functions.
  */
 public class ItemService {
 

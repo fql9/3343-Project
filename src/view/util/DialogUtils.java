@@ -7,7 +7,8 @@ import javafx.scene.control.TextInputDialog;
 import java.util.Optional;
 
 /**
- * JavaFX dialog utility class
+ * JavaFX dialog utility class.
+ * Provides common dialog methods for user interaction.
  */
 public class DialogUtils {
 

@@ -1,5 +1,8 @@
 package model;
 
+/**
+ * Item entity class representing a product for sale.
+ */
 public class Item {
     private Long id;
     private Long sellerId;

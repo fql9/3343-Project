@@ -9,6 +9,10 @@ import service.OrderService;
 import service.UserService;
 import view.util.DialogUtils;
 
+/**
+ * Checkout controller - handles the purchase checkout process.
+ * Displays order summary, shipping info, and payment options.
+ */
 public class CheckoutController {
 
     private BorderPane mainLayout;

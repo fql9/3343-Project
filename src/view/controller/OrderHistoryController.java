@@ -14,6 +14,10 @@ import view.util.DialogUtils;
 
 import java.util.List;
 
+/**
+ * Order history controller - displays buyer's order history.
+ * Shows purchased items, order status, and review functionality.
+ */
 public class OrderHistoryController {
 
     private BorderPane mainLayout;

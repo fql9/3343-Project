@@ -3,6 +3,9 @@ package dao;
 import model.Notification;
 import java.util.List;
 
+/**
+ * Notification Data Access Object interface.
+ */
 public interface NotificationDao {
     void save(Notification notification);
     List<Notification> findByUserId(Long userId);

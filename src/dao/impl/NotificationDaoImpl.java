@@ -10,6 +10,10 @@ import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Notification Data Access Object implementation.
+ * Provides database operations for Notification entity.
+ */
 public class NotificationDaoImpl implements NotificationDao {
 
     @Override

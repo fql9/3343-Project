@@ -8,6 +8,10 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Order Data Access Object implementation.
+ * Provides database operations for Order entity.
+ */
 public class OrderDaoImpl implements OrderDao {
 
     @Override

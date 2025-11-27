@@ -10,6 +10,10 @@ import service.UserService;
 
 import java.util.List;
 
+/**
+ * Notification controller - handles user notifications.
+ * Displays notification list and provides mark as read functionality.
+ */
 public class NotificationController {
 
     private BorderPane mainLayout;

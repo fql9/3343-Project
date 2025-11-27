@@ -11,7 +11,9 @@ import service.UserService;
 import view.util.DialogUtils;
 
 /**
- * Login controller - handles user login and registration
+ * Login controller - handles user login and registration.
+ * Provides login form, registration form, and authentication logic.
+ * This is the entry point controller for the application.
  */
 public class LoginController {
 
@@ -28,7 +30,8 @@ public class LoginController {
     }
     
     /**
-     * Show login view
+     * Show login view.
+     * Creates and displays the login form with username and password fields.
      */
     public void showLoginView() {
         VBox root = new VBox(20);
@@ -105,7 +108,8 @@ public class LoginController {
     }
     
     /**
-     * Show register view
+     * Show register view.
+     * Creates and displays the registration form for new users.
      */
     public void showRegisterView() {
         VBox root = new VBox(15);
@@ -169,7 +173,8 @@ public class LoginController {
     }
     
     /**
-     * Handle login
+     * Handle login action.
+     * Validates input and authenticates user credentials.
      */
     private void handleLogin() {
         String username = usernameField.getText().trim();
@@ -194,7 +199,8 @@ public class LoginController {
     }
     
     /**
-     * Handle registration
+     * Handle registration action.
+     * Validates input and creates a new user account.
      */
     private void handleRegister() {
         String username = usernameField.getText().trim();

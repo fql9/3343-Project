@@ -14,7 +14,8 @@ import view.util.DialogUtils;
 import java.io.File;
 
 /**
- * User profile controller - displays and edits user profile
+ * User profile controller - displays and edits user profile.
+ * Provides profile editing, avatar upload, and password change functions.
  */
 public class UserProfileController {
 
@@ -29,7 +30,8 @@ public class UserProfileController {
     }
     
     /**
-     * Show user profile view
+     * Show user profile view.
+     * Creates and displays the profile editing interface.
      */
     public void showUserProfileView() {
         VBox root = new VBox(20);
