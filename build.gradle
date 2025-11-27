@@ -23,8 +23,8 @@ sourceSets {
 }
 
 dependencies {
-    implementation 'org.openjfx:javafx-controls:23.0.1'
-    implementation 'org.openjfx:javafx-fxml:23.0.1'
+    implementation 'org.openjfx:javafx-controls:17.0.10'
+    implementation 'org.openjfx:javafx-fxml:17.0.10'
     implementation 'org.xerial:sqlite-jdbc:3.46.0.0'
     implementation 'org.slf4j:slf4j-simple:2.0.16'
     
@@ -32,7 +32,7 @@ dependencies {
 }
 
 javafx {
-    version = '23.0.1'
+    version = '17.0.10'
     modules = ['javafx.controls', 'javafx.fxml']
 }
 
@@ -42,8 +42,12 @@ application {
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(25)
+        languageVersion = JavaLanguageVersion.of(17)
     }
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
 }
 
 tasks.withType(Test).configureEach {
