@@ -5,13 +5,15 @@ import service.MessageService;
 import service.UserService;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 /**
  * High-level P2P service class that provides easy-to-use APIs for P2P communication.
- * Combines connection management, peer discovery, and message handling.
+ * Combines connection management, peer discovery (both database and broadcast), and message handling.
  */
 public class P2PService {
     
@@ -45,7 +47,7 @@ public class P2PService {
     
     /**
      * Initialize P2P service for current user.
-     * Starts the P2P server and registers peer information.
+     * Starts the P2P server, broadcast discovery, and registers peer information.
      * @throws IOException if initialization fails
      */
     public void initialize() throws IOException {
@@ -56,10 +58,10 @@ public class P2PService {
         Long userId = UserService.getCurrentUser().getId();
         String username = UserService.getCurrentUser().getUsername();
         
-        // Initialize connection manager
+        // Initialize connection manager (this also starts broadcast discovery)
         connectionManager.initialize(userId, username);
         
-        // Register peer information
+        // Register peer information in local database (for reference)
         peerDiscovery.registerPeer(userId, username);
         
         initialized = true;
@@ -68,7 +70,7 @@ public class P2PService {
     
     /**
      * Connect to a peer by user ID.
-     * Looks up peer information and establishes connection.
+     * First tries broadcast discovery, then falls back to database lookup.
      * @param peerId Target peer's user ID
      * @return CompletableFuture that completes with chat session
      */
@@ -78,12 +80,27 @@ public class P2PService {
             return CompletableFuture.completedFuture(connectionManager.getSession(peerId));
         }
         
-        // Look up peer information
+        // First try broadcast discovery (for LAN peers)
+        P2PBroadcastDiscovery broadcastDiscovery = connectionManager.getBroadcastDiscovery();
+        if (broadcastDiscovery != null) {
+            P2PBroadcastDiscovery.DiscoveredPeer discoveredPeer = broadcastDiscovery.getDiscoveredPeer(peerId);
+            if (discoveredPeer != null && !discoveredPeer.isExpired()) {
+                System.out.println("[P2P Service] Connecting via broadcast discovery: " + 
+                                  discoveredPeer.ipAddress + ":" + discoveredPeer.port);
+                return connectionManager.connectToPeer(
+                    discoveredPeer.ipAddress,
+                    discoveredPeer.port,
+                    peerId
+                );
+            }
+        }
+        
+        // Fall back to database lookup
         Optional<PeerInfo> peerInfoOpt = peerDiscovery.findPeer(peerId);
         
         if (peerInfoOpt.isEmpty() || !peerInfoOpt.get().isOnline()) {
             CompletableFuture<P2PChatSession> future = new CompletableFuture<>();
-            future.completeExceptionally(new IOException("Peer not online: " + peerId));
+            future.completeExceptionally(new IOException("Peer not found or not online: " + peerId));
             return future;
         }
         
@@ -93,6 +110,18 @@ public class P2PService {
             peerInfo.getPort(), 
             peerId
         );
+    }
+    
+    /**
+     * Connect to a peer by IP address and port (manual connection).
+     * @param host Peer's IP address
+     * @param port Peer's port number
+     * @return CompletableFuture that completes with chat session
+     */
+    public CompletableFuture<P2PChatSession> connectToPeerManual(String host, int port) {
+        // For manual connection, we use 0 as placeholder peer ID
+        // The actual peer ID will be determined during handshake
+        return connectionManager.connectToPeer(host, port, 0L);
     }
     
     /**
@@ -150,7 +179,33 @@ public class P2PService {
     }
     
     /**
-     * Get list of online peers (excluding current user).
+     * Get list of discovered peers from broadcast (LAN discovery).
+     * This is the primary method for finding peers on the same network.
+     * @return List of discovered peers as PeerInfo objects
+     */
+    public List<PeerInfo> getDiscoveredPeers() {
+        List<PeerInfo> peers = new ArrayList<>();
+        
+        P2PBroadcastDiscovery broadcastDiscovery = connectionManager.getBroadcastDiscovery();
+        if (broadcastDiscovery != null) {
+            Map<Long, P2PBroadcastDiscovery.DiscoveredPeer> discovered = 
+                broadcastDiscovery.getDiscoveredPeers();
+            
+            for (P2PBroadcastDiscovery.DiscoveredPeer peer : discovered.values()) {
+                if (!peer.isExpired()) {
+                    PeerInfo info = new PeerInfo(peer.userId, peer.username, 
+                                                 peer.ipAddress, peer.port);
+                    info.setOnline(true);
+                    peers.add(info);
+                }
+            }
+        }
+        
+        return peers;
+    }
+    
+    /**
+     * Get list of online peers (from database - legacy method).
      * @return List of online peer information
      */
     public List<PeerInfo> getOnlinePeers() {
@@ -172,6 +227,22 @@ public class P2PService {
      */
     public void removeMessageListener(P2PMessageListener listener) {
         connectionManager.removeMessageListener(listener);
+    }
+    
+    /**
+     * Add a peer discovery listener.
+     * @param listener The listener to add
+     */
+    public void addDiscoveryListener(P2PConnectionManager.PeerDiscoveryListener listener) {
+        connectionManager.addDiscoveryListener(listener);
+    }
+    
+    /**
+     * Remove a peer discovery listener.
+     * @param listener The listener to remove
+     */
+    public void removeDiscoveryListener(P2PConnectionManager.PeerDiscoveryListener listener) {
+        connectionManager.removeDiscoveryListener(listener);
     }
     
     /**
@@ -199,6 +270,14 @@ public class P2PService {
     }
     
     /**
+     * Force announce presence on the network.
+     * Useful to immediately notify other peers of our presence.
+     */
+    public void forceAnnounce() {
+        connectionManager.forceAnnounce();
+    }
+    
+    /**
      * Check if service is initialized.
      * @return true if initialized
      */
@@ -215,15 +294,14 @@ public class P2PService {
             return;
         }
         
-        // Unregister peer
+        // Unregister peer from database
         Long userId = UserService.getCurrentUser().getId();
         peerDiscovery.unregisterPeer(userId);
         
-        // Shutdown connection manager
+        // Shutdown connection manager (also stops broadcast discovery)
         connectionManager.shutdown();
         
         initialized = false;
         System.out.println("[P2P Service] Shutdown complete");
     }
 }
-

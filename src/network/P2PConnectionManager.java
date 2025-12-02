@@ -6,7 +6,7 @@ import java.util.concurrent.*;
 
 /**
  * Manages all P2P connections for the current user.
- * Coordinates between P2P server, client, and chat sessions.
+ * Coordinates between P2P server, client, broadcast discovery, and chat sessions.
  */
 public class P2PConnectionManager {
     
@@ -16,11 +16,21 @@ public class P2PConnectionManager {
     private String currentUsername;
     private P2PServer server;
     private P2PClient client;
+    private P2PBroadcastDiscovery broadcastDiscovery;
     private final Map<Long, P2PChatSession> activeSessions;
     private final List<P2PMessageListener> listeners;
+    private final List<PeerDiscoveryListener> discoveryListeners;
     private final P2PConfig config;
     
     private volatile boolean initialized;
+    
+    /**
+     * Interface for peer discovery events.
+     */
+    public interface PeerDiscoveryListener {
+        void onPeerDiscovered(Long peerId, String peerName, String ipAddress, int port);
+        void onPeerLost(Long peerId);
+    }
     
     /**
      * Private constructor for singleton pattern.
@@ -28,6 +38,7 @@ public class P2PConnectionManager {
     private P2PConnectionManager() {
         this.activeSessions = new ConcurrentHashMap<>();
         this.listeners = new CopyOnWriteArrayList<>();
+        this.discoveryListeners = new CopyOnWriteArrayList<>();
         this.config = new P2PConfig();
         this.initialized = false;
     }
@@ -64,6 +75,15 @@ public class P2PConnectionManager {
         
         // Create P2P client
         client = new P2PClient(userId, username, this);
+        
+        // Start broadcast discovery for LAN peer discovery
+        broadcastDiscovery = new P2PBroadcastDiscovery();
+        try {
+            broadcastDiscovery.start(userId, username, port, this);
+        } catch (IOException e) {
+            System.err.println("[P2P Manager] Failed to start broadcast discovery: " + e.getMessage());
+            // Continue without broadcast discovery - can still use manual connection
+        }
         
         initialized = true;
         System.out.println("[P2P Manager] Initialized for user: " + username + 
@@ -188,6 +208,22 @@ public class P2PConnectionManager {
     }
     
     /**
+     * Add a peer discovery listener.
+     * @param listener The listener to add
+     */
+    public void addDiscoveryListener(PeerDiscoveryListener listener) {
+        discoveryListeners.add(listener);
+    }
+    
+    /**
+     * Remove a peer discovery listener.
+     * @param listener The listener to remove
+     */
+    public void removeDiscoveryListener(PeerDiscoveryListener listener) {
+        discoveryListeners.remove(listener);
+    }
+    
+    /**
      * Notify listeners of a received message.
      * @param message The received message
      */
@@ -260,6 +296,40 @@ public class P2PConnectionManager {
     }
     
     /**
+     * Notify listeners of a newly discovered peer via broadcast.
+     * @param peerId Discovered peer's ID
+     * @param peerName Discovered peer's name
+     * @param ipAddress Peer's IP address
+     * @param port Peer's P2P server port
+     */
+    public void notifyPeerDiscovered(Long peerId, String peerName, String ipAddress, int port) {
+        for (PeerDiscoveryListener listener : discoveryListeners) {
+            try {
+                listener.onPeerDiscovered(peerId, peerName, ipAddress, port);
+            } catch (Exception e) {
+                System.err.println("[P2P Manager] Discovery listener error: " + e.getMessage());
+            }
+        }
+    }
+    
+    /**
+     * Get the broadcast discovery service.
+     * @return Broadcast discovery instance or null if not available
+     */
+    public P2PBroadcastDiscovery getBroadcastDiscovery() {
+        return broadcastDiscovery;
+    }
+    
+    /**
+     * Force announce presence on the network.
+     */
+    public void forceAnnounce() {
+        if (broadcastDiscovery != null && broadcastDiscovery.isRunning()) {
+            broadcastDiscovery.forceAnnounce();
+        }
+    }
+    
+    /**
      * Shutdown the P2P connection manager.
      */
     public void shutdown() {
@@ -268,6 +338,12 @@ public class P2PConnectionManager {
             session.close();
         }
         activeSessions.clear();
+        
+        // Stop broadcast discovery
+        if (broadcastDiscovery != null) {
+            broadcastDiscovery.stop();
+            broadcastDiscovery = null;
+        }
         
         // Stop server
         if (server != null) {
@@ -333,4 +409,3 @@ public class P2PConnectionManager {
         return config;
     }
 }
-

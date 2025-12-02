@@ -22,8 +22,9 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * P2P Chat Controller - manages real-time P2P chat interface.
  * Provides direct peer-to-peer messaging with live connection status.
+ * Uses UDP broadcast for automatic LAN peer discovery.
  */
-public class P2PChatController implements P2PMessageListener {
+public class P2PChatController implements P2PMessageListener, P2PConnectionManager.PeerDiscoveryListener {
     
     private BorderPane mainLayout;
     private MainController mainController;
@@ -39,6 +40,7 @@ public class P2PChatController implements P2PMessageListener {
     private TextField messageField;
     private Label connectionStatusLabel;
     private Label typingIndicatorLabel;
+    private Label peerCountLabel;
     private Long selectedPeerId;
     
     // Track peer typing status
@@ -73,8 +75,9 @@ public class P2PChatController implements P2PMessageListener {
             }
         }
         
-        // Add this controller as message listener
+        // Add this controller as listeners
         p2pService.addMessageListener(this);
+        p2pService.addDiscoveryListener(this);
         
         BorderPane root = new BorderPane();
         root.setPadding(new Insets(20));
@@ -82,7 +85,7 @@ public class P2PChatController implements P2PMessageListener {
         
         // Left: peer list panel
         VBox leftPanel = createPeerListPanel();
-        leftPanel.setPrefWidth(280);
+        leftPanel.setPrefWidth(300);
         
         // Center: chat area
         chatBox = createChatBox();
@@ -94,6 +97,9 @@ public class P2PChatController implements P2PMessageListener {
         
         // Load peer list
         loadPeerList();
+        
+        // Force announce presence
+        p2pService.forceAnnounce();
     }
     
     /**
@@ -106,38 +112,154 @@ public class P2PChatController implements P2PMessageListener {
         panel.setEffect(new javafx.scene.effect.DropShadow(10, Color.gray(0.3)));
         
         // Header
-        Label titleLabel = new Label("Online Users");
-        titleLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
+        Label titleLabel = new Label("LAN Users (Auto-Discovery)");
+        titleLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
+        
+        // Peer count
+        peerCountLabel = new Label("Searching for peers...");
+        peerCountLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #27ae60;");
         
         // Connection info
         String localInfo = p2pService.getLocalAddressInfo();
         Label infoLabel = new Label("Your address: " + localInfo);
         infoLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #7f8c8d;");
+        infoLabel.setWrapText(true);
         
         // Peer list
         peerListView = new ListView<>();
         peerListView.setCellFactory(lv -> new PeerListCell());
         peerListView.getSelectionModel().selectedItemProperty().addListener(
             (obs, oldVal, newVal) -> {
-                if (newVal != null) {
-                    selectPeer(newVal.userId);
+                if (newVal != null && newVal.userId != null) {
+                    selectPeer(newVal.userId, newVal.ipAddress, newVal.port);
                 }
             }
         );
         peerListView.setStyle("-fx-background-color: transparent;");
         VBox.setVgrow(peerListView, Priority.ALWAYS);
         
+        // Button box
+        HBox buttonBox = new HBox(5);
+        
         // Refresh button
         Button refreshButton = new Button("⟳ Refresh");
         refreshButton.setMaxWidth(Double.MAX_VALUE);
+        HBox.setHgrow(refreshButton, Priority.ALWAYS);
         refreshButton.setStyle("-fx-background-color: #3498db; -fx-text-fill: white; " +
-                              "-fx-font-size: 13px; -fx-cursor: hand;");
-        refreshButton.setOnAction(e -> loadPeerList());
+                              "-fx-font-size: 12px; -fx-cursor: hand;");
+        refreshButton.setOnAction(e -> {
+            p2pService.forceAnnounce();
+            loadPeerList();
+        });
         
-        panel.getChildren().addAll(titleLabel, infoLabel, new Separator(), 
-                                   peerListView, refreshButton);
+        // Manual connect button
+        Button manualButton = new Button("+ Manual");
+        manualButton.setMaxWidth(Double.MAX_VALUE);
+        HBox.setHgrow(manualButton, Priority.ALWAYS);
+        manualButton.setStyle("-fx-background-color: #9b59b6; -fx-text-fill: white; " +
+                             "-fx-font-size: 12px; -fx-cursor: hand;");
+        manualButton.setOnAction(e -> showManualConnectDialog());
+        
+        buttonBox.getChildren().addAll(refreshButton, manualButton);
+        
+        // Help text
+        Label helpLabel = new Label("Peers on the same network will appear automatically. " +
+                                   "Use 'Manual' to connect by IP if needed.");
+        helpLabel.setStyle("-fx-font-size: 10px; -fx-text-fill: #95a5a6;");
+        helpLabel.setWrapText(true);
+        
+        panel.getChildren().addAll(titleLabel, peerCountLabel, infoLabel, 
+                                   new Separator(), peerListView, buttonBox, helpLabel);
         
         return panel;
+    }
+    
+    /**
+     * Show manual connection dialog.
+     */
+    private void showManualConnectDialog() {
+        Dialog<String[]> dialog = new Dialog<>();
+        dialog.setTitle("Manual P2P Connection");
+        dialog.setHeaderText("Enter the peer's IP address and port");
+        
+        // Set the button types
+        ButtonType connectButtonType = new ButtonType("Connect", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(connectButtonType, ButtonType.CANCEL);
+        
+        // Create the fields
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new Insets(20, 150, 10, 10));
+        
+        TextField ipField = new TextField();
+        ipField.setPromptText("e.g., 192.168.1.100");
+        
+        TextField portField = new TextField();
+        portField.setPromptText("e.g., 50001");
+        
+        grid.add(new Label("IP Address:"), 0, 0);
+        grid.add(ipField, 1, 0);
+        grid.add(new Label("Port:"), 0, 1);
+        grid.add(portField, 1, 1);
+        
+        dialog.getDialogPane().setContent(grid);
+        
+        // Request focus on the IP field
+        Platform.runLater(ipField::requestFocus);
+        
+        // Convert the result
+        dialog.setResultConverter(dialogButton -> {
+            if (dialogButton == connectButtonType) {
+                return new String[]{ipField.getText(), portField.getText()};
+            }
+            return null;
+        });
+        
+        Optional<String[]> result = dialog.showAndWait();
+        result.ifPresent(values -> {
+            try {
+                String ip = values[0].trim();
+                int port = Integer.parseInt(values[1].trim());
+                
+                if (ip.isEmpty()) {
+                    DialogUtils.showError("Invalid Input", "IP address cannot be empty");
+                    return;
+                }
+                
+                // Try to connect
+                connectManually(ip, port);
+                
+            } catch (NumberFormatException e) {
+                DialogUtils.showError("Invalid Input", "Port must be a valid number");
+            }
+        });
+    }
+    
+    /**
+     * Connect to a peer manually by IP and port.
+     * @param ip IP address
+     * @param port Port number
+     */
+    private void connectManually(String ip, int port) {
+        DialogUtils.showInfo("Connecting", "Attempting to connect to " + ip + ":" + port + "...");
+        
+        p2pService.connectToPeerManual(ip, port)
+            .thenAccept(session -> {
+                Platform.runLater(() -> {
+                    DialogUtils.showInfo("Connected", 
+                        "Successfully connected to " + session.getPeerName());
+                    loadPeerList();
+                    selectPeer(session.getPeerId(), ip, port);
+                });
+            })
+            .exceptionally(ex -> {
+                Platform.runLater(() -> {
+                    DialogUtils.showError("Connection Failed", 
+                        "Could not connect: " + ex.getMessage());
+                });
+                return null;
+            });
     }
     
     /**
@@ -168,8 +290,10 @@ public class P2PChatController implements P2PMessageListener {
         Label emptyLabel = new Label("Select a user to start chatting");
         emptyLabel.setStyle("-fx-font-size: 16px; -fx-text-fill: #bdc3c7;");
         
-        Label hintLabel = new Label("Choose from the online users list on the left");
+        Label hintLabel = new Label("Peers on your local network will appear automatically.\n" +
+                                   "Make sure both devices are on the same WiFi/LAN.");
         hintLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #bdc3c7;");
+        hintLabel.setTextAlignment(javafx.scene.text.TextAlignment.CENTER);
         
         box.getChildren().addAll(emptyLabel, hintLabel);
     }
@@ -177,12 +301,15 @@ public class P2PChatController implements P2PMessageListener {
     /**
      * Select a peer and show chat interface.
      * @param peerId Selected peer's user ID
+     * @param ipAddress Peer's IP address
+     * @param port Peer's port
      */
-    private void selectPeer(Long peerId) {
+    private void selectPeer(Long peerId, String ipAddress, int port) {
         selectedPeerId = peerId;
         
+        // Try to get user from local database, otherwise use peer info
         User peerUser = userService.getUserById(peerId);
-        if (peerUser == null) return;
+        String peerName = peerUser != null ? peerUser.getUsername() : "User #" + peerId;
         
         chatBox.getChildren().clear();
         chatBox.setAlignment(Pos.TOP_LEFT);
@@ -192,8 +319,11 @@ public class P2PChatController implements P2PMessageListener {
         header.setAlignment(Pos.CENTER_LEFT);
         header.setPadding(new Insets(0, 0, 10, 0));
         
-        Label nameLabel = new Label(peerUser.getUsername());
+        Label nameLabel = new Label(peerName);
         nameLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
+        
+        Label addressLabel = new Label("(" + ipAddress + ":" + port + ")");
+        addressLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #7f8c8d;");
         
         connectionStatusLabel = new Label();
         updateConnectionStatus(peerId);
@@ -201,11 +331,11 @@ public class P2PChatController implements P2PMessageListener {
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
         
-        Button connectButton = new Button("Connect P2P");
+        Button connectButton = new Button("Connect");
         connectButton.setStyle("-fx-background-color: #27ae60; -fx-text-fill: white; -fx-cursor: hand;");
-        connectButton.setOnAction(e -> connectToPeer(peerId));
+        connectButton.setOnAction(e -> connectToPeer(peerId, ipAddress, port));
         
-        header.getChildren().addAll(nameLabel, connectionStatusLabel, spacer, connectButton);
+        header.getChildren().addAll(nameLabel, addressLabel, connectionStatusLabel, spacer, connectButton);
         
         // Typing indicator
         typingIndicatorLabel = new Label();
@@ -236,15 +366,17 @@ public class P2PChatController implements P2PMessageListener {
         
         // Typing indicator on key press
         messageField.textProperty().addListener((obs, oldVal, newVal) -> {
-            p2pService.sendTypingIndicator(peerId, !newVal.isEmpty());
+            if (p2pService.isConnectedTo(peerId)) {
+                p2pService.sendTypingIndicator(peerId, !newVal.isEmpty());
+            }
         });
         
         Button sendButton = new Button("Send");
         sendButton.setStyle("-fx-background-color: #3498db; -fx-text-fill: white; " +
                            "-fx-font-size: 14px; -fx-cursor: hand; -fx-padding: 8 20;");
-        sendButton.setOnAction(e -> sendMessage());
+        sendButton.setOnAction(e -> sendMessage(ipAddress, port));
         
-        messageField.setOnAction(e -> sendMessage());
+        messageField.setOnAction(e -> sendMessage(ipAddress, port));
         
         inputBox.getChildren().addAll(messageField, sendButton);
         
@@ -253,14 +385,31 @@ public class P2PChatController implements P2PMessageListener {
     }
     
     /**
-     * Load peer list from discovery service.
+     * Legacy select peer method.
+     */
+    private void selectPeer(Long peerId) {
+        // Try to find peer info
+        List<PeerInfo> peers = p2pService.getDiscoveredPeers();
+        for (PeerInfo peer : peers) {
+            if (peer.getUserId().equals(peerId)) {
+                selectPeer(peerId, peer.getIpAddress(), peer.getPort());
+                return;
+            }
+        }
+        // Fallback
+        selectPeer(peerId, "unknown", 0);
+    }
+    
+    /**
+     * Load peer list from broadcast discovery.
      */
     private void loadPeerList() {
         peerListView.getItems().clear();
         
-        List<PeerInfo> onlinePeers = p2pService.getOnlinePeers();
+        // Get peers from broadcast discovery (LAN peers)
+        List<PeerInfo> discoveredPeers = p2pService.getDiscoveredPeers();
         
-        for (PeerInfo peer : onlinePeers) {
+        for (PeerInfo peer : discoveredPeers) {
             boolean connected = p2pService.isConnectedTo(peer.getUserId());
             peerListView.getItems().add(
                 new PeerListItem(peer.getUserId(), peer.getUsername(), 
@@ -268,10 +417,18 @@ public class P2PChatController implements P2PMessageListener {
             );
         }
         
-        if (peerListView.getItems().isEmpty()) {
+        // Update peer count
+        int count = peerListView.getItems().size();
+        if (count == 0) {
+            peerCountLabel.setText("No peers found on LAN");
+            peerCountLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #e74c3c;");
+            
             // Show no peers message
-            PeerListItem emptyItem = new PeerListItem(null, "No users online", "", 0, false);
+            PeerListItem emptyItem = new PeerListItem(null, "Waiting for peers...", "", 0, false);
             peerListView.getItems().add(emptyItem);
+        } else {
+            peerCountLabel.setText(count + " peer(s) found on LAN");
+            peerCountLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #27ae60;");
         }
     }
     
@@ -336,8 +493,10 @@ public class P2PChatController implements P2PMessageListener {
     
     /**
      * Send a message to selected peer.
+     * @param ipAddress Peer's IP address
+     * @param port Peer's port
      */
-    private void sendMessage() {
+    private void sendMessage(String ipAddress, int port) {
         if (selectedPeerId == null || messageField == null) return;
         
         String content = messageField.getText().trim();
@@ -357,24 +516,28 @@ public class P2PChatController implements P2PMessageListener {
                 if (!sent) {
                     Platform.runLater(() -> {
                         DialogUtils.showWarning("Send Warning", 
-                            "Message saved but P2P delivery failed. User may receive it next time they connect.");
+                            "Message saved but P2P delivery failed. Click 'Connect' to establish connection first.");
                     });
                 }
             });
         
         // Clear typing indicator
-        p2pService.sendTypingIndicator(selectedPeerId, false);
+        if (p2pService.isConnectedTo(selectedPeerId)) {
+            p2pService.sendTypingIndicator(selectedPeerId, false);
+        }
     }
     
     /**
      * Connect to a peer via P2P.
      * @param peerId Peer's user ID
+     * @param ipAddress Peer's IP address
+     * @param port Peer's port
      */
-    private void connectToPeer(Long peerId) {
+    private void connectToPeer(Long peerId, String ipAddress, int port) {
         connectionStatusLabel.setText("Connecting...");
         connectionStatusLabel.setStyle("-fx-text-fill: #f39c12; -fx-font-size: 12px;");
         
-        p2pService.connectToPeer(peerId)
+        p2pService.getConnectionManager().connectToPeer(ipAddress, port, peerId)
             .thenAccept(session -> {
                 Platform.runLater(() -> {
                     updateConnectionStatus(peerId);
@@ -385,7 +548,11 @@ public class P2PChatController implements P2PMessageListener {
                 Platform.runLater(() -> {
                     updateConnectionStatus(peerId);
                     DialogUtils.showError("Connection Failed", 
-                        "Could not connect to peer: " + ex.getMessage());
+                        "Could not connect: " + ex.getMessage() + 
+                        "\n\nMake sure:\n" +
+                        "1. Both devices are on the same network\n" +
+                        "2. Firewall is not blocking port " + port + "\n" +
+                        "3. The other user has P2P Chat open");
                 });
                 return null;
             });
@@ -416,9 +583,7 @@ public class P2PChatController implements P2PMessageListener {
         
         Boolean isTyping = peerTypingStatus.get(peerId);
         if (Boolean.TRUE.equals(isTyping)) {
-            User peer = userService.getUserById(peerId);
-            String name = peer != null ? peer.getUsername() : "User";
-            typingIndicatorLabel.setText(name + " is typing...");
+            typingIndicatorLabel.setText("typing...");
         } else {
             typingIndicatorLabel.setText("");
         }
@@ -490,11 +655,27 @@ public class P2PChatController implements P2PMessageListener {
         });
     }
     
+    // PeerDiscoveryListener implementation
+    
+    @Override
+    public void onPeerDiscovered(Long peerId, String peerName, String ipAddress, int port) {
+        Platform.runLater(() -> {
+            System.out.println("[P2P Chat] New peer discovered: " + peerName + " at " + ipAddress);
+            loadPeerList();
+        });
+    }
+    
+    @Override
+    public void onPeerLost(Long peerId) {
+        Platform.runLater(this::loadPeerList);
+    }
+    
     /**
      * Cleanup when leaving this view.
      */
     public void cleanup() {
         p2pService.removeMessageListener(this);
+        p2pService.removeDiscoveryListener(this);
     }
     
     /**
@@ -553,7 +734,7 @@ public class P2PChatController implements P2PMessageListener {
                 
                 // Status indicator
                 Circle statusCircle = new Circle(5);
-                statusCircle.setFill(item.connected ? Color.web("#27ae60") : Color.web("#95a5a6"));
+                statusCircle.setFill(item.connected ? Color.web("#27ae60") : Color.web("#3498db"));
                 
                 // User info
                 VBox infoBox = new VBox(2);
@@ -564,7 +745,11 @@ public class P2PChatController implements P2PMessageListener {
                 Label addressLabel = new Label(item.ipAddress + ":" + item.port);
                 addressLabel.setStyle("-fx-font-size: 10px; -fx-text-fill: #7f8c8d;");
                 
-                infoBox.getChildren().addAll(nameLabel, addressLabel);
+                Label statusLabel = new Label(item.connected ? "Connected" : "Available");
+                statusLabel.setStyle("-fx-font-size: 9px; -fx-text-fill: " + 
+                                    (item.connected ? "#27ae60" : "#3498db") + ";");
+                
+                infoBox.getChildren().addAll(nameLabel, addressLabel, statusLabel);
                 
                 box.getChildren().addAll(statusCircle, infoBox);
                 setGraphic(box);
@@ -572,4 +757,3 @@ public class P2PChatController implements P2PMessageListener {
         }
     }
 }
-
