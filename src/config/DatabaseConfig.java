@@ -130,6 +130,19 @@ public class DatabaseConfig {
                 );
             """);
             
+            // ----- peer_info (for P2P networking) -----
+            stmt.execute("""
+                CREATE TABLE IF NOT EXISTS peer_info (
+                    user_id INTEGER PRIMARY KEY,
+                    username TEXT NOT NULL,
+                    ip_address TEXT NOT NULL,
+                    port INTEGER NOT NULL,
+                    online INTEGER DEFAULT 0,
+                    last_active_time TEXT,
+                    FOREIGN KEY(user_id) REFERENCES users(id)
+                );
+            """);
+            
             // 修复数据：将不合法的 'USER' 角色更新为 'BUYER'
             stmt.executeUpdate("UPDATE users SET role = 'BUYER' WHERE role = 'USER'");
 

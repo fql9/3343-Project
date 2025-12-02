@@ -10,6 +10,7 @@ import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import model.Notification;
+import network.P2PService;
 import service.MessageService;
 import service.NotificationService;
 import service.UserService;
@@ -156,13 +157,16 @@ public class MainController {
         Button messagesButton = createMenuButton("My Messages");
         messagesButton.setOnAction(e -> showMessages());
         
+        Button p2pChatButton = createMenuButton("P2P Live Chat");
+        p2pChatButton.setOnAction(e -> showP2PChat());
+        
         Button notificationsButton = createMenuButton("Notifications");
         notificationsButton.setOnAction(e -> showNotifications());
 
         Button profileButton = createMenuButton("My Profile");
         profileButton.setOnAction(e -> showProfile());
 
-        menu.getChildren().addAll(boardButton, myItemsButton, myOrdersButton, mySalesButton, favoritesButton, messagesButton, notificationsButton, profileButton);
+        menu.getChildren().addAll(boardButton, myItemsButton, myOrdersButton, mySalesButton, favoritesButton, messagesButton, p2pChatButton, notificationsButton, profileButton);
         
         // If admin, add user management button
         if (UserService.isAdmin()) {
@@ -259,6 +263,15 @@ public class MainController {
     }
     
     /**
+     * Show P2P live chat.
+     * Navigates to the real-time P2P chat interface.
+     */
+    private void showP2PChat() {
+        P2PChatController p2pChatController = new P2PChatController(mainLayout, this);
+        p2pChatController.showP2PChatView();
+    }
+    
+    /**
      * Show notifications.
      * Navigates to the notifications list view.
      */
@@ -325,6 +338,14 @@ public class MainController {
             if (notificationPoller != null) {
                 notificationPoller.stop();
             }
+            
+            // Shutdown P2P service before logout
+            try {
+                P2PService.getInstance().shutdown();
+            } catch (Exception e) {
+                System.err.println("Error shutting down P2P service: " + e.getMessage());
+            }
+            
             userService.logout();
             LoginController loginController = new LoginController(primaryStage);
             loginController.showLoginView();
