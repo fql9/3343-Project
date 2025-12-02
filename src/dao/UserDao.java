@@ -1,7 +1,11 @@
 package dao;
+
 import model.User;
 import java.util.List;
 
+/**
+ * User Data Access Object interface.
+ */
 public interface UserDao {
 
     User findByUsername(String username);

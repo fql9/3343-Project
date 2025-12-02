@@ -4,11 +4,16 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.Statement;
 
+/**
+ * Database configuration and initialization class.
+ */
 public class DatabaseConfig {
 
     private static final String DB_URL = "jdbc:sqlite:secondhand.db";
 
-    // 初始化数据库（程序启动时执行）
+    /**
+     * Initialize database tables (called on application startup).
+     */
     public static void initDatabase() {
         try (Connection conn = getConnection();
              Statement stmt = conn.createStatement()) {
@@ -150,7 +155,10 @@ public class DatabaseConfig {
         }
     }
 
-    // 单例 Connection
+    /**
+     * Get database connection.
+     * @return Database connection instance.
+     */
     public static Connection getConnection() {
         try {
             return DriverManager.getConnection(DB_URL);

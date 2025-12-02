@@ -8,6 +8,10 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Item Data Access Object implementation.
+ * Provides database operations for Item entity.
+ */
 public class ItemDaoImpl implements ItemDao {
 
     @Override

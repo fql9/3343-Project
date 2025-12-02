@@ -9,6 +9,10 @@ import java.sql.*;
 import java.util.ArrayList; 
 import java.util.List;
 
+/**
+ * User Data Access Object implementation.
+ * Provides database operations for User entity.
+ */
 public class UserDaoImpl implements UserDao {
 
     @Override

@@ -1,5 +1,8 @@
 package model;
 
+/**
+ * Order entity class representing a transaction order.
+ */
 public class Order {
     private Long id;
     private String orderNo;      // Unique Order Number

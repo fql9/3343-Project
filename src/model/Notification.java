@@ -1,5 +1,8 @@
 package model;
 
+/**
+ * Notification entity class representing a system notification.
+ */
 public class Notification {
     private Long id;
     private Long userId;

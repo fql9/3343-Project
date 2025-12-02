@@ -9,7 +9,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 /**
- * Message service class - handles message-related business logic
+ * Message service class - handles message-related business logic.
+ * Provides messaging, inbox, and conversation management functions.
  */
 public class MessageService {
 

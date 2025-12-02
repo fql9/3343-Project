@@ -13,7 +13,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Favorite service class - handles favorite-related business logic
+ * Favorite service class - handles favorite-related business logic.
+ * Provides favorite management functions for users.
  */
 public class FavoriteService {
 

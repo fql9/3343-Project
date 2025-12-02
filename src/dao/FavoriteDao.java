@@ -3,6 +3,9 @@ package dao;
 import model.Favorite;
 import java.util.List;
 
+/**
+ * Favorite Data Access Object interface.
+ */
 public interface FavoriteDao {
 
     Favorite findById(Long id);

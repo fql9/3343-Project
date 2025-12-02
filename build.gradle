@@ -5,7 +5,7 @@ plugins {
 }
 
 group = 'com.example'
-version = '1.0-SNAPSHOT'
+version = '1.0'
 
 repositories {
     mavenCentral()
@@ -23,8 +23,8 @@ sourceSets {
 }
 
 dependencies {
-    implementation 'org.openjfx:javafx-controls:23.0.1'
-    implementation 'org.openjfx:javafx-fxml:23.0.1'
+    implementation 'org.openjfx:javafx-controls:17.0.10'
+    implementation 'org.openjfx:javafx-fxml:17.0.10'
     implementation 'org.xerial:sqlite-jdbc:3.46.0.0'
     implementation 'org.slf4j:slf4j-simple:2.0.16'
     
@@ -32,7 +32,7 @@ dependencies {
 }
 
 javafx {
-    version = '23.0.1'
+    version = '17.0.10'
     modules = ['javafx.controls', 'javafx.fxml']
 }
 
@@ -42,10 +42,162 @@ application {
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(25)
+        languageVersion = JavaLanguageVersion.of(23)
     }
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
 }
 
 tasks.withType(Test).configureEach {
     useJUnitPlatform()
 }
+
+// 创建包含所有依赖的分发包
+distributions {
+    main {
+        contents {
+            from('image') {
+                into 'image'
+            }
+            from('secondhand.db') {
+                into ''
+            }
+        }
+    }
+}
+
+// 创建自定义Fat JAR任务
+task fatJar(type: Jar) {
+    archiveBaseName = 'SecondHandTrading'
+    archiveVersion = version
+    archiveClassifier = 'all'
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    
+    manifest {
+        attributes(
+            'Main-Class': 'MainApp',
+            'Class-Path': configurations.runtimeClasspath.collect { it.getName() }.join(' ')
+        )
+    }
+    
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    
+    with jar
+    
+    // 排除签名文件避免冲突
+    exclude 'META-INF/*.SF'
+    exclude 'META-INF/*.DSA'
+    exclude 'META-INF/*.RSA'
+}
+
+// 创建完整的可运行分发包
+task createDistribution(type: Zip) {
+    dependsOn fatJar
+    
+    archiveBaseName = 'SecondHandTrading'
+    archiveVersion = version
+    
+    from(fatJar.archiveFile) {
+        into 'lib'
+    }
+    
+    from('image') {
+        into 'image'
+    }
+    
+    from('secondhand.db') {
+        into ''
+    }
+    
+    from(projectDir) {
+        include 'run.bat'
+        include 'run.sh'
+    }
+}
+
+// 生成启动脚本
+task createLaunchers {
+    doLast {
+        // Windows批处理文件
+        file('run.bat').text = '''@echo off
+cd /d "%~dp0"
+java --module-path lib --add-modules javafx.controls,javafx.fxml -jar lib/SecondHandTrading-1.0-all.jar
+pause
+'''
+        
+        // Unix Shell脚本
+        file('run.sh').text = '''#!/bin/bash
+cd "$(dirname "$0")"
+java --module-path lib --add-modules javafx.controls,javafx.fxml -jar lib/SecondHandTrading-1.0-all.jar
+'''
+    }
+}
+
+createDistribution.dependsOn createLaunchers
+
+// jpackage 打包任务 - 创建 Windows 安装程序
+task jpackageImage(type: Exec) {
+    dependsOn fatJar
+    
+    def jpackageHome = System.getenv('JAVA_HOME') ?: ''
+    def jpackageExe = jpackageHome ? "${jpackageHome}/bin/jpackage" : 'jpackage'
+    
+    def outputDir = file("${buildDir}/jpackage")
+    def inputDir = file("${buildDir}/libs")
+    def resourceDir = file("${projectDir}")
+    
+    doFirst {
+        outputDir.mkdirs()
+    }
+    
+    commandLine jpackageExe,
+        '--type', 'app-image',
+        '--name', 'SecondHandTrading',
+        '--app-version', version,
+        '--vendor', 'CityU Student',
+        '--input', inputDir.absolutePath,
+        '--main-jar', "SecondHandTrading-${version}-all.jar",
+        '--main-class', 'MainApp',
+        '--dest', outputDir.absolutePath,
+        '--java-options', '--add-modules=javafx.controls,javafx.fxml',
+        '--java-options', '--add-opens=javafx.graphics/javafx.scene=ALL-UNNAMED'
+}
+
+// jpackage 打包为 exe 安装程序
+task jpackageExe(type: Exec) {
+    dependsOn fatJar
+    
+    def jpackageHome = System.getenv('JAVA_HOME') ?: ''
+    def jpackageExe = jpackageHome ? "${jpackageHome}/bin/jpackage" : 'jpackage'
+    
+    def outputDir = file("${buildDir}/installer")
+    def inputDir = file("${buildDir}/libs")
+    
+    doFirst {
+        outputDir.mkdirs()
+    }
+    
+    commandLine jpackageExe,
+        '--type', 'exe',
+        '--name', 'SecondHandTrading',
+        '--app-version', version,
+        '--vendor', 'CityU Student',
+        '--description', 'A Second Hand Trading Platform for Campus',
+        '--input', inputDir.absolutePath,
+        '--main-jar', "SecondHandTrading-${version}-all.jar",
+        '--main-class', 'MainApp',
+        '--dest', outputDir.absolutePath,
+        '--java-options', '--add-modules=javafx.controls,javafx.fxml',
+        '--java-options', '--add-opens=javafx.graphics/javafx.scene=ALL-UNNAMED',
+        '--win-dir-chooser',
+        '--win-shortcut',
+        '--win-menu'
+}
+
+// 打包命令: ./gradlew createDistribution
+// 或直接运行: ./gradlew fatJar 然后 java --module-path build/libs --add-modules javafx.controls,javafx.fxml -jar build/libs/SecondHandTrading-1.0-all.jar
+// jpackage 打包: ./gradlew jpackageExe

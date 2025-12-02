@@ -1,5 +1,5 @@
 import config.DatabaseConfig;
-import controller.LoginController;
+import view.controller.LoginController;
 import javafx.application.Application;
 import javafx.stage.Stage;
 

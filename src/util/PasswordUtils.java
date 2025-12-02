@@ -6,7 +6,8 @@ import java.security.SecureRandom;
 import java.util.Base64;
 
 /**
- * Password utility class - for password encryption and verification
+ * Password utility class - for password encryption and verification.
+ * Uses SHA-256 algorithm for secure password hashing.
  */
 public class PasswordUtils {
 

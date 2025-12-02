@@ -8,6 +8,10 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Review Data Access Object implementation.
+ * Provides database operations for Review entity.
+ */
 public class ReviewDaoImpl implements ReviewDao {
 
     @Override
