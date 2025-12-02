@@ -82,6 +82,8 @@ public class P2PServer {
      * @param socket The client socket
      */
     private void handleConnection(Socket socket) {
+        String clientIP = socket.getInetAddress().getHostAddress();
+        
         try {
             ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
             ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
@@ -94,7 +96,14 @@ public class P2PServer {
                 Long peerId = handshake.getSenderId();
                 String peerName = handshake.getSenderName();
                 
-                System.out.println("[P2P Server] Handshake received from: " + peerName);
+                System.out.println("[P2P Server] Handshake received from: " + peerName + " (" + clientIP + ")");
+                
+                // Check if already connected to this peer
+                if (connectionManager.isConnectedToByName(peerName)) {
+                    System.out.println("[P2P Server] Already connected to " + peerName + ", rejecting");
+                    socket.close();
+                    return;
+                }
                 
                 // Send response handshake
                 P2PMessage response = P2PMessage.createHandshake(userId, username);
@@ -105,7 +114,14 @@ public class P2PServer {
                 P2PChatSession session = new P2PChatSession(
                     socket, in, out, peerId, peerName, false, connectionManager
                 );
-                connectionManager.registerSession(peerId, session);
+                
+                // Try to register - might fail if duplicate
+                boolean registered = connectionManager.registerSession(peerId, peerName, session);
+                if (!registered) {
+                    System.out.println("[P2P Server] Failed to register session for " + peerName);
+                    socket.close();
+                    return;
+                }
                 
                 // Start receiving messages
                 session.startReceiving();

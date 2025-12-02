@@ -7,6 +7,7 @@ import java.util.concurrent.*;
 /**
  * Manages all P2P connections for the current user.
  * Coordinates between P2P server, client, broadcast discovery, and chat sessions.
+ * Uses peerName as session key since userId might be same across different databases.
  */
 public class P2PConnectionManager {
     
@@ -17,10 +18,16 @@ public class P2PConnectionManager {
     private P2PServer server;
     private P2PClient client;
     private P2PBroadcastDiscovery broadcastDiscovery;
-    private final Map<Long, P2PChatSession> activeSessions;
+    
+    // Use peerName as key since userId might be duplicate across different DBs
+    private final Map<String, P2PChatSession> activeSessionsByName;
+    private final Map<Long, P2PChatSession> activeSessionsById;
     private final List<P2PMessageListener> listeners;
     private final List<PeerDiscoveryListener> discoveryListeners;
     private final P2PConfig config;
+    
+    // Track pending connections to avoid duplicates
+    private final Set<String> pendingConnections;
     
     private volatile boolean initialized;
     
@@ -36,9 +43,11 @@ public class P2PConnectionManager {
      * Private constructor for singleton pattern.
      */
     private P2PConnectionManager() {
-        this.activeSessions = new ConcurrentHashMap<>();
+        this.activeSessionsByName = new ConcurrentHashMap<>();
+        this.activeSessionsById = new ConcurrentHashMap<>();
         this.listeners = new CopyOnWriteArrayList<>();
         this.discoveryListeners = new CopyOnWriteArrayList<>();
+        this.pendingConnections = ConcurrentHashMap.newKeySet();
         this.config = new P2PConfig();
         this.initialized = false;
     }
@@ -98,22 +107,52 @@ public class P2PConnectionManager {
      * @return CompletableFuture that completes with the chat session
      */
     public CompletableFuture<P2PChatSession> connectToPeer(String host, int port, Long peerId) {
-        // Check if already connected
-        if (activeSessions.containsKey(peerId)) {
-            return CompletableFuture.completedFuture(activeSessions.get(peerId));
+        String connectionKey = host + ":" + port;
+        
+        // Check if connection is already pending
+        if (pendingConnections.contains(connectionKey)) {
+            CompletableFuture<P2PChatSession> future = new CompletableFuture<>();
+            future.completeExceptionally(new IOException("Connection already in progress"));
+            return future;
         }
         
-        return client.connectAsync(host, port, peerId);
+        // Check if already connected to this host:port
+        for (P2PChatSession session : activeSessionsByName.values()) {
+            if (session.isActive() && session.getPeerAddress().startsWith(host)) {
+                return CompletableFuture.completedFuture(session);
+            }
+        }
+        
+        pendingConnections.add(connectionKey);
+        
+        return client.connectAsync(host, port, peerId)
+            .whenComplete((session, ex) -> {
+                pendingConnections.remove(connectionKey);
+            });
     }
     
     /**
-     * Send a message to a peer.
+     * Send a message to a peer by ID.
      * @param peerId Target peer's ID
      * @param content Message content
      * @return true if message was sent
      */
     public boolean sendMessage(Long peerId, String content) {
-        P2PChatSession session = activeSessions.get(peerId);
+        P2PChatSession session = activeSessionsById.get(peerId);
+        if (session != null && session.isActive()) {
+            return session.sendMessage(content);
+        }
+        return false;
+    }
+    
+    /**
+     * Send a message to a peer by name.
+     * @param peerName Target peer's name
+     * @param content Message content
+     * @return true if message was sent
+     */
+    public boolean sendMessageByName(String peerName, String content) {
+        P2PChatSession session = activeSessionsByName.get(peerName);
         if (session != null && session.isActive()) {
             return session.sendMessage(content);
         }
@@ -126,7 +165,7 @@ public class P2PConnectionManager {
      * @param isTyping Whether user is typing
      */
     public void sendTypingIndicator(Long peerId, boolean isTyping) {
-        P2PChatSession session = activeSessions.get(peerId);
+        P2PChatSession session = activeSessionsById.get(peerId);
         if (session != null && session.isActive()) {
             session.sendTypingIndicator(isTyping);
         }
@@ -137,23 +176,59 @@ public class P2PConnectionManager {
      * @param peerId Peer's ID to disconnect from
      */
     public void disconnectPeer(Long peerId) {
-        P2PChatSession session = activeSessions.get(peerId);
+        P2PChatSession session = activeSessionsById.get(peerId);
         if (session != null) {
             session.close();
         }
     }
     
     /**
+     * Check if already connected to a peer from specific address.
+     * @param host Peer's host address
+     * @return true if already connected
+     */
+    public boolean isConnectedToHost(String host) {
+        for (P2PChatSession session : activeSessionsByName.values()) {
+            if (session.isActive() && session.getPeerAddress().startsWith(host)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    /**
      * Register a chat session.
+     * @param peerId Peer's user ID
+     * @param peerName Peer's username
+     * @param session The chat session
+     * @return true if registered, false if duplicate connection
+     */
+    public boolean registerSession(Long peerId, String peerName, P2PChatSession session) {
+        // Check for existing connection by name
+        P2PChatSession existingByName = activeSessionsByName.get(peerName);
+        if (existingByName != null && existingByName.isActive() && existingByName != session) {
+            // Already have an active connection to this peer
+            System.out.println("[P2P Manager] Already connected to " + peerName + ", rejecting duplicate");
+            return false;
+        }
+        
+        // Register by name (primary key)
+        activeSessionsByName.put(peerName, session);
+        
+        // Also register by ID for compatibility
+        activeSessionsById.put(peerId, session);
+        
+        System.out.println("[P2P Manager] Registered session with: " + peerName + " (ID: " + peerId + ")");
+        return true;
+    }
+    
+    /**
+     * Register a chat session (legacy method for compatibility).
      * @param peerId Peer's user ID
      * @param session The chat session
      */
     public void registerSession(Long peerId, P2PChatSession session) {
-        // Close existing session if any
-        P2PChatSession existing = activeSessions.put(peerId, session);
-        if (existing != null && existing != session) {
-            existing.close();
-        }
+        registerSession(peerId, session.getPeerName(), session);
     }
     
     /**
@@ -161,26 +236,60 @@ public class P2PConnectionManager {
      * @param peerId Peer's user ID
      */
     public void unregisterSession(Long peerId) {
-        activeSessions.remove(peerId);
+        P2PChatSession session = activeSessionsById.remove(peerId);
+        if (session != null) {
+            activeSessionsByName.remove(session.getPeerName());
+            System.out.println("[P2P Manager] Unregistered session: " + session.getPeerName());
+        }
     }
     
     /**
-     * Check if connected to a peer.
+     * Unregister a chat session by name.
+     * @param peerName Peer's username
+     */
+    public void unregisterSessionByName(String peerName) {
+        P2PChatSession session = activeSessionsByName.remove(peerName);
+        if (session != null) {
+            activeSessionsById.remove(session.getPeerId());
+        }
+    }
+    
+    /**
+     * Check if connected to a peer by ID.
      * @param peerId Peer's user ID
      * @return true if connected
      */
     public boolean isConnectedTo(Long peerId) {
-        P2PChatSession session = activeSessions.get(peerId);
+        P2PChatSession session = activeSessionsById.get(peerId);
         return session != null && session.isActive();
     }
     
     /**
-     * Get active session with a peer.
+     * Check if connected to a peer by name.
+     * @param peerName Peer's username
+     * @return true if connected
+     */
+    public boolean isConnectedToByName(String peerName) {
+        P2PChatSession session = activeSessionsByName.get(peerName);
+        return session != null && session.isActive();
+    }
+    
+    /**
+     * Get active session with a peer by ID.
      * @param peerId Peer's user ID
      * @return Chat session or null if not connected
      */
     public P2PChatSession getSession(Long peerId) {
-        return activeSessions.get(peerId);
+        return activeSessionsById.get(peerId);
+    }
+    
+    /**
+     * Get active session with a peer by name.
+     * @param peerName Peer's username
+     * @return Chat session or null if not connected
+     */
+    public P2PChatSession getSessionByName(String peerName) {
+        return activeSessionsByName.get(peerName);
     }
     
     /**
@@ -188,7 +297,15 @@ public class P2PConnectionManager {
      * @return Set of connected peer IDs
      */
     public Set<Long> getConnectedPeerIds() {
-        return new HashSet<>(activeSessions.keySet());
+        return new HashSet<>(activeSessionsById.keySet());
+    }
+    
+    /**
+     * Get all active peer names.
+     * @return Set of connected peer names
+     */
+    public Set<String> getConnectedPeerNames() {
+        return new HashSet<>(activeSessionsByName.keySet());
     }
     
     /**
@@ -334,10 +451,12 @@ public class P2PConnectionManager {
      */
     public void shutdown() {
         // Close all sessions
-        for (P2PChatSession session : activeSessions.values()) {
+        for (P2PChatSession session : activeSessionsByName.values()) {
             session.close();
         }
-        activeSessions.clear();
+        activeSessionsByName.clear();
+        activeSessionsById.clear();
+        pendingConnections.clear();
         
         // Stop broadcast discovery
         if (broadcastDiscovery != null) {

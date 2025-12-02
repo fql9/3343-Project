@@ -7,7 +7,6 @@ import service.UserService;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -188,10 +187,10 @@ public class P2PService {
         
         P2PBroadcastDiscovery broadcastDiscovery = connectionManager.getBroadcastDiscovery();
         if (broadcastDiscovery != null) {
-            Map<Long, P2PBroadcastDiscovery.DiscoveredPeer> discovered = 
-                broadcastDiscovery.getDiscoveredPeers();
+            List<P2PBroadcastDiscovery.DiscoveredPeer> discovered = 
+                broadcastDiscovery.getDiscoveredPeersList();
             
-            for (P2PBroadcastDiscovery.DiscoveredPeer peer : discovered.values()) {
+            for (P2PBroadcastDiscovery.DiscoveredPeer peer : discovered) {
                 if (!peer.isExpired()) {
                     PeerInfo info = new PeerInfo(peer.userId, peer.username, 
                                                  peer.ipAddress, peer.port);

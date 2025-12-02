@@ -11,10 +11,8 @@ import java.util.concurrent.*;
  * Enables automatic discovery of peers on the same local network
  * without requiring a central server.
  * 
- * Improvements:
- * - Broadcasts to all network interface broadcast addresses
- * - Listens on wildcard address for better compatibility
- * - More robust error handling
+ * Uses username as unique identifier since multiple users might have same userId
+ * in different local databases.
  */
 public class P2PBroadcastDiscovery {
     
@@ -37,8 +35,10 @@ public class P2PBroadcastDiscovery {
     private Long userId;
     private String username;
     private int serverPort;
+    private Set<String> localIPAddresses;
     
-    private final Map<Long, DiscoveredPeer> discoveredPeers;
+    // Key: "ip:username" for uniqueness across different databases
+    private final Map<String, DiscoveredPeer> discoveredPeers;
     private final ScheduledExecutorService scheduler;
     private final ExecutorService listenerExecutor;
     
@@ -72,6 +72,10 @@ public class P2PBroadcastDiscovery {
         public void updateLastSeen() {
             this.lastSeen = System.currentTimeMillis();
         }
+        
+        public String getKey() {
+            return ipAddress + ":" + username;
+        }
     }
     
     /**
@@ -83,6 +87,7 @@ public class P2PBroadcastDiscovery {
         this.listenerExecutor = Executors.newSingleThreadExecutor();
         this.running = false;
         this.broadcastAddresses = new ArrayList<>();
+        this.localIPAddresses = new HashSet<>();
     }
     
     /**
@@ -103,6 +108,9 @@ public class P2PBroadcastDiscovery {
         this.username = username;
         this.serverPort = serverPort;
         this.connectionManager = connectionManager;
+        
+        // Collect local IP addresses to identify our own broadcasts
+        collectLocalIPAddresses();
         
         // Collect all broadcast addresses from network interfaces
         collectBroadcastAddresses();
@@ -140,7 +148,37 @@ public class P2PBroadcastDiscovery {
         );
         
         System.out.println("[Broadcast Discovery] Started on port " + DISCOVERY_PORT);
+        System.out.println("[Broadcast Discovery] Local IPs: " + localIPAddresses);
         System.out.println("[Broadcast Discovery] Broadcast addresses: " + broadcastAddresses);
+    }
+    
+    /**
+     * Collect all local IP addresses to identify our own broadcasts.
+     */
+    private void collectLocalIPAddresses() {
+        localIPAddresses.clear();
+        localIPAddresses.add("127.0.0.1");
+        
+        try {
+            Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
+            while (interfaces != null && interfaces.hasMoreElements()) {
+                NetworkInterface networkInterface = interfaces.nextElement();
+                
+                if (!networkInterface.isUp()) {
+                    continue;
+                }
+                
+                Enumeration<InetAddress> addresses = networkInterface.getInetAddresses();
+                while (addresses.hasMoreElements()) {
+                    InetAddress addr = addresses.nextElement();
+                    if (addr instanceof Inet4Address) {
+                        localIPAddresses.add(addr.getHostAddress());
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("[Broadcast Discovery] Error collecting local IPs: " + e.getMessage());
+        }
     }
     
     /**
@@ -212,8 +250,6 @@ public class P2PBroadcastDiscovery {
                     broadcastSocket.send(packet);
                 } catch (IOException e) {
                     // Some broadcast addresses might fail, that's okay
-                    System.err.println("[Broadcast Discovery] Failed to broadcast to " + 
-                                      broadcastAddr.getHostAddress() + ": " + e.getMessage());
                 }
             }
             
@@ -238,10 +274,6 @@ public class P2PBroadcastDiscovery {
                 String message = new String(packet.getData(), 0, packet.getLength(), 
                                            StandardCharsets.UTF_8);
                 String senderIP = packet.getAddress().getHostAddress();
-                
-                // Debug logging
-                System.out.println("[Broadcast Discovery] Received packet from " + senderIP + 
-                                  ": " + message.substring(0, Math.min(50, message.length())));
                 
                 if (message.startsWith(MESSAGE_PREFIX)) {
                     handleDiscoveryMessage(message, senderIP);
@@ -273,7 +305,6 @@ public class P2PBroadcastDiscovery {
             String[] parts = content.split(":");
             
             if (parts.length < 3) {
-                System.err.println("[Broadcast Discovery] Invalid message format: " + message);
                 return;
             }
             
@@ -281,29 +312,31 @@ public class P2PBroadcastDiscovery {
             String peerName = parts[1];
             int peerPort = Integer.parseInt(parts[2]);
             
-            // Ignore our own broadcasts
-            if (peerId.equals(this.userId)) {
+            // Check if this is our own broadcast by checking:
+            // 1. Same username AND from local IP
+            // 2. OR same IP address
+            boolean isOwnBroadcast = localIPAddresses.contains(senderIP) && peerName.equals(this.username);
+            
+            if (isOwnBroadcast) {
+                // This is our own broadcast, ignore it
                 return;
             }
             
+            // Use IP + username as unique key (since userId might be same in different DBs)
+            String peerKey = senderIP + ":" + peerName;
+            
             // Check if this is a new peer or update existing
-            DiscoveredPeer existing = discoveredPeers.get(peerId);
+            DiscoveredPeer existing = discoveredPeers.get(peerKey);
             
             if (existing != null) {
                 // Update last seen time
                 existing.updateLastSeen();
-                // Update IP if changed (e.g., peer reconnected)
-                if (!existing.ipAddress.equals(senderIP) || existing.port != peerPort) {
-                    DiscoveredPeer updated = new DiscoveredPeer(peerId, peerName, senderIP, peerPort);
-                    discoveredPeers.put(peerId, updated);
-                    System.out.println("[Broadcast Discovery] Peer updated: " + peerName + 
-                                      " at " + senderIP + ":" + peerPort);
-                }
             } else {
-                // New peer discovered
+                // New peer discovered!
                 DiscoveredPeer newPeer = new DiscoveredPeer(peerId, peerName, senderIP, peerPort);
-                discoveredPeers.put(peerId, newPeer);
-                System.out.println("[Broadcast Discovery] *** NEW PEER DISCOVERED: " + peerName + 
+                discoveredPeers.put(peerKey, newPeer);
+                
+                System.out.println("[Broadcast Discovery] *** NEW PEER: " + peerName + 
                                   " at " + senderIP + ":" + peerPort + " ***");
                 
                 // Notify connection manager about new peer
@@ -313,7 +346,7 @@ public class P2PBroadcastDiscovery {
             }
             
         } catch (NumberFormatException e) {
-            System.err.println("[Broadcast Discovery] Invalid message format: " + message);
+            System.err.println("[Broadcast Discovery] Invalid message format");
         }
     }
     
@@ -333,11 +366,19 @@ public class P2PBroadcastDiscovery {
     
     /**
      * Get all currently discovered peers.
-     * @return Map of peer ID to peer information
+     * @return Map of peer key to peer information
      */
-    public Map<Long, DiscoveredPeer> getDiscoveredPeers() {
+    public Map<String, DiscoveredPeer> getDiscoveredPeers() {
         // Return a copy to prevent modification
         return new ConcurrentHashMap<>(discoveredPeers);
+    }
+    
+    /**
+     * Get all discovered peers as a list.
+     * @return List of discovered peers
+     */
+    public List<DiscoveredPeer> getDiscoveredPeersList() {
+        return new ArrayList<>(discoveredPeers.values());
     }
     
     /**
@@ -346,7 +387,27 @@ public class P2PBroadcastDiscovery {
      * @return DiscoveredPeer or null if not found
      */
     public DiscoveredPeer getDiscoveredPeer(Long peerId) {
-        return discoveredPeers.get(peerId);
+        // Search by userId (may return first match if multiple)
+        for (DiscoveredPeer peer : discoveredPeers.values()) {
+            if (peer.userId.equals(peerId)) {
+                return peer;
+            }
+        }
+        return null;
+    }
+    
+    /**
+     * Get a discovered peer by username.
+     * @param username Peer's username
+     * @return DiscoveredPeer or null if not found
+     */
+    public DiscoveredPeer getDiscoveredPeerByUsername(String username) {
+        for (DiscoveredPeer peer : discoveredPeers.values()) {
+            if (peer.username.equals(username)) {
+                return peer;
+            }
+        }
+        return null;
     }
     
     /**
@@ -355,7 +416,7 @@ public class P2PBroadcastDiscovery {
      * @return true if peer is in discovered list
      */
     public boolean isPeerDiscovered(Long peerId) {
-        DiscoveredPeer peer = discoveredPeers.get(peerId);
+        DiscoveredPeer peer = getDiscoveredPeer(peerId);
         return peer != null && !peer.isExpired();
     }
     
@@ -364,7 +425,8 @@ public class P2PBroadcastDiscovery {
      */
     public void forceAnnounce() {
         System.out.println("[Broadcast Discovery] Force announcing presence...");
-        // Refresh broadcast addresses in case network changed
+        // Refresh local IPs and broadcast addresses in case network changed
+        collectLocalIPAddresses();
         collectBroadcastAddresses();
         broadcastPresence();
     }
