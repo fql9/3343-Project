@@ -125,6 +125,15 @@ public class P2PChatController implements P2PMessageListener, P2PConnectionManag
         infoLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #7f8c8d;");
         infoLabel.setWrapText(true);
         
+        // Show broadcast addresses for debugging
+        P2PBroadcastDiscovery discovery = p2pService.getConnectionManager().getBroadcastDiscovery();
+        String broadcastInfo = discovery != null ? 
+            "Broadcasting to: " + String.join(", ", discovery.getBroadcastAddressStrings()) : 
+            "Broadcast not available";
+        Label broadcastLabel = new Label(broadcastInfo);
+        broadcastLabel.setStyle("-fx-font-size: 9px; -fx-text-fill: #95a5a6;");
+        broadcastLabel.setWrapText(true);
+        
         // Peer list
         peerListView = new ListView<>();
         peerListView.setCellFactory(lv -> new PeerListCell());
@@ -168,7 +177,7 @@ public class P2PChatController implements P2PMessageListener, P2PConnectionManag
         helpLabel.setStyle("-fx-font-size: 10px; -fx-text-fill: #95a5a6;");
         helpLabel.setWrapText(true);
         
-        panel.getChildren().addAll(titleLabel, peerCountLabel, infoLabel, 
+        panel.getChildren().addAll(titleLabel, peerCountLabel, infoLabel, broadcastLabel,
                                    new Separator(), peerListView, buttonBox, helpLabel);
         
         return panel;

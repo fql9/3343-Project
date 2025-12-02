@@ -3,13 +3,18 @@ package network;
 import java.io.IOException;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.*;
 
 /**
  * UDP Broadcast-based peer discovery service for LAN environments.
  * Enables automatic discovery of peers on the same local network
  * without requiring a central server.
+ * 
+ * Improvements:
+ * - Broadcasts to all network interface broadcast addresses
+ * - Listens on wildcard address for better compatibility
+ * - More robust error handling
  */
 public class P2PBroadcastDiscovery {
     
@@ -17,10 +22,10 @@ public class P2PBroadcastDiscovery {
     private static final int DISCOVERY_PORT = 50999;
     
     // Broadcast interval in seconds
-    private static final int BROADCAST_INTERVAL = 3;
+    private static final int BROADCAST_INTERVAL = 2;
     
     // Peer timeout in seconds (remove if not seen for this long)
-    private static final int PEER_TIMEOUT = 15;
+    private static final int PEER_TIMEOUT = 10;
     
     // Message prefix for discovery packets
     private static final String MESSAGE_PREFIX = "P2P_DISCOVER:";
@@ -38,6 +43,9 @@ public class P2PBroadcastDiscovery {
     private final ExecutorService listenerExecutor;
     
     private P2PConnectionManager connectionManager;
+    
+    // Cache of broadcast addresses to send to
+    private List<InetAddress> broadcastAddresses;
     
     /**
      * Represents a discovered peer with timestamp.
@@ -74,6 +82,7 @@ public class P2PBroadcastDiscovery {
         this.scheduler = Executors.newScheduledThreadPool(2);
         this.listenerExecutor = Executors.newSingleThreadExecutor();
         this.running = false;
+        this.broadcastAddresses = new ArrayList<>();
     }
     
     /**
@@ -95,21 +104,26 @@ public class P2PBroadcastDiscovery {
         this.serverPort = serverPort;
         this.connectionManager = connectionManager;
         
-        // Create broadcast socket
+        // Collect all broadcast addresses from network interfaces
+        collectBroadcastAddresses();
+        
+        // Create broadcast socket (for sending)
         broadcastSocket = new DatagramSocket();
         broadcastSocket.setBroadcast(true);
+        broadcastSocket.setReuseAddress(true);
         
-        // Create listener socket
+        // Create listener socket - bind to wildcard address to receive from any interface
         listenerSocket = new DatagramSocket(null);
         listenerSocket.setReuseAddress(true);
-        listenerSocket.bind(new InetSocketAddress(DISCOVERY_PORT));
+        listenerSocket.setBroadcast(true);
+        listenerSocket.bind(new InetSocketAddress("0.0.0.0", DISCOVERY_PORT));
         
         running = true;
         
         // Start listening for broadcasts
         listenerExecutor.submit(this::listenForBroadcasts);
         
-        // Start periodic broadcasting
+        // Start periodic broadcasting (more frequent initially)
         scheduler.scheduleAtFixedRate(
             this::broadcastPresence,
             0,
@@ -126,13 +140,58 @@ public class P2PBroadcastDiscovery {
         );
         
         System.out.println("[Broadcast Discovery] Started on port " + DISCOVERY_PORT);
+        System.out.println("[Broadcast Discovery] Broadcast addresses: " + broadcastAddresses);
+    }
+    
+    /**
+     * Collect broadcast addresses from all network interfaces.
+     */
+    private void collectBroadcastAddresses() {
+        broadcastAddresses.clear();
+        
+        try {
+            // Add global broadcast
+            broadcastAddresses.add(InetAddress.getByName("255.255.255.255"));
+            
+            // Enumerate all network interfaces
+            Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
+            while (interfaces != null && interfaces.hasMoreElements()) {
+                NetworkInterface networkInterface = interfaces.nextElement();
+                
+                // Skip loopback, down, or virtual interfaces
+                if (networkInterface.isLoopback() || !networkInterface.isUp()) {
+                    continue;
+                }
+                
+                // Get all interface addresses
+                for (InterfaceAddress interfaceAddress : networkInterface.getInterfaceAddresses()) {
+                    InetAddress broadcast = interfaceAddress.getBroadcast();
+                    if (broadcast != null && !broadcastAddresses.contains(broadcast)) {
+                        broadcastAddresses.add(broadcast);
+                        System.out.println("[Broadcast Discovery] Found broadcast address: " + 
+                                          broadcast.getHostAddress() + " on " + networkInterface.getDisplayName());
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("[Broadcast Discovery] Error collecting broadcast addresses: " + e.getMessage());
+        }
+        
+        // Ensure we have at least the global broadcast
+        if (broadcastAddresses.isEmpty()) {
+            try {
+                broadcastAddresses.add(InetAddress.getByName("255.255.255.255"));
+            } catch (UnknownHostException e) {
+                // Should never happen
+            }
+        }
     }
     
     /**
      * Broadcast presence to all peers on the network.
      */
     private void broadcastPresence() {
-        if (!running || broadcastSocket == null) {
+        if (!running || broadcastSocket == null || broadcastSocket.isClosed()) {
             return;
         }
         
@@ -141,32 +200,24 @@ public class P2PBroadcastDiscovery {
             String message = MESSAGE_PREFIX + userId + ":" + username + ":" + serverPort;
             byte[] data = message.getBytes(StandardCharsets.UTF_8);
             
-            // Broadcast to 255.255.255.255
-            DatagramPacket packet = new DatagramPacket(
-                data, 
-                data.length,
-                InetAddress.getByName("255.255.255.255"),
-                DISCOVERY_PORT
-            );
-            
-            broadcastSocket.send(packet);
-            
-            // Also try subnet broadcast (for networks that block 255.255.255.255)
-            try {
-                String localIP = InetAddress.getLocalHost().getHostAddress();
-                String broadcastIP = localIP.substring(0, localIP.lastIndexOf('.')) + ".255";
-                DatagramPacket subnetPacket = new DatagramPacket(
-                    data,
-                    data.length,
-                    InetAddress.getByName(broadcastIP),
-                    DISCOVERY_PORT
-                );
-                broadcastSocket.send(subnetPacket);
-            } catch (Exception e) {
-                // Ignore subnet broadcast errors
+            // Send to all collected broadcast addresses
+            for (InetAddress broadcastAddr : broadcastAddresses) {
+                try {
+                    DatagramPacket packet = new DatagramPacket(
+                        data, 
+                        data.length,
+                        broadcastAddr,
+                        DISCOVERY_PORT
+                    );
+                    broadcastSocket.send(packet);
+                } catch (IOException e) {
+                    // Some broadcast addresses might fail, that's okay
+                    System.err.println("[Broadcast Discovery] Failed to broadcast to " + 
+                                      broadcastAddr.getHostAddress() + ": " + e.getMessage());
+                }
             }
             
-        } catch (IOException e) {
+        } catch (Exception e) {
             System.err.println("[Broadcast Discovery] Broadcast error: " + e.getMessage());
         }
     }
@@ -177,6 +228,8 @@ public class P2PBroadcastDiscovery {
     private void listenForBroadcasts() {
         byte[] buffer = new byte[1024];
         
+        System.out.println("[Broadcast Discovery] Listening for peer broadcasts...");
+        
         while (running && !listenerSocket.isClosed()) {
             try {
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
@@ -184,9 +237,14 @@ public class P2PBroadcastDiscovery {
                 
                 String message = new String(packet.getData(), 0, packet.getLength(), 
                                            StandardCharsets.UTF_8);
+                String senderIP = packet.getAddress().getHostAddress();
+                
+                // Debug logging
+                System.out.println("[Broadcast Discovery] Received packet from " + senderIP + 
+                                  ": " + message.substring(0, Math.min(50, message.length())));
                 
                 if (message.startsWith(MESSAGE_PREFIX)) {
-                    handleDiscoveryMessage(message, packet.getAddress().getHostAddress());
+                    handleDiscoveryMessage(message, senderIP);
                 }
                 
             } catch (SocketException e) {
@@ -199,6 +257,8 @@ public class P2PBroadcastDiscovery {
                 }
             }
         }
+        
+        System.out.println("[Broadcast Discovery] Listener stopped");
     }
     
     /**
@@ -213,6 +273,7 @@ public class P2PBroadcastDiscovery {
             String[] parts = content.split(":");
             
             if (parts.length < 3) {
+                System.err.println("[Broadcast Discovery] Invalid message format: " + message);
                 return;
             }
             
@@ -232,16 +293,18 @@ public class P2PBroadcastDiscovery {
                 // Update last seen time
                 existing.updateLastSeen();
                 // Update IP if changed (e.g., peer reconnected)
-                if (!existing.ipAddress.equals(senderIP)) {
-                    discoveredPeers.put(peerId, new DiscoveredPeer(peerId, peerName, senderIP, peerPort));
-                    System.out.println("[Broadcast Discovery] Peer IP updated: " + peerName + 
+                if (!existing.ipAddress.equals(senderIP) || existing.port != peerPort) {
+                    DiscoveredPeer updated = new DiscoveredPeer(peerId, peerName, senderIP, peerPort);
+                    discoveredPeers.put(peerId, updated);
+                    System.out.println("[Broadcast Discovery] Peer updated: " + peerName + 
                                       " at " + senderIP + ":" + peerPort);
                 }
             } else {
                 // New peer discovered
-                discoveredPeers.put(peerId, new DiscoveredPeer(peerId, peerName, senderIP, peerPort));
-                System.out.println("[Broadcast Discovery] New peer discovered: " + peerName + 
-                                  " at " + senderIP + ":" + peerPort);
+                DiscoveredPeer newPeer = new DiscoveredPeer(peerId, peerName, senderIP, peerPort);
+                discoveredPeers.put(peerId, newPeer);
+                System.out.println("[Broadcast Discovery] *** NEW PEER DISCOVERED: " + peerName + 
+                                  " at " + senderIP + ":" + peerPort + " ***");
                 
                 // Notify connection manager about new peer
                 if (connectionManager != null) {
@@ -300,6 +363,9 @@ public class P2PBroadcastDiscovery {
      * Force a broadcast to announce presence immediately.
      */
     public void forceAnnounce() {
+        System.out.println("[Broadcast Discovery] Force announcing presence...");
+        // Refresh broadcast addresses in case network changed
+        collectBroadcastAddresses();
         broadcastPresence();
     }
     
@@ -350,5 +416,16 @@ public class P2PBroadcastDiscovery {
     public static int getDiscoveryPort() {
         return DISCOVERY_PORT;
     }
+    
+    /**
+     * Get current broadcast addresses being used.
+     * @return List of broadcast addresses
+     */
+    public List<String> getBroadcastAddressStrings() {
+        List<String> result = new ArrayList<>();
+        for (InetAddress addr : broadcastAddresses) {
+            result.add(addr.getHostAddress());
+        }
+        return result;
+    }
 }
-
