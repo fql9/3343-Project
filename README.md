@@ -157,6 +157,77 @@ The system initializes with the following test accounts:
 - User management (view/enable/disable users)
 - Item moderation
 
+## Testing
+
+### Test Structure
+
+The project follows a mixed testing approach combining unit tests and integration tests:
+
+#### Unit Tests (with Mockito)
+- Location: `test/unit/`
+- Services tested with mocked dependencies:
+  - `ItemServiceTest` (17 test cases)
+  - `FavoriteServiceTest` (11 test cases)
+  - `ValidationUtilsTest`, `PasswordUtilsTest`
+
+#### Integration Tests (with real SQLite database)
+- Location: `test/integration/`
+- Components tested:
+  - **DAO Layer**: `UserDaoImplTest`, `ItemDaoImplTest`, `MessageDaoImplTest`, `FavoriteDaoImplTest`
+  - **Service Layer**: `UserServiceTest`, `MessageServiceTest`, `OrderServiceTest`, `ReviewServiceTest`, `NotificationServiceTest`
+  - **Config**: `DatabaseConfigTest`
+  - **Utilities**: `ExportUsersTest`
+
+### Test Coverage Report (JaCoCo)
+
+**Overall Coverage:**
+- **Line Coverage**: 87% (3,378 of 3,877 instructions)
+- **Branch Coverage**: 71% (205 of 287 branches)
+- **Method Coverage**: 100% (all 267 methods)
+- **Class Coverage**: 100% (all 26 classes)
+
+**By Package:**
+| Package | Line Coverage | Branch Coverage | Methods |
+|---------|---------------|-----------------|---------|
+| model | 99% | n/a | 110/110 |
+| util | 92% | 100% | 16/16 |
+| service | 89% | 80% | 79/79 |
+| dao.impl | 83% | 55% | 56/56 |
+| config | 77% | 75% | 6/6 |
+
+**Total Test Cases**: 231 (all passing ✅)
+
+### Running Tests
+
+```bash
+# Run all tests
+.\gradlew test
+
+# Run only unit tests
+.\gradlew unitTest
+
+# Run only integration tests
+.\gradlew integrationTest
+
+# Generate coverage report
+.\gradlew jacocoTestReport
+
+# View coverage report
+# Open: build/jacocoHtml/index.html in browser
+```
+
+### Test Coverage Roadmap
+
+**Current Status**: 231 test cases, 87% code coverage
+
+**Planned Improvements**:
+1. **Service Unit Tests** (Planned): Add unit tests for MessageService, OrderService, ReviewService, NotificationService with mocked dependencies (~40-50 cases)
+2. **DAO Integration Tests** (Planned): Add tests for ReviewDaoImpl, NotificationDaoImpl, OrderDaoImpl (~15-20 cases)
+3. **Controller Integration Tests** (Planned): Add integration tests for critical Controllers with mocked Services (~30-50 cases)
+   - LoginController, BoardController, CheckoutController, OrderHistoryController, etc.
+
+**Target Coverage**: 95%+
+
 ## Database
 
 The project uses SQLite database with the file `secondhand.db`, containing the following tables:
