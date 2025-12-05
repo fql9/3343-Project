@@ -319,13 +319,20 @@ The database is automatically created on first run. Schema migrations are handle
 Run the following utility class to view all users and their information:
 
 ```bash
-# Run in IDE
-src/util/ShowUserPasswords.java
+# View all users with password hashes and roles
+java -cp "build/classes/java/main;lib/*" util.QueryUsers
+
+# Or run directly in IDE: src/util/QueryUsers.java
 ```
 
 ### Export User Data
+Export all user information to a text file:
+
 ```bash
-# Run the corresponding task or utility class in IDE
+# Export users to users_export.txt
+java -cp "build/classes/java/main;lib/*" util.ExportUsers
+
+# Or run directly in IDE: src/util/ExportUsers.java
 ```
 
 ## Troubleshooting
