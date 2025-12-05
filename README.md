@@ -370,4 +370,4 @@ This project is for educational purposes only.
 
 ---
 
-**Note**: This project is a course assignment and should not be used for commercial purposes.
+**Note**: This project is a course assignment of CS3343 and should not be used for commercial purposes.
