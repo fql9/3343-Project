@@ -10,6 +10,53 @@
 概述
 --------------------------------------------------------------------------------
 本次更新大幅提升了项目的单元测试覆盖率，特别是 util 包从 60% 提升到 92%。
+同时将测试分离为 unit/ 和 integration/ 两个目录，便于管理和运行。
+
+--------------------------------------------------------------------------------
+目录结构变更
+--------------------------------------------------------------------------------
+
+旧结构:
+test/
+├── config/
+├── dao/impl/
+├── service/
+└── util/
+
+新结构:
+test/
+├── unit/           # 纯单元测试 (无外部依赖或使用Mock)
+│   ├── util/
+│   │   ├── ValidationUtilsTest.java
+│   │   └── PasswordUtilsTest.java
+│   └── service/
+│       ├── ItemServiceTest.java      (使用Mockito)
+│       └── FavoriteServiceTest.java  (使用Mockito)
+│
+└── integration/    # 集成测试 (使用真实数据库)
+    ├── config/
+    │   └── DatabaseConfigTest.java
+    ├── dao/impl/
+    │   ├── FavoriteDaoImplTest.java
+    │   ├── ItemDaoImplTest.java
+    │   ├── MessageDaoImplTest.java
+    │   └── UserDaoImplTest.java
+    ├── service/
+    │   ├── UserServiceTest.java
+    │   ├── MessageServiceTest.java
+    │   ├── OrderServiceTest.java
+    │   ├── ReviewServiceTest.java
+    │   └── NotificationServiceTest.java
+    └── util/
+        └── ExportUsersTest.java
+
+--------------------------------------------------------------------------------
+新增 Gradle 任务
+--------------------------------------------------------------------------------
+
+1. ./gradlew unitTest        - 只运行单元测试
+2. ./gradlew integrationTest - 只运行集成测试
+3. ./gradlew test            - 运行所有测试
 
 --------------------------------------------------------------------------------
 覆盖率变化

@@ -1,5 +1,10 @@
 package service;
 
+import service.ReviewService;
+import service.UserService;
+import service.ItemService;
+import service.OrderService;
+
 import config.DatabaseConfig;
 import model.Item;
 import model.Order;

@@ -1,4 +1,7 @@
 package service;
+
+import service.NotificationService;
+import service.UserService;
 import config.DatabaseConfig;
 import model.Notification;
 import model.UserRole;

@@ -1,4 +1,6 @@
 package service;
+
+import service.UserService;
 import config.DatabaseConfig;
 import model.User;
 import model.UserRole;

@@ -1,5 +1,7 @@
 package dao.impl;
 
+import dao.impl.ItemDaoImpl;
+
 import config.DatabaseConfig;
 import dao.ItemDao;
 import model.Item;

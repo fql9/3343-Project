@@ -1,5 +1,11 @@
 package service;
 
+import service.FavoriteService;
+import dao.FavoriteDao;
+import dao.ItemDao;
+import model.Favorite;
+import model.Item;
+
 import dao.FavoriteDao;
 import dao.ItemDao;
 import model.Favorite;

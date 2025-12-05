@@ -1,5 +1,7 @@
 package dao.impl;
 
+import dao.impl.FavoriteDaoImpl;
+
 import config.DatabaseConfig;
 import dao.FavoriteDao;
 import model.Favorite;

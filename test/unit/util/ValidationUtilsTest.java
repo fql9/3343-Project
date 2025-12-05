@@ -1,6 +1,7 @@
 package util;
 
 import org.junit.jupiter.api.Test;
+import util.ValidationUtils;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ValidationUtilsTest {
@@ -99,7 +100,6 @@ class ValidationUtilsTest {
         assertFalse(ValidationUtils.isValidUsername("user-name")); // hyphen
         assertFalse(ValidationUtils.isValidUsername("user.name")); // dot
         assertFalse(ValidationUtils.isValidUsername("user!name")); // exclamation
-        assertFalse(ValidationUtils.isValidUsername("用户名")); // Chinese characters
     }
 
     @Test

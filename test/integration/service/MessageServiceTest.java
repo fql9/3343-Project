@@ -1,5 +1,8 @@
 package service;
 
+import service.MessageService;
+import service.UserService;
+
 import config.DatabaseConfig;
 import model.Message;
 import model.UserRole;

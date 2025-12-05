@@ -1,4 +1,9 @@
 package service;
+
+import service.OrderService;
+import service.UserService;
+import service.ItemService;
+import service.NotificationService;
 import config.DatabaseConfig;
 import model.Item;
 import model.Notification;

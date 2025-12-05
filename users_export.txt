@@ -1,7 +1,0 @@
-ID    | USERNAME        | ROLE       | EMAIL                     | ACTIVE    
-------------------------------------------------------------------------------
-1     | admin           | ADMIN      | admin@example.com         | Yes       
-2     | alice           | BUYER      | alice@example.com         | Yes       
-3     | bob             | BUYER      | bob@example.com           | Yes       
-4     | charlie         | BUYER      | charlie@example.com       | Yes       
-5     | david           | BUYER      | david@example.com         | Yes       

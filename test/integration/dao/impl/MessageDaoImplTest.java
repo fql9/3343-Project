@@ -1,5 +1,7 @@
 package dao.impl;
 
+import dao.impl.MessageDaoImpl;
+
 import config.DatabaseConfig;
 import dao.MessageDao;
 import model.Message;

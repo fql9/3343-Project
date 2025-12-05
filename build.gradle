@@ -32,12 +32,62 @@ sourceSets {
     }
     test {
         java {
-            srcDirs = ['test']
+            srcDirs = ['test/unit', 'test/integration']
         }
         resources {
-            srcDirs = ['test']
+            srcDirs = ['test/unit', 'test/integration']
         }
     }
+}
+
+// Task to run only unit tests (from test/unit directory)
+tasks.register('unitTest', Test) {
+    description = 'Runs unit tests only (from test/unit directory).'
+    group = 'verification'
+    useJUnitPlatform()
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    // Unit tests: ValidationUtilsTest, PasswordUtilsTest, ItemServiceTest, FavoriteServiceTest
+    filter {
+        includeTestsMatching 'util.ValidationUtilsTest'
+        includeTestsMatching 'util.PasswordUtilsTest'
+        includeTestsMatching 'service.ItemServiceTest'
+        includeTestsMatching 'service.FavoriteServiceTest'
+    }
+    jvmArgs '--add-opens', 'java.base/java.lang=ALL-UNNAMED',
+            '--add-opens', 'java.base/java.lang.invoke=ALL-UNNAMED',
+            '--add-opens', 'java.base/java.lang.reflect=ALL-UNNAMED',
+            '--add-opens', 'java.base/java.util=ALL-UNNAMED',
+            '-XX:+EnableDynamicAgentLoading',
+            '-Dnet.bytebuddy.experimental=true'
+}
+
+// Task to run only integration tests (from test/integration directory)
+tasks.register('integrationTest', Test) {
+    description = 'Runs integration tests only (from test/integration directory).'
+    group = 'verification'
+    useJUnitPlatform()
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    // Integration tests: all DAO, service (except ItemService/FavoriteService), config, ExportUsers
+    filter {
+        includeTestsMatching 'config.DatabaseConfigTest'
+        includeTestsMatching 'dao.impl.*'
+        includeTestsMatching 'service.UserServiceTest'
+        includeTestsMatching 'service.MessageServiceTest'
+        includeTestsMatching 'service.OrderServiceTest'
+        includeTestsMatching 'service.ReviewServiceTest'
+        includeTestsMatching 'service.NotificationServiceTest'
+        includeTestsMatching 'util.ExportUsersTest'
+    }
+    jvmArgs '--add-opens', 'java.base/java.lang=ALL-UNNAMED',
+            '--add-opens', 'java.base/java.lang.invoke=ALL-UNNAMED',
+            '--add-opens', 'java.base/java.lang.reflect=ALL-UNNAMED',
+            '--add-opens', 'java.base/java.util=ALL-UNNAMED',
+            '--add-opens', 'java.base/java.io=ALL-UNNAMED',
+            '--add-opens', 'java.base/sun.nio.ch=ALL-UNNAMED',
+            '-XX:+EnableDynamicAgentLoading',
+            '-Dnet.bytebuddy.experimental=true'
 }
 
 
@@ -72,6 +122,11 @@ java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(25)
     }
+}
+
+// Set encoding to UTF-8 for all Java compilation tasks
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
 }
 
 // Explicitly configure toolchain repositories if the foojay plugin is not sufficient or applied in settings.gradle
