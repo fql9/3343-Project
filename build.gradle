@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id 'application'
     id 'org.openjfx.javafxplugin' version '0.1.0'
+    id 'jacoco'
 }
 
 group = 'com.example'
@@ -29,6 +30,8 @@ dependencies {
     implementation 'org.slf4j:slf4j-simple:2.0.16'
     
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
+    testImplementation 'org.mockito:mockito-core:5.11.0'
+    testImplementation 'org.mockito:mockito-junit-jupiter:5.11.0'
 }
 
 javafx {
@@ -48,4 +51,18 @@ java {
 
 tasks.withType(Test).configureEach {
     useJUnitPlatform()
+}
+
+test {
+    useJUnitPlatform()
+    finalizedBy jacocoTestReport // 测试结束后自动生成报告
+}
+
+jacocoTestReport {
+    dependsOn test // 生成报告前先运行测试
+    reports {
+        xml.required = false
+        csv.required = false
+        html.outputLocation = layout.buildDirectory.dir('jacocoHtml')
+    }
 }

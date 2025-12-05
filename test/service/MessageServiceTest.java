@@ -1,9 +1,8 @@
+package service;
 
 import config.DatabaseConfig;
 import model.Message;
 import model.UserRole;
-import service.MessageService;
-import service.UserService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;

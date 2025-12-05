@@ -1,12 +1,9 @@
+package service;
 import config.DatabaseConfig;
 import model.Item;
 import model.Notification;
 import model.Order;
 import model.UserRole;
-import service.OrderService;
-import service.UserService;
-import service.ItemService;
-import service.NotificationService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;

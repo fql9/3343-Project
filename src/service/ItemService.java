@@ -20,7 +20,11 @@ public class ItemService {
         DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     
     public ItemService() {
-        this.itemDao = new ItemDaoImpl();
+        this(new ItemDaoImpl());
+    }
+
+    public ItemService(ItemDao itemDao) {
+        this.itemDao = itemDao;
     }
     
     /**

@@ -1,6 +1,5 @@
+package service;
 import config.DatabaseConfig;
-import service.NotificationService;
-import service.UserService;
 import model.Notification;
 import model.UserRole;
 import org.junit.jupiter.api.AfterEach;
