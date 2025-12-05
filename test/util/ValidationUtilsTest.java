@@ -81,4 +81,98 @@ class ValidationUtilsTest {
         assertNotNull(ValidationUtils.getPasswordValidationMessage());
         assertTrue(ValidationUtils.getPasswordValidationMessage().contains("at least 6 characters"));
     }
+
+    @Test
+    void testIsValidUsername_EdgeCases() {
+        // Test with numbers only
+        assertTrue(ValidationUtils.isValidUsername("123"));
+        assertTrue(ValidationUtils.isValidUsername("12345678901234567890")); // exactly 20 chars
+        
+        // Test with underscores
+        assertTrue(ValidationUtils.isValidUsername("___"));
+        assertTrue(ValidationUtils.isValidUsername("_user_"));
+        
+        // Test with mixed case
+        assertTrue(ValidationUtils.isValidUsername("UserNAME"));
+        
+        // Invalid: special characters
+        assertFalse(ValidationUtils.isValidUsername("user-name")); // hyphen
+        assertFalse(ValidationUtils.isValidUsername("user.name")); // dot
+        assertFalse(ValidationUtils.isValidUsername("user!name")); // exclamation
+        assertFalse(ValidationUtils.isValidUsername("用户名")); // Chinese characters
+    }
+
+    @Test
+    void testIsValidPassword_EdgeCases() {
+        // Exactly 6 characters - should pass
+        assertTrue(ValidationUtils.isValidPassword("123456"));
+        
+        // Very long password - should pass
+        assertTrue(ValidationUtils.isValidPassword("a".repeat(100)));
+        
+        // Password with special characters - should pass
+        assertTrue(ValidationUtils.isValidPassword("p@ss!#"));
+        
+        // Password with spaces - should pass (no restriction on content)
+        assertTrue(ValidationUtils.isValidPassword("pass  word"));
+        
+        // 5 characters - should fail
+        assertFalse(ValidationUtils.isValidPassword("12345"));
+    }
+
+    @Test
+    void testIsValidEmail_EdgeCases() {
+        // Valid: various formats
+        assertTrue(ValidationUtils.isValidEmail("a@b.co"));
+        assertTrue(ValidationUtils.isValidEmail("user123@domain123.com"));
+        assertTrue(ValidationUtils.isValidEmail("user_name@example.org"));
+        assertTrue(ValidationUtils.isValidEmail("user@a.b.c.d.com"));
+        
+        // Valid: with plus sign
+        assertTrue(ValidationUtils.isValidEmail("user+filter@gmail.com"));
+        
+        // Invalid: missing parts
+        assertFalse(ValidationUtils.isValidEmail("userexample.com")); // missing @
+        assertFalse(ValidationUtils.isValidEmail("user@")); // missing domain
+        assertFalse(ValidationUtils.isValidEmail("@example.com")); // missing local part
+        
+        // Invalid: special cases
+        assertFalse(ValidationUtils.isValidEmail("user@@example.com")); // double @
+        assertFalse(ValidationUtils.isValidEmail("user@-example.com")); // domain starts with hyphen
+        
+        // Whitespace only should be treated as empty (optional)
+        assertTrue(ValidationUtils.isValidEmail("   ")); // whitespace is trimmed, treated as empty
+    }
+
+    @Test
+    void testIsValidPrice_EdgeCases() {
+        // Very small positive price
+        assertTrue(ValidationUtils.isValidPrice(0.001));
+        assertTrue(ValidationUtils.isValidPrice(Double.MIN_VALUE));
+        
+        // Very large price
+        assertTrue(ValidationUtils.isValidPrice(999999.99));
+        assertTrue(ValidationUtils.isValidPrice(Double.MAX_VALUE));
+        
+        // Exactly zero
+        assertFalse(ValidationUtils.isValidPrice(0.0));
+        
+        // Negative prices
+        assertFalse(ValidationUtils.isValidPrice(-0.01));
+        assertFalse(ValidationUtils.isValidPrice(-999999.99));
+    }
+
+    @Test
+    void testIsNotEmpty_EdgeCases() {
+        // Single character
+        assertTrue(ValidationUtils.isNotEmpty("a"));
+        
+        // String with leading/trailing spaces but content
+        assertTrue(ValidationUtils.isNotEmpty("  hello  "));
+        
+        // Tab and newline characters only
+        assertFalse(ValidationUtils.isNotEmpty("\t"));
+        assertFalse(ValidationUtils.isNotEmpty("\n"));
+        assertFalse(ValidationUtils.isNotEmpty("\t\n  "));
+    }
 }

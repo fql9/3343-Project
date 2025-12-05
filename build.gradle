@@ -111,4 +111,13 @@ jacocoTestReport {
         csv.required = false
         html.outputLocation = layout.buildDirectory.dir('jacocoHtml')
     }
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: [
+                'util/DialogUtils.class',  // JavaFX UI class - requires TestFX
+                'controller/**',           // Controllers require TestFX
+                'MainApp.class'             // Main application class
+            ])
+        }))
+    }
 }

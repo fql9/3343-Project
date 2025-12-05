@@ -5,6 +5,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.Connection;
@@ -90,6 +91,14 @@ class ExportUsersTest {
                 ps.setString(4, "SELLER");
                 ps.setInt(5, 1);
                 ps.executeUpdate();
+
+                // Add inactive user to test "No" branch
+                ps.setString(1, "inactiveuser");
+                ps.setString(2, "password3");
+                ps.setString(3, "inactive@example.com");
+                ps.setString(4, "BUYER");
+                ps.setInt(5, 0);  // inactive
+                ps.executeUpdate();
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -133,5 +142,86 @@ class ExportUsersTest {
         } catch (IOException e) {
             fail("读取导出文件失败: " + e.getMessage());
         }
+    }
+
+    // Helper method to invoke private truncateOrPad via reflection
+    private String invokeTruncateOrPad(String str, int length) throws Exception {
+        Method method = ExportUsers.class.getDeclaredMethod("truncateOrPad", String.class, int.class);
+        method.setAccessible(true);
+        return (String) method.invoke(null, str, length);
+    }
+
+    @Test
+    void testTruncateOrPad_NullString() throws Exception {
+        String result = invokeTruncateOrPad(null, 10);
+        assertEquals("", result);
+    }
+
+    @Test
+    void testTruncateOrPad_EmptyString() throws Exception {
+        String result = invokeTruncateOrPad("", 10);
+        assertEquals("", result);
+    }
+
+    @Test
+    void testTruncateOrPad_ShorterThanLength() throws Exception {
+        String result = invokeTruncateOrPad("hello", 10);
+        assertEquals("hello", result);
+    }
+
+    @Test
+    void testTruncateOrPad_ExactLength() throws Exception {
+        String result = invokeTruncateOrPad("hello", 5);
+        assertEquals("hello", result);
+    }
+
+    @Test
+    void testTruncateOrPad_LongerThanLength() throws Exception {
+        String result = invokeTruncateOrPad("hello world", 5);
+        assertEquals("hello", result);
+    }
+
+    @Test
+    void testTruncateOrPad_ZeroLength() throws Exception {
+        String result = invokeTruncateOrPad("hello", 0);
+        assertEquals("", result);
+    }
+
+    @Test
+    void testTruncateOrPad_SingleCharacter() throws Exception {
+        String result = invokeTruncateOrPad("a", 1);
+        assertEquals("a", result);
+    }
+
+    @Test
+    void testTruncateOrPad_VeryLongString() throws Exception {
+        String longString = "a".repeat(1000);
+        String result = invokeTruncateOrPad(longString, 50);
+        assertEquals(50, result.length());
+        assertEquals("a".repeat(50), result);
+    }
+
+    @Test
+    void testTruncateOrPad_SpecialCharacters() throws Exception {
+        String result = invokeTruncateOrPad("@#$%^&*", 5);
+        assertEquals("@#$%^", result);
+    }
+
+    @Test
+    void testTruncateOrPad_UnicodeCharacters() throws Exception {
+        String result = invokeTruncateOrPad("中文字符测试", 3);
+        assertEquals("中文字", result);
+    }
+
+    @Test
+    void testTruncateOrPad_WhitespaceOnly() throws Exception {
+        String result = invokeTruncateOrPad("     ", 3);
+        assertEquals("   ", result);
+    }
+
+    @Test
+    void testTruncateOrPad_MixedContent() throws Exception {
+        String result = invokeTruncateOrPad("User123@email.com", 10);
+        assertEquals("User123@em", result);
     }
 }

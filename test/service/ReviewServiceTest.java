@@ -473,6 +473,7 @@ class ReviewServiceTest {
     @Test
     void testAddReview_AllRatingValues() {
         // Test each valid rating value
+        int reviewsAdded = 0;
         for (int rating = 1; rating <= 5; rating++) {
             // Create new item and order for each rating
             userService.login("review_test_seller", "password123");
@@ -493,11 +494,12 @@ class ReviewServiceTest {
 
             // Assert
             assertNull(result, "Rating " + rating + " should be valid");
+            reviewsAdded++;
         }
         
         // Verify all reviews were added
         List<Review> reviews = reviewService.getSellerReviews(testSellerId);
-        assertEquals(5, reviews.size());
+        assertEquals(reviewsAdded, reviews.size());
     }
 
     @Test
