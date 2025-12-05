@@ -15,18 +15,9 @@ class DatabaseConfigTest {
 
     @BeforeEach
     void setUp() {
-        // 获取原始的数据库URL（通过反射）
-        try {
-            java.lang.reflect.Field field = DatabaseConfig.class.getDeclaredField("DB_URL");
-            field.setAccessible(true);
-            originalDbUrl = (String) field.get(null);
-            
-            // 修改为测试数据库URL
-            field.set(null, TEST_DB_URL);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        
+        // 切换到测试数据库
+        DatabaseConfig.setDbUrlForTest(TEST_DB_URL);
+
         // 确保测试数据库文件不存在
         File testDbFile = new File("test_secondhand.db");
         if (testDbFile.exists()) {
@@ -36,15 +27,9 @@ class DatabaseConfigTest {
 
     @AfterEach
     void tearDown() {
-        // 恢复原始的数据库URL
-        try {
-            java.lang.reflect.Field field = DatabaseConfig.class.getDeclaredField("DB_URL");
-            field.setAccessible(true);
-            field.set(null, originalDbUrl);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        
+        // 恢复默认数据库
+        DatabaseConfig.resetDbUrl();
+
         // 清理测试数据库文件
         File testDbFile = new File("test_secondhand.db");
         if (testDbFile.exists()) {
@@ -99,18 +84,10 @@ class DatabaseConfigTest {
 
     @Test
     void testConnectionException() {
-        // 修改为无效的数据库URL（使用不存在的协议）
-        try {
-            java.lang.reflect.Field field = DatabaseConfig.class.getDeclaredField("DB_URL");
-            field.setAccessible(true);
-            field.set(null, "jdbc:nonexistent:invalid.db");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        
+        // 使用无效的数据库URL
+        DatabaseConfig.setDbUrlForTest("jdbc:nonexistent:invalid.db");
+
         // 验证获取连接时是否抛出异常
-        assertThrows(RuntimeException.class, () -> {
-            DatabaseConfig.getConnection();
-        });
+        assertThrows(RuntimeException.class, DatabaseConfig::getConnection);
     }
 }

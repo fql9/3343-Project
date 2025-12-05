@@ -6,8 +6,8 @@ import java.sql.Statement;
 
 public class DatabaseConfig {
 
-    private static final String DB_URL = "jdbc:sqlite:secondhand.db";
-
+    private static final String DEFAULT_DB_URL = "jdbc:sqlite:secondhand.db";
+    private static String DB_URL = DEFAULT_DB_URL;
     // 初始化数据库（程序启动时执行）
     public static void initDatabase() {
         try (Connection conn = getConnection();
@@ -117,8 +117,8 @@ public class DatabaseConfig {
                 CREATE TABLE IF NOT EXISTS notifications (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     user_id INTEGER NOT NULL,
-                    title TEXT NOT NULL,
-                    content TEXT NOT NULL,
+                    title TEXT,
+                    content TEXT,
                     is_read INTEGER DEFAULT 0,
                     created_time TEXT,
                     FOREIGN KEY(user_id) REFERENCES users(id)
@@ -152,10 +152,23 @@ public class DatabaseConfig {
 
     // 单例 Connection
     public static Connection getConnection() {
+        // 防御：只允许 SQLite URL，避免意外的驱动或无效协议悄悄成功
+        if (DB_URL == null || !DB_URL.startsWith("jdbc:sqlite:")) {
+            throw new RuntimeException("Invalid database URL: " + DB_URL);
+        }
         try {
             return DriverManager.getConnection(DB_URL);
         } catch (Exception e) {
             throw new RuntimeException("Unable to connect database.", e);
         }
+    }
+
+    public static synchronized void setDbUrlForTest(String url) {
+        DB_URL = url;
+    }
+
+    /** for tests only */
+    public static synchronized void resetDbUrl() {
+        DB_URL = DEFAULT_DB_URL;
     }
 }

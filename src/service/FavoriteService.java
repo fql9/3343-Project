@@ -26,6 +26,12 @@ public class FavoriteService {
         this.favoriteDao = new FavoriteDaoImpl();
         this.itemDao = new ItemDaoImpl();
     }
+
+    /** Constructor for dependency injection (used by tests) */
+    public FavoriteService(FavoriteDao favoriteDao, ItemDao itemDao) {
+        this.favoriteDao = favoriteDao;
+        this.itemDao = itemDao;
+    }
     
     /**
      * Add favorite

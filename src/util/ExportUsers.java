@@ -10,6 +10,14 @@ import java.sql.Statement;
 
 public class ExportUsers {
 
+    private static String truncateOrPad(String str, int length) {
+        if (str == null) str = "";
+        if (str.length() > length) {
+            return str.substring(0, length);
+        }
+        return str;
+    }
+
     public static void main(String[] args) {
         String outputFile = "users_export.txt";
 
@@ -18,16 +26,16 @@ public class ExportUsers {
              ResultSet rs = stmt.executeQuery("SELECT * FROM users");
              BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile))) {
 
-            writer.write(String.format("%-5s | %-15s | %-10s | %-25s | %-10s\n", "ID", "USERNAME", "ROLE", "EMAIL", "ACTIVE"));
+            writer.write("ID | USERNAME        | ROLE      | EMAIL                     | ACTIVE   \n");
             writer.write("------------------------------------------------------------------------------\n");
 
             int count = 0;
             while (rs.next()) {
-                String line = String.format("%-5d | %-15s | %-10s | %-25s | %-10s",
+                String line = String.format("%-2d | %-15s | %-9s | %-25s | %-8s",
                         rs.getInt("id"),
-                        rs.getString("username"),
-                        rs.getString("role"),
-                        rs.getString("email"),
+                        truncateOrPad(rs.getString("username"), 15),
+                        truncateOrPad(rs.getString("role"), 9),
+                        truncateOrPad(rs.getString("email"), 25),
                         rs.getInt("active") == 1 ? "Yes" : "No"
                 );
                 writer.write(line);

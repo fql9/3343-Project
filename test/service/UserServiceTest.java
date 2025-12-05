@@ -361,7 +361,7 @@ class UserServiceTest {
         
         // Verify role
         userService.login("seller_user", TEST_PASS);
-        assertEquals(UserRole.SELLER.name(), UserService.getCurrentUser().getRole());
+        assertEquals(UserRole.SELLER, UserService.getCurrentUser().getRole());
         
         // Cleanup
         Long userId = UserService.getCurrentUser().getId();
