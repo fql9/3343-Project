@@ -1,5 +1,6 @@
-package dao.impl;
+package integration.dao.impl;
 
+import integration.IntegrationTestBase;
 import dao.impl.UserDaoImpl;
 
 import config.DatabaseConfig;
@@ -14,7 +15,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import static org.junit.jupiter.api.Assertions.*;
 
-class UserDaoImplTest {
+class UserDaoImplTest extends IntegrationTestBase {
     private UserDao userDao;
     private User testUser;
 

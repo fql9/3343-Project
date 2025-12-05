@@ -1,5 +1,6 @@
-package util;
+package integration.util;
 
+import integration.IntegrationTestBase;
 import util.ExportUsers;
 
 import org.junit.jupiter.api.AfterEach;
@@ -16,24 +17,12 @@ import java.sql.Statement;
 import config.DatabaseConfig;
 import static org.junit.jupiter.api.Assertions.*;
 
-class ExportUsersTest {
-    private static final String TEST_DB_URL = "jdbc:sqlite:test_export_users.db";
+class ExportUsersTest extends IntegrationTestBase {
     private static final String TEST_OUTPUT_FILE = "users_export.txt";
-    private String originalDbUrl;
 
     @BeforeEach
     void setUp() {
-        // 保存原始的数据库URL
-        try {
-            java.lang.reflect.Field field = DatabaseConfig.class.getDeclaredField("DB_URL");
-            field.setAccessible(true);
-            originalDbUrl = (String) field.get(null);
-            field.set(null, TEST_DB_URL);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        // 创建测试数据库
+        // 创建测试数据
         initTestDatabase();
 
         // 清理可能存在的输出文件
@@ -42,43 +31,17 @@ class ExportUsersTest {
 
     @AfterEach
     void tearDown() {
-        // 恢复原始的数据库URL
-        try {
-            java.lang.reflect.Field field = DatabaseConfig.class.getDeclaredField("DB_URL");
-            field.setAccessible(true);
-            field.set(null, originalDbUrl);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        // 删除测试数据库文件
-        File testDbFile = new File("test_export_users.db");
-        if (testDbFile.exists()) {
-            testDbFile.delete();
-        }
-
         // 清理输出文件
         cleanUpOutputFile();
     }
 
     private void initTestDatabase() {
-        try (Connection conn = DatabaseConfig.getConnection();
-             Statement stmt = conn.createStatement()) {
-
-            // 创建users表
-            stmt.execute("""
-                CREATE TABLE IF NOT EXISTS users (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    username TEXT NOT NULL,
-                    password TEXT NOT NULL,
-                    email TEXT NOT NULL,
-                    role TEXT NOT NULL,
-                    active INTEGER NOT NULL DEFAULT 1
-                );
-            """);
+        try (Connection conn = DatabaseConfig.getConnection()) {
+            // 直接使用 DatabaseConfig 来初始化表结构（确保一致性）
+            // users 表已经由 IntegrationTestBase 创建
 
             // 插入测试数据
-            String insertSql = "INSERT INTO users (username, password, email, role, active) VALUES (?, ?, ?, ?, ?)";
+            String insertSql = "INSERT INTO users (username, password_hash, email, role, active) VALUES (?, ?, ?, ?, ?)";
             try (PreparedStatement ps = conn.prepareStatement(insertSql)) {
                 ps.setString(1, "testuser1");
                 ps.setString(2, "password1");

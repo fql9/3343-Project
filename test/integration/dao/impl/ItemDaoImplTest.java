@@ -1,5 +1,6 @@
-package dao.impl;
+package integration.dao.impl;
 
+import integration.IntegrationTestBase;
 import dao.impl.ItemDaoImpl;
 
 import config.DatabaseConfig;
@@ -15,7 +16,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import static org.junit.jupiter.api.Assertions.*;
 
-class ItemDaoImplTest {
+class ItemDaoImplTest extends IntegrationTestBase {
     private ItemDao itemDao;
     private Item testItem;
     private static final Long TEST_SELLER_ID = 1L;

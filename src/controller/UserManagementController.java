@@ -157,6 +157,7 @@ public class UserManagementController {
      * Load user list
      */
     private void loadUsers() {
+        userTable.getSelectionModel().clearSelection();
         userTable.getItems().clear();
         
         List<User> users = userService.getAllUsers();

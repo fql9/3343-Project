@@ -32,10 +32,10 @@ sourceSets {
     }
     test {
         java {
-            srcDirs = ['test/unit', 'test/integration']
+            srcDirs = ['test']
         }
         resources {
-            srcDirs = ['test/unit', 'test/integration']
+            srcDirs = ['test']
         }
     }
 }
@@ -120,7 +120,7 @@ application {
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(25)
+        languageVersion = JavaLanguageVersion.of(21)
     }
 }
 
@@ -175,4 +175,169 @@ jacocoTestReport {
             ])
         }))
     }
+}
+
+// ===========================
+// Executable File Generation
+// ===========================
+
+// Configure JAR manifest
+jar {
+    manifest {
+        attributes(
+            'Main-Class': 'MainApp',
+            'Implementation-Title': 'CS3343 Second-Hand Trading Platform',
+            'Implementation-Version': version,
+            'Class-Path': configurations.runtimeClasspath.files.collect { "lib/${it.name}" }.join(' ')
+        )
+    }
+}
+
+// Create FAT JAR with all dependencies
+tasks.register('fatJar', Jar) {
+    group = 'build'
+    description = 'Create executable FAT JAR with all dependencies'
+    archiveBaseName = '3343-Project'
+    archiveClassifier = 'all'
+    manifest {
+        attributes(
+            'Main-Class': 'MainApp',
+            'Implementation-Title': 'CS3343 Second-Hand Trading Platform',
+            'Implementation-Version': version
+        )
+    }
+    
+    from sourceSets.main.output
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    
+    // Exclude duplicate files
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    
+    doLast {
+        println "✓ FAT JAR created at: ${archiveFile.get()}"
+        println "✓ Run with: java -jar ${archiveFile.get()}"
+    }
+}
+
+// Create Windows batch script
+tasks.register('createWindowsExecutable') {
+    group = 'build'
+    description = 'Create Windows executable batch script'
+    dependsOn fatJar
+    doLast {
+        def batFile = new File(projectDir, '3343-Project.bat')
+        
+        batFile.text = '''@echo off
+REM Second-Hand Trading Platform Launcher
+REM This script requires Java 25 or higher to be installed
+
+setlocal enabledelayedexpansion
+
+REM Check if Java is installed
+java -version >nul 2>&1
+if errorlevel 1 (
+    echo Error: Java is not installed or not in PATH
+    echo Please install Java 25 or higher from https://www.oracle.com/java/technologies/downloads/
+    pause
+    exit /b 1
+)
+
+REM Get the directory where this script is located
+set SCRIPT_DIR=%~dp0
+
+REM Run the application (automatically finds the JAR)
+for /f "tokens=*" %%a in ('dir "%SCRIPT_DIR%build\\libs\\3343-Project-*-all.jar" /b /s 2^>nul') do (
+    java -jar "%%a"
+    if errorlevel 1 (
+        echo.
+        echo Application exited with error code %ERRORLEVEL%
+        pause
+    )
+    goto:eof
+)
+
+echo Error: Could not find JAR file
+echo Expected location: build\\libs\\3343-Project-*-all.jar
+pause
+endlocal
+'''
+        println "✓ Windows batch script created: 3343-Project.bat"
+        println "✓ Double-click to run the application"
+    }
+}
+
+// Create Linux/Mac shell script
+tasks.register('createUnixExecutable') {
+    group = 'build'
+    description = 'Create Linux/Mac executable shell script'
+    dependsOn fatJar
+    doLast {
+        def shFile = new File(projectDir, '3343-Project.sh')
+        
+        shFile.text = '''#!/bin/bash
+# Second-Hand Trading Platform Launcher
+# This script requires Java 25 or higher to be installed
+
+# Check if Java is installed
+if ! command -v java &> /dev/null; then
+    echo "Error: Java is not installed"
+    echo "Please install Java 25 or higher"
+    exit 1
+fi
+
+# Get the directory where this script is located
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# Find and run the JAR file
+JAR_FILE=$(find "$SCRIPT_DIR/build/libs" -name "3343-Project-*-all.jar" -type f | head -1)
+
+if [ -z "$JAR_FILE" ]; then
+    echo "Error: Could not find JAR file"
+    echo "Expected location: build/libs/3343-Project-*-all.jar"
+    exit 1
+fi
+
+# Run the application
+java -jar "$JAR_FILE"
+'''
+        
+        // Make the script executable
+        shFile.setExecutable(true)
+        
+        println "✓ Unix shell script created: 3343-Project.sh"
+        println "✓ Run with: chmod +x 3343-Project.sh && ./3343-Project.sh"
+    }
+}
+
+// Create all executables
+tasks.register('createExecutables') {
+    group = 'build'
+    description = 'Create all executable files (Windows batch and Unix shell script)'
+    dependsOn createWindowsExecutable, createUnixExecutable
+    doLast {
+        println ""
+        println "========================================"
+        println "✓ All executable files created!"
+        println "========================================"
+        println ""
+        println "Windows Users:"
+        println "  - Double-click: 3343-Project.bat"
+        println "  - Or run: 3343-Project.bat"
+        println ""
+        println "Linux/Mac Users:"
+        println "  - Run: ./3343-Project.sh"
+        println ""
+        println "All Platforms:"
+        println "  - Use FAT JAR: java -jar build/libs/3343-Project-all.jar"
+        println ""
+    }
+}
+// Task to initialize demo data
+tasks.register('initDemoData', JavaExec) {
+    group = 'application'
+    description = 'Initialize database with demo data'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'InitializeDemoData'
 }

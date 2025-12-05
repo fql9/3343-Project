@@ -1,5 +1,6 @@
-package service;
+package integration.service;
 
+import integration.IntegrationTestBase;
 import service.OrderService;
 import service.UserService;
 import service.ItemService;
@@ -10,7 +11,6 @@ import model.Notification;
 import model.Order;
 import model.UserRole;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -18,7 +18,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class OrderServiceTest {
+class OrderServiceTest extends IntegrationTestBase {
 
     private OrderService orderService;
     private UserService userService;
@@ -30,11 +30,7 @@ class OrderServiceTest {
     private Long testItemId;
     private Long testOperatorId;
 
-    @BeforeAll
-    static void setupDatabase() {
-        // Ensure database is initialized
-        DatabaseConfig.initDatabase();
-    }
+
 
     @BeforeEach
     void setUp() {

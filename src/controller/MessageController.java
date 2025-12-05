@@ -78,7 +78,7 @@ public class MessageController {
         messageListView.setCellFactory(lv -> new MessageListCell());
         messageListView.getSelectionModel().selectedItemProperty().addListener(
             (obs, oldVal, newVal) -> {
-                if (newVal != null) {
+                if (newVal != null && messageListView.getItems().contains(newVal)) {
                     showConversation(newVal.userId);
                 }
             }
@@ -100,6 +100,8 @@ public class MessageController {
      * Load message list
      */
     private void loadMessageList() {
+        // Clear selection first to prevent IndexOutOfBoundsException
+        messageListView.getSelectionModel().clearSelection();
         messageListView.getItems().clear();
         
         Long currentUserId = UserService.getCurrentUser().getId();
@@ -199,9 +201,31 @@ public class MessageController {
         
         conversationBox.getChildren().addAll(userLabel, new Separator(), scrollPane, sendBox);
         
-        // Mark messages as read
+        // Mark messages as read and refresh the list to remove red badge
         messageService.markConversationAsRead(currentUserId, otherUserId);
-        loadMessageList(); // Refresh list to update unread count
+        
+        // Refresh message list in background to update unread count
+        javafx.application.Platform.runLater(() -> {
+            // Save current selection to avoid triggering selection change
+            Long currentSelection = selectedUserId;
+            
+            // Find the item in the list for this user
+            for (int i = 0; i < messageListView.getItems().size(); i++) {
+                MessageItem item = messageListView.getItems().get(i);
+                if (item.userId.equals(otherUserId) && item.unreadCount > 0) {
+                    // Update the unread count to 0
+                    item.unreadCount = 0;
+                    // Force the cell to refresh
+                    messageListView.getItems().set(i, item);
+                    break;
+                }
+            }
+            
+            // Update main view unread count
+            if (mainController != null) {
+                mainController.updateUnreadCount();
+            }
+        });
     }
     
     /**

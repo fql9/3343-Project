@@ -1,11 +1,11 @@
-package service;
+package integration.service;
 
+import integration.IntegrationTestBase;
 import service.UserService;
 import config.DatabaseConfig;
 import model.User;
 import model.UserRole;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -13,40 +13,21 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
 
-class UserServiceTest {
+class UserServiceTest extends IntegrationTestBase {
 
     private UserService userService;
     private static final String TEST_USER = "test_login_user";
     private static final String TEST_PASS = "password123";
     private static final String TEST_EMAIL = "test_login@example.com";
 
-    @BeforeAll
-    static void setupDatabase() {
-        // Ensure database is initialized
-        DatabaseConfig.initDatabase();
-    }
-
     @BeforeEach
     void setUp() {
         userService = new UserService();
-        // Ensure clean state for test user
-        cleanupTestUser();
     }
 
     @AfterEach
     void tearDown() {
-        // Clean up after tests
-        cleanupTestUser();
         userService.logout();
-    }
-
-    private void cleanupTestUser() {
-        try (java.sql.Connection conn = DatabaseConfig.getConnection();
-             java.sql.Statement stmt = conn.createStatement()) {
-            stmt.executeUpdate("DELETE FROM users WHERE username IN ('" + TEST_USER + "', 'admin_user', 'seller_user', 'test_user2')");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
 

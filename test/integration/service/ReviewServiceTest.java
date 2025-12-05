@@ -1,5 +1,6 @@
-package service;
+package integration.service;
 
+import integration.IntegrationTestBase;
 import service.ReviewService;
 import service.UserService;
 import service.ItemService;
@@ -19,7 +20,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class ReviewServiceTest {
+class ReviewServiceTest extends IntegrationTestBase {
 
     private ReviewService reviewService;
     private UserService userService;
@@ -30,12 +31,6 @@ class ReviewServiceTest {
     private Long testSellerId;
     private Long testItemId;
     private Long testOrderId;
-
-    @BeforeAll
-    static void setupDatabase() {
-        // Ensure database is initialized
-        DatabaseConfig.initDatabase();
-    }
 
     @BeforeEach
     void setUp() {

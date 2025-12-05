@@ -1,4 +1,4 @@
-package util;
+package unit.util;
 
 import org.junit.jupiter.api.Test;
 import util.ValidationUtils;

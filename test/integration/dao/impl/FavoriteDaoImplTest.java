@@ -1,5 +1,6 @@
-package dao.impl;
+package integration.dao.impl;
 
+import integration.IntegrationTestBase;
 import dao.impl.FavoriteDaoImpl;
 
 import config.DatabaseConfig;
@@ -15,7 +16,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import static org.junit.jupiter.api.Assertions.*;
 
-class FavoriteDaoImplTest {
+class FavoriteDaoImplTest extends IntegrationTestBase {
     private FavoriteDao favoriteDao;
     private Favorite testFavorite;
     private static final Long TEST_USER_ID = 1L;
@@ -24,6 +25,38 @@ class FavoriteDaoImplTest {
     @BeforeEach
     void setUp() {
         favoriteDao = new FavoriteDaoImpl();
+        
+        // 创建测试用户和商品（满足外键约束）
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(
+                 "INSERT OR IGNORE INTO users (id, username, password_hash, email, role, active, created_time) VALUES (?, ?, ?, ?, ?, ?, ?)")) {
+            ps.setLong(1, TEST_USER_ID);
+            ps.setString(2, "test_user_fav");
+            ps.setString(3, "hash");
+            ps.setString(4, "test_fav@test.com");
+            ps.setString(5, "BUYER");
+            ps.setInt(6, 1);
+            ps.setString(7, LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(
+                 "INSERT OR IGNORE INTO items (id, seller_id, title, description, price, category, active, created_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")) {
+            ps.setLong(1, TEST_ITEM_ID);
+            ps.setLong(2, TEST_USER_ID);
+            ps.setString(3, "Test Item");
+            ps.setString(4, "Test Description");
+            ps.setDouble(5, 100.0);
+            ps.setString(6, "Test");
+            ps.setInt(7, 1);
+            ps.setString(8, LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
         
         // 创建测试收藏
         testFavorite = new Favorite();

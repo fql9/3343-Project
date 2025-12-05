@@ -1,5 +1,6 @@
-package dao.impl;
+package integration.dao.impl;
 
+import integration.IntegrationTestBase;
 import dao.impl.MessageDaoImpl;
 
 import config.DatabaseConfig;
@@ -15,7 +16,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import static org.junit.jupiter.api.Assertions.*;
 
-class MessageDaoImplTest {
+class MessageDaoImplTest extends IntegrationTestBase {
     private MessageDao messageDao;
     private Message testMessage;
     private static final Long TEST_FROM_USER_ID = 1L;
@@ -24,6 +25,37 @@ class MessageDaoImplTest {
     @BeforeEach
     void setUp() {
         messageDao = new MessageDaoImpl();
+        
+        // 创建测试用户（满足外键约束）
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(
+                 "INSERT OR IGNORE INTO users (id, username, password_hash, email, role, active, created_time) VALUES (?, ?, ?, ?, ?, ?, ?)")) {
+            ps.setLong(1, TEST_FROM_USER_ID);
+            ps.setString(2, "test_user_msg_from");
+            ps.setString(3, "hash");
+            ps.setString(4, "test_msg_from@test.com");
+            ps.setString(5, "BUYER");
+            ps.setInt(6, 1);
+            ps.setString(7, LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(
+                 "INSERT OR IGNORE INTO users (id, username, password_hash, email, role, active, created_time) VALUES (?, ?, ?, ?, ?, ?, ?)")) {
+            ps.setLong(1, TEST_TO_USER_ID);
+            ps.setString(2, "test_user_msg_to");
+            ps.setString(3, "hash");
+            ps.setString(4, "test_msg_to@test.com");
+            ps.setString(5, "BUYER");
+            ps.setInt(6, 1);
+            ps.setString(7, LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
         
         // 创建测试消息
         testMessage = new Message();

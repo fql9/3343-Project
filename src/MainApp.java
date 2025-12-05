@@ -11,7 +11,7 @@ public class MainApp extends Application {
     @Override
     public void start(Stage primaryStage) {
         try {
-            // Initialize database
+            // Initialize database structure
             DatabaseConfig.initDatabase();
             
             // Set window properties

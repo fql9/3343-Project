@@ -1,5 +1,6 @@
-package service;
+package integration.service;
 
+import integration.IntegrationTestBase;
 import service.NotificationService;
 import service.UserService;
 import config.DatabaseConfig;
@@ -14,39 +15,13 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class NotificationServiceTest {
+class NotificationServiceTest extends IntegrationTestBase {
 
     private NotificationService notificationService;
     private UserService userService;
     
     private Long testUser1Id;
     private Long testUser2Id;
-
-    @BeforeAll
-    static void setupDatabase() {
-        // Ensure database is initialized
-        DatabaseConfig.initDatabase();
-        
-        // Recreate notifications table to ensure it allows NULL for title and content
-        try (java.sql.Connection conn = DatabaseConfig.getConnection();
-             java.sql.Statement stmt = conn.createStatement()) {
-            // Drop and recreate notifications table with correct schema
-            stmt.execute("DROP TABLE IF EXISTS notifications");
-            stmt.execute("""
-                CREATE TABLE notifications (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    user_id INTEGER NOT NULL,
-                    title TEXT,
-                    content TEXT,
-                    is_read INTEGER DEFAULT 0,
-                    created_time TEXT,
-                    FOREIGN KEY(user_id) REFERENCES users(id)
-                )
-            """);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
 
     @BeforeEach
     void setUp() {

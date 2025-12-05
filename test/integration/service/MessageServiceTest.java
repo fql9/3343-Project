@@ -1,5 +1,6 @@
-package service;
+package integration.service;
 
+import integration.IntegrationTestBase;
 import service.MessageService;
 import service.UserService;
 
@@ -7,7 +8,6 @@ import config.DatabaseConfig;
 import model.Message;
 import model.UserRole;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -15,7 +15,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class MessageServiceTest {
+class MessageServiceTest extends IntegrationTestBase {
 
     private MessageService messageService;
     private UserService userService;
@@ -23,11 +23,7 @@ class MessageServiceTest {
     private Long testUser2Id;
     private Long testUser3Id;
 
-    @BeforeAll
-    static void setupDatabase() {
-        // Ensure database is initialized
-        DatabaseConfig.initDatabase();
-    }
+
 
     @BeforeEach
     void setUp() {

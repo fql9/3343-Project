@@ -1,5 +1,6 @@
-package config;
+package integration.config;
 
+import integration.IntegrationTestBase;
 import config.DatabaseConfig;
 
 import org.junit.jupiter.api.AfterEach;
@@ -11,20 +12,11 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import static org.junit.jupiter.api.Assertions.*;
 
-class DatabaseConfigTest {
-    private static final String TEST_DB_URL = "jdbc:sqlite:test_secondhand.db";
-    private String originalDbUrl;
+class DatabaseConfigTest extends IntegrationTestBase {
 
     @BeforeEach
     void setUp() {
-        // 切换到测试数据库
-        DatabaseConfig.setDbUrlForTest(TEST_DB_URL);
-
-        // 确保测试数据库文件不存在
-        File testDbFile = new File("test_secondhand.db");
-        if (testDbFile.exists()) {
-            testDbFile.delete();
-        }
+        // 测试数据库已由基类配置
     }
 
     @AfterEach
