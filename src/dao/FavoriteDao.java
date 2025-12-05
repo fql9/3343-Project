@@ -5,10 +5,10 @@ import java.util.List;
 
 /**
  * Favorite Data Access Object interface.
+ * Note: The favorites table uses a composite primary key (user_id, item_id),
+ * so operations should use these fields instead of a separate id.
  */
 public interface FavoriteDao {
-
-    Favorite findById(Long id);
 
     List<Favorite> findByUserId(Long userId);
 
@@ -17,8 +17,6 @@ public interface FavoriteDao {
     boolean exists(Long userId, Long itemId);
 
     void save(Favorite favorite);
-
-    void delete(Long id);
 
     void deleteByUserAndItem(Long userId, Long itemId);
 }

@@ -11,24 +11,9 @@ import java.util.List;
 /**
  * Favorite Data Access Object implementation.
  * Provides database operations for Favorite entity.
+ * Note: The favorites table uses a composite primary key (user_id, item_id).
  */
 public class FavoriteDaoImpl implements FavoriteDao {
-
-    @Override
-    public Favorite findById(Long id) {
-        String sql = "SELECT * FROM favorites WHERE id = ?";
-
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setLong(1, id);
-            ResultSet rs = ps.executeQuery();
-
-            if (rs.next()) return mapRow(rs);
-
-        } catch (SQLException e) { e.printStackTrace(); }
-        return null;
-    }
 
     @Override
     public List<Favorite> findByUserId(Long userId) {
@@ -103,19 +88,6 @@ public class FavoriteDaoImpl implements FavoriteDao {
     }
 
     @Override
-    public void delete(Long id) {
-        String sql = "DELETE FROM favorites WHERE id=?";
-
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setLong(1, id);
-            ps.executeUpdate();
-
-        } catch (SQLException e) { e.printStackTrace(); }
-    }
-
-    @Override
     public void deleteByUserAndItem(Long userId, Long itemId) {
         String sql = "DELETE FROM favorites WHERE user_id=? AND item_id=?";
 
@@ -131,7 +103,7 @@ public class FavoriteDaoImpl implements FavoriteDao {
 
     private Favorite mapRow(ResultSet rs) throws SQLException {
         Favorite fav = new Favorite();
-        fav.setId(rs.getLong("id"));
+        // Note: favorites table uses composite primary key (user_id, item_id), no separate id column
         fav.setUserId(rs.getLong("user_id"));
         fav.setItemId(rs.getLong("item_id"));
         fav.setCreatedTime(rs.getString("created_time"));

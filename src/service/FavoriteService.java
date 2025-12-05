@@ -106,11 +106,4 @@ public class FavoriteService {
         return favoriteDao.findByItemId(itemId).size();
     }
     
-    /**
-     * Delete favorite
-     * @param favoriteId Favorite ID
-     */
-    public void deleteFavorite(Long favoriteId) {
-        favoriteDao.delete(favoriteId);
-    }
 }
