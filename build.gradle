@@ -2,13 +2,23 @@ plugins {
     id 'java'
     id 'application'
     id 'org.openjfx.javafxplugin' version '0.1.0'
+    id 'jacoco'
+    // id 'org.gradle.toolchains.foojay-resolver-convention' version '0.8.0' // This plugin is often applied in settings.gradle, but if used here, ensure it works or configure repositories manually below.
 }
 
 group = 'com.example'
-version = '1.0'
+version = '1.0-SNAPSHOT'
 
 repositories {
     mavenCentral()
+    maven { url "https://maven.aliyun.com/repository/public" } // 镜像
+}
+
+configurations.all {
+    resolutionStrategy {
+        force 'net.bytebuddy:byte-buddy:1.17.1'
+        force 'net.bytebuddy:byte-buddy-agent:1.17.1'
+    }
 }
 
 sourceSets {
@@ -20,19 +30,87 @@ sourceSets {
             srcDirs = ['src']
         }
     }
+    test {
+        java {
+            srcDirs = ['test']
+        }
+        resources {
+            srcDirs = ['test']
+        }
+    }
 }
 
+// Task to run only unit tests (from test/unit directory)
+tasks.register('unitTest', Test) {
+    description = 'Runs unit tests only (from test/unit directory).'
+    group = 'verification'
+    useJUnitPlatform()
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    // Unit tests: ValidationUtilsTest, PasswordUtilsTest, ItemServiceTest, FavoriteServiceTest
+    filter {
+        includeTestsMatching 'util.ValidationUtilsTest'
+        includeTestsMatching 'util.PasswordUtilsTest'
+        includeTestsMatching 'service.ItemServiceTest'
+        includeTestsMatching 'service.FavoriteServiceTest'
+    }
+    jvmArgs '--add-opens', 'java.base/java.lang=ALL-UNNAMED',
+            '--add-opens', 'java.base/java.lang.invoke=ALL-UNNAMED',
+            '--add-opens', 'java.base/java.lang.reflect=ALL-UNNAMED',
+            '--add-opens', 'java.base/java.util=ALL-UNNAMED',
+            '-XX:+EnableDynamicAgentLoading',
+            '-Dnet.bytebuddy.experimental=true'
+}
+
+// Task to run only integration tests (from test/integration directory)
+tasks.register('integrationTest', Test) {
+    description = 'Runs integration tests only (from test/integration directory).'
+    group = 'verification'
+    useJUnitPlatform()
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    // Integration tests: all DAO, service (except ItemService/FavoriteService), config, ExportUsers
+    filter {
+        includeTestsMatching 'config.DatabaseConfigTest'
+        includeTestsMatching 'dao.impl.*'
+        includeTestsMatching 'service.UserServiceTest'
+        includeTestsMatching 'service.MessageServiceTest'
+        includeTestsMatching 'service.OrderServiceTest'
+        includeTestsMatching 'service.ReviewServiceTest'
+        includeTestsMatching 'service.NotificationServiceTest'
+        includeTestsMatching 'util.ExportUsersTest'
+    }
+    jvmArgs '--add-opens', 'java.base/java.lang=ALL-UNNAMED',
+            '--add-opens', 'java.base/java.lang.invoke=ALL-UNNAMED',
+            '--add-opens', 'java.base/java.lang.reflect=ALL-UNNAMED',
+            '--add-opens', 'java.base/java.util=ALL-UNNAMED',
+            '--add-opens', 'java.base/java.io=ALL-UNNAMED',
+            '--add-opens', 'java.base/sun.nio.ch=ALL-UNNAMED',
+            '-XX:+EnableDynamicAgentLoading',
+            '-Dnet.bytebuddy.experimental=true'
+}
+
+
 dependencies {
-    implementation 'org.openjfx:javafx-controls:17.0.10'
-    implementation 'org.openjfx:javafx-fxml:17.0.10'
+    implementation 'org.openjfx:javafx-controls:23.0.1'
+    implementation 'org.openjfx:javafx-fxml:23.0.1'
     implementation 'org.xerial:sqlite-jdbc:3.46.0.0'
     implementation 'org.slf4j:slf4j-simple:2.0.16'
-    
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
+    testImplementation('org.mockito:mockito-core:5.14.2') {
+        exclude group: 'net.bytebuddy'
+    }
+    testImplementation('org.mockito:mockito-junit-jupiter:5.14.2') {
+        exclude group: 'net.bytebuddy'
+    }
+    testImplementation 'net.bytebuddy:byte-buddy:1.17.1'
+    testImplementation 'net.bytebuddy:byte-buddy-agent:1.17.1'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.10.2'
 }
 
 javafx {
-    version = '17.0.10'
+    version = '23.0.1'
     modules = ['javafx.controls', 'javafx.fxml']
 }
 
@@ -42,162 +120,224 @@ application {
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(23)
+        languageVersion = JavaLanguageVersion.of(21)
     }
 }
 
-tasks.withType(JavaCompile) {
+// Set encoding to UTF-8 for all Java compilation tasks
+tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
 }
+
+// Explicitly configure toolchain repositories if the foojay plugin is not sufficient or applied in settings.gradle
+// Note: In newer Gradle versions, this is usually done in settings.gradle, but for a single build file fix:
+/*
+toolchain {
+    repositories {
+        mavenCentral() 
+    }
+}
+*/
+
 
 tasks.withType(Test).configureEach {
     useJUnitPlatform()
 }
 
-// 创建包含所有依赖的分发包
-distributions {
-    main {
-        contents {
-            from('image') {
-                into 'image'
-            }
-            from('secondhand.db') {
-                into ''
-            }
-        }
+test {
+    useJUnitPlatform()
+    jvmArgs '--add-opens', 'java.base/java.lang=ALL-UNNAMED',
+            '--add-opens', 'java.base/java.lang.invoke=ALL-UNNAMED',
+            '--add-opens', 'java.base/java.lang.reflect=ALL-UNNAMED',
+            '--add-opens', 'java.base/java.util=ALL-UNNAMED',
+            '--add-opens', 'java.base/java.io=ALL-UNNAMED',
+            '--add-opens', 'java.base/sun.nio.ch=ALL-UNNAMED',
+            '--add-opens', 'java.base/sun.security.ssl=ALL-UNNAMED',
+            '--add-opens', 'java.base/java.util.concurrent=ALL-UNNAMED',
+            '--add-opens', 'java.base/java.net=ALL-UNNAMED',
+            '-XX:+EnableDynamicAgentLoading',
+            '-Dnet.bytebuddy.experimental=true'
+}
+
+jacocoTestReport {
+    dependsOn test // 生成报告前先运行测试
+    reports {
+        xml.required = false
+        csv.required = false
+        html.outputLocation = layout.buildDirectory.dir('jacocoHtml')
+    }
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: [
+                'util/DialogUtils.class',  // JavaFX UI class - requires TestFX
+                'controller/**',           // Controllers require TestFX
+                'MainApp.class'             // Main application class
+            ])
+        }))
     }
 }
 
-// 创建自定义Fat JAR任务
-task fatJar(type: Jar) {
-    archiveBaseName = 'SecondHandTrading'
-    archiveVersion = version
-    archiveClassifier = 'all'
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    
+// ===========================
+// Executable File Generation
+// ===========================
+
+// Configure JAR manifest
+jar {
     manifest {
         attributes(
             'Main-Class': 'MainApp',
-            'Class-Path': configurations.runtimeClasspath.collect { it.getName() }.join(' ')
+            'Implementation-Title': 'CS3343 Second-Hand Trading Platform',
+            'Implementation-Version': version,
+            'Class-Path': configurations.runtimeClasspath.files.collect { "lib/${it.name}" }.join(' ')
+        )
+    }
+}
+
+// Create FAT JAR with all dependencies
+tasks.register('fatJar', Jar) {
+    group = 'build'
+    description = 'Create executable FAT JAR with all dependencies'
+    archiveBaseName = '3343-Project'
+    archiveClassifier = 'all'
+    manifest {
+        attributes(
+            'Main-Class': 'MainApp',
+            'Implementation-Title': 'CS3343 Second-Hand Trading Platform',
+            'Implementation-Version': version
         )
     }
     
+    from sourceSets.main.output
     from {
         configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
     }
     
-    with jar
+    // Exclude duplicate files
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     
-    // 排除签名文件避免冲突
-    exclude 'META-INF/*.SF'
-    exclude 'META-INF/*.DSA'
-    exclude 'META-INF/*.RSA'
-}
-
-// 创建完整的可运行分发包
-task createDistribution(type: Zip) {
-    dependsOn fatJar
-    
-    archiveBaseName = 'SecondHandTrading'
-    archiveVersion = version
-    
-    from(fatJar.archiveFile) {
-        into 'lib'
-    }
-    
-    from('image') {
-        into 'image'
-    }
-    
-    from('secondhand.db') {
-        into ''
-    }
-    
-    from(projectDir) {
-        include 'run.bat'
-        include 'run.sh'
-    }
-}
-
-// 生成启动脚本
-task createLaunchers {
     doLast {
-        // Windows批处理文件
-        file('run.bat').text = '''@echo off
-cd /d "%~dp0"
-java --module-path lib --add-modules javafx.controls,javafx.fxml -jar lib/SecondHandTrading-1.0-all.jar
+        println "✓ FAT JAR created at: ${archiveFile.get()}"
+        println "✓ Run with: java -jar ${archiveFile.get()}"
+    }
+}
+
+// Create Windows batch script
+tasks.register('createWindowsExecutable') {
+    group = 'build'
+    description = 'Create Windows executable batch script'
+    dependsOn fatJar
+    doLast {
+        def batFile = new File(projectDir, '3343-Project.bat')
+        
+        batFile.text = '''@echo off
+REM Second-Hand Trading Platform Launcher
+REM This script requires Java 25 or higher to be installed
+
+setlocal enabledelayedexpansion
+
+REM Check if Java is installed
+java -version >nul 2>&1
+if errorlevel 1 (
+    echo Error: Java is not installed or not in PATH
+    echo Please install Java 25 or higher from https://www.oracle.com/java/technologies/downloads/
+    pause
+    exit /b 1
+)
+
+REM Get the directory where this script is located
+set SCRIPT_DIR=%~dp0
+
+REM Run the application (automatically finds the JAR)
+for /f "tokens=*" %%a in ('dir "%SCRIPT_DIR%build\\libs\\3343-Project-*-all.jar" /b /s 2^>nul') do (
+    java -jar "%%a"
+    if errorlevel 1 (
+        echo.
+        echo Application exited with error code %ERRORLEVEL%
+        pause
+    )
+    goto:eof
+)
+
+echo Error: Could not find JAR file
+echo Expected location: build\\libs\\3343-Project-*-all.jar
 pause
+endlocal
+'''
+        println "✓ Windows batch script created: 3343-Project.bat"
+        println "✓ Double-click to run the application"
+    }
+}
+
+// Create Linux/Mac shell script
+tasks.register('createUnixExecutable') {
+    group = 'build'
+    description = 'Create Linux/Mac executable shell script'
+    dependsOn fatJar
+    doLast {
+        def shFile = new File(projectDir, '3343-Project.sh')
+        
+        shFile.text = '''#!/bin/bash
+# Second-Hand Trading Platform Launcher
+# This script requires Java 25 or higher to be installed
+
+# Check if Java is installed
+if ! command -v java &> /dev/null; then
+    echo "Error: Java is not installed"
+    echo "Please install Java 25 or higher"
+    exit 1
+fi
+
+# Get the directory where this script is located
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# Find and run the JAR file
+JAR_FILE=$(find "$SCRIPT_DIR/build/libs" -name "3343-Project-*-all.jar" -type f | head -1)
+
+if [ -z "$JAR_FILE" ]; then
+    echo "Error: Could not find JAR file"
+    echo "Expected location: build/libs/3343-Project-*-all.jar"
+    exit 1
+fi
+
+# Run the application
+java -jar "$JAR_FILE"
 '''
         
-        // Unix Shell脚本
-        file('run.sh').text = '''#!/bin/bash
-cd "$(dirname "$0")"
-java --module-path lib --add-modules javafx.controls,javafx.fxml -jar lib/SecondHandTrading-1.0-all.jar
-'''
+        // Make the script executable
+        shFile.setExecutable(true)
+        
+        println "✓ Unix shell script created: 3343-Project.sh"
+        println "✓ Run with: chmod +x 3343-Project.sh && ./3343-Project.sh"
     }
 }
 
-createDistribution.dependsOn createLaunchers
-
-// jpackage 打包任务 - 创建 Windows 安装程序
-task jpackageImage(type: Exec) {
-    dependsOn fatJar
-    
-    def jpackageHome = System.getenv('JAVA_HOME') ?: ''
-    def jpackageExe = jpackageHome ? "${jpackageHome}/bin/jpackage" : 'jpackage'
-    
-    def outputDir = file("${buildDir}/jpackage")
-    def inputDir = file("${buildDir}/libs")
-    def resourceDir = file("${projectDir}")
-    
-    doFirst {
-        outputDir.mkdirs()
+// Create all executables
+tasks.register('createExecutables') {
+    group = 'build'
+    description = 'Create all executable files (Windows batch and Unix shell script)'
+    dependsOn createWindowsExecutable, createUnixExecutable
+    doLast {
+        println ""
+        println "========================================"
+        println "✓ All executable files created!"
+        println "========================================"
+        println ""
+        println "Windows Users:"
+        println "  - Double-click: 3343-Project.bat"
+        println "  - Or run: 3343-Project.bat"
+        println ""
+        println "Linux/Mac Users:"
+        println "  - Run: ./3343-Project.sh"
+        println ""
+        println "All Platforms:"
+        println "  - Use FAT JAR: java -jar build/libs/3343-Project-all.jar"
+        println ""
     }
-    
-    commandLine jpackageExe,
-        '--type', 'app-image',
-        '--name', 'SecondHandTrading',
-        '--app-version', version,
-        '--vendor', 'CityU Student',
-        '--input', inputDir.absolutePath,
-        '--main-jar', "SecondHandTrading-${version}-all.jar",
-        '--main-class', 'MainApp',
-        '--dest', outputDir.absolutePath,
-        '--java-options', '--add-modules=javafx.controls,javafx.fxml',
-        '--java-options', '--add-opens=javafx.graphics/javafx.scene=ALL-UNNAMED'
 }
-
-// jpackage 打包为 exe 安装程序
-task jpackageExe(type: Exec) {
-    dependsOn fatJar
-    
-    def jpackageHome = System.getenv('JAVA_HOME') ?: ''
-    def jpackageExe = jpackageHome ? "${jpackageHome}/bin/jpackage" : 'jpackage'
-    
-    def outputDir = file("${buildDir}/installer")
-    def inputDir = file("${buildDir}/libs")
-    
-    doFirst {
-        outputDir.mkdirs()
-    }
-    
-    commandLine jpackageExe,
-        '--type', 'exe',
-        '--name', 'SecondHandTrading',
-        '--app-version', version,
-        '--vendor', 'CityU Student',
-        '--description', 'A Second Hand Trading Platform for Campus',
-        '--input', inputDir.absolutePath,
-        '--main-jar', "SecondHandTrading-${version}-all.jar",
-        '--main-class', 'MainApp',
-        '--dest', outputDir.absolutePath,
-        '--java-options', '--add-modules=javafx.controls,javafx.fxml',
-        '--java-options', '--add-opens=javafx.graphics/javafx.scene=ALL-UNNAMED',
-        '--win-dir-chooser',
-        '--win-shortcut',
-        '--win-menu'
+// Task to initialize demo data
+tasks.register('initDemoData', JavaExec) {
+    group = 'application'
+    description = 'Initialize database with demo data'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'InitializeDemoData'
 }
-
-// 打包命令: ./gradlew createDistribution
-// 或直接运行: ./gradlew fatJar 然后 java --module-path build/libs --add-modules javafx.controls,javafx.fxml -jar build/libs/SecondHandTrading-1.0-all.jar
-// jpackage 打包: ./gradlew jpackageExe
