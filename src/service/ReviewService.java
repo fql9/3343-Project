@@ -8,10 +8,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
-/**
- * Review service class - handles review-related business logic.
- * Provides review creation and query functions.
- */
 public class ReviewService {
 
     private final ReviewDao reviewDao;

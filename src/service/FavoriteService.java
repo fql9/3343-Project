@@ -13,8 +13,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Favorite service class - handles favorite-related business logic.
- * Provides favorite management functions for users.
+ * Favorite service class - handles favorite-related business logic
  */
 public class FavoriteService {
 
@@ -26,6 +25,12 @@ public class FavoriteService {
     public FavoriteService() {
         this.favoriteDao = new FavoriteDaoImpl();
         this.itemDao = new ItemDaoImpl();
+    }
+
+    /** Constructor for dependency injection (used by tests) */
+    public FavoriteService(FavoriteDao favoriteDao, ItemDao itemDao) {
+        this.favoriteDao = favoriteDao;
+        this.itemDao = itemDao;
     }
     
     /**
@@ -106,4 +111,11 @@ public class FavoriteService {
         return favoriteDao.findByItemId(itemId).size();
     }
     
+    /**
+     * Delete favorite
+     * @param favoriteId Favorite ID
+     */
+    public void deleteFavorite(Long favoriteId) {
+        favoriteDao.delete(favoriteId);
+    }
 }

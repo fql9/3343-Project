@@ -3,13 +3,12 @@ package util;
 import java.util.regex.Pattern;
 
 /**
- * Data validation utility class.
- * Provides common validation methods for user input.
+ * Data validation utility class
  */
 public class ValidationUtils {
 
     private static final Pattern EMAIL_PATTERN = 
-        Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
+        Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9][A-Za-z0-9-]*(\\.[A-Za-z0-9][A-Za-z0-9-]*)+$");
     
     private static final Pattern USERNAME_PATTERN = 
         Pattern.compile("^[A-Za-z0-9_]{3,20}$");

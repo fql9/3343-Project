@@ -3,9 +3,6 @@ package dao;
 import model.Message;
 import java.util.List;
 
-/**
- * Message Data Access Object interface.
- */
 public interface MessageDao {
 
     Message findById(Long id);

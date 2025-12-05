@@ -1,17 +1,17 @@
 import config.DatabaseConfig;
-import view.controller.LoginController;
+import controller.LoginController;
 import javafx.application.Application;
 import javafx.stage.Stage;
 
 /**
- * Main application entry class.
+ * Main application entry class
  */
 public class MainApp extends Application {
 
     @Override
     public void start(Stage primaryStage) {
         try {
-            // Initialize database
+            // Initialize database structure
             DatabaseConfig.initDatabase();
             
             // Set window properties

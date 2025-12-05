@@ -12,8 +12,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 /**
- * User service class - handles user-related business logic.
- * Provides authentication, registration, and user management functions.
+ * User service class - handles user-related business logic
  */
 public class UserService {
 
@@ -125,7 +124,7 @@ public class UserService {
      * @return Whether is admin
      */
     public static boolean isAdmin() {
-        return currentUser != null && UserRole.ADMIN.name().equals(currentUser.getRole());
+        return currentUser != null && currentUser.getRole() == UserRole.ADMIN;
     }
     
     /**

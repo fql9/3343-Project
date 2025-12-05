@@ -8,10 +8,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
-/**
- * Notification service class - handles notification-related business logic.
- * Provides notification creation and management functions.
- */
 public class NotificationService {
 
     private final NotificationDao notificationDao;

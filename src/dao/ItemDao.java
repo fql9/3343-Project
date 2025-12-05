@@ -3,9 +3,6 @@ package dao;
 import model.Item;
 import java.util.List;
 
-/**
- * Item Data Access Object interface.
- */
 public interface ItemDao {
 
     Item findById(Long id);

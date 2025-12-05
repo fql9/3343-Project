@@ -1,16 +1,15 @@
 package model;
 
-/**
- * Favorite entity class representing a user's favorite item.
- * Links users to their bookmarked items for quick access.
- * Note: Uses composite primary key (userId, itemId) in database.
- */
 public class Favorite {
+    private Long id;
     private Long userId;
     private Long itemId;
     private String createdTime;
 
     // Getter & Setter
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
     public Long getUserId() { return userId; }
     public void setUserId(Long userId) { this.userId = userId; }
 

@@ -11,8 +11,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Item service class - handles item-related business logic.
- * Provides item publishing, searching, and management functions.
+ * Item service class - handles item-related business logic
  */
 public class ItemService {
 
@@ -21,7 +20,11 @@ public class ItemService {
         DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     
     public ItemService() {
-        this.itemDao = new ItemDaoImpl();
+        this(new ItemDaoImpl());
+    }
+
+    public ItemService(ItemDao itemDao) {
+        this.itemDao = itemDao;
     }
     
     /**

@@ -13,10 +13,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Order service class - handles order-related business logic.
- * Provides order creation, status management, and query functions.
- */
 public class OrderService {
 
     private final OrderDao orderDao;

@@ -1,8 +1,5 @@
 package model;
 
-/**
- * Message entity class representing a chat message between users.
- */
 public class Message {
     private Long id;
     private Long fromUserId;

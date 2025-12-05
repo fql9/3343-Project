@@ -1,8 +1,5 @@
 package model;
 
-/**
- * User entity class representing a platform user.
- */
 public class User {
     private Long id;
     private String username;

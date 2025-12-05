@@ -4,16 +4,36 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.Statement;
 
-/**
- * Database configuration and initialization class.
- */
 public class DatabaseConfig {
 
-    private static final String DB_URL = "jdbc:sqlite:secondhand.db";
-
+    private static final String DEFAULT_DB_URL = "jdbc:sqlite:secondhand.db";
+    private static final String TEST_DB_URL = "jdbc:sqlite:test_secondhand.db";
+    private static String DB_URL = DEFAULT_DB_URL;
+    private static boolean isTestMode = false;
+    
     /**
-     * Initialize database tables (called on application startup).
+     * 设置为测试模式，使用独立的测试数据库
      */
+    public static void setTestMode(boolean testMode) {
+        isTestMode = testMode;
+        DB_URL = testMode ? TEST_DB_URL : DEFAULT_DB_URL;
+    }
+    
+    /**
+     * 检查是否在测试模式
+     */
+    public static boolean isTestMode() {
+        return isTestMode;
+    }
+    
+    /**
+     * 获取当前数据库URL
+     */
+    public static String getDatabaseUrl() {
+        return DB_URL;
+    }
+    
+    // 初始化数据库（程序启动时执行）
     public static void initDatabase() {
         try (Connection conn = getConnection();
              Statement stmt = conn.createStatement()) {
@@ -23,10 +43,13 @@ public class DatabaseConfig {
                 CREATE TABLE IF NOT EXISTS users (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     username TEXT NOT NULL UNIQUE,
-                    password TEXT NOT NULL,
+                    password_hash TEXT NOT NULL,
                     email TEXT NOT NULL UNIQUE,
                     phone TEXT,
                     role TEXT DEFAULT 'BUYER',
+                    active INTEGER DEFAULT 1,
+                    avatar_url TEXT,
+                    bio TEXT,
                     created_time TEXT
                 );
             """);
@@ -57,10 +80,11 @@ public class DatabaseConfig {
             // ----- favorites -----
             stmt.execute("""
                 CREATE TABLE IF NOT EXISTS favorites (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
                     user_id INTEGER NOT NULL,
                     item_id INTEGER NOT NULL,
                     created_time TEXT,
-                    PRIMARY KEY(user_id, item_id),
+                    UNIQUE(user_id, item_id),
                     FOREIGN KEY(user_id) REFERENCES users(id),
                     FOREIGN KEY(item_id) REFERENCES items(id)
                 );
@@ -70,14 +94,13 @@ public class DatabaseConfig {
             stmt.execute("""
                 CREATE TABLE IF NOT EXISTS messages (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    sender_id INTEGER NOT NULL,
-                    receiver_id INTEGER NOT NULL,
-                    item_id INTEGER,
+                    from_user_id INTEGER NOT NULL,
+                    to_user_id INTEGER NOT NULL,
                     content TEXT NOT NULL,
                     created_time TEXT NOT NULL,
-                    FOREIGN KEY(sender_id) REFERENCES users(id),
-                    FOREIGN KEY(receiver_id) REFERENCES users(id),
-                    FOREIGN KEY(item_id) REFERENCES items(id)
+                    read INTEGER DEFAULT 0,
+                    FOREIGN KEY(from_user_id) REFERENCES users(id),
+                    FOREIGN KEY(to_user_id) REFERENCES users(id)
                 );
             """);
 
@@ -122,8 +145,8 @@ public class DatabaseConfig {
                 CREATE TABLE IF NOT EXISTS notifications (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     user_id INTEGER NOT NULL,
-                    title TEXT NOT NULL,
-                    content TEXT NOT NULL,
+                    title TEXT,
+                    content TEXT,
                     is_read INTEGER DEFAULT 0,
                     created_time TEXT,
                     FOREIGN KEY(user_id) REFERENCES users(id)
@@ -155,15 +178,27 @@ public class DatabaseConfig {
         }
     }
 
-    /**
-     * Get database connection.
-     * @return Database connection instance.
-     */
+    // 单例 Connection
     public static Connection getConnection() {
+        // 防御:只允许 SQLite URL,避免意外的驱动或无效协议悄悄成功
+        if (DB_URL == null || !DB_URL.startsWith("jdbc:sqlite:")) {
+            throw new RuntimeException("Invalid database URL: " + DB_URL);
+        }
         try {
-            return DriverManager.getConnection(DB_URL);
+            // Configure SQLite for better concurrency
+            String url = DB_URL + "?journal_mode=WAL&busy_timeout=10000";
+            return DriverManager.getConnection(url);
         } catch (Exception e) {
             throw new RuntimeException("Unable to connect database.", e);
         }
+    }
+
+    public static synchronized void setDbUrlForTest(String url) {
+        DB_URL = url;
+    }
+
+    /** for tests only */
+    public static synchronized void resetDbUrl() {
+        DB_URL = DEFAULT_DB_URL;
     }
 }

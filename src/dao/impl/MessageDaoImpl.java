@@ -8,10 +8,6 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Message Data Access Object implementation.
- * Provides database operations for Message entity.
- */
 public class MessageDaoImpl implements MessageDao {
 
     @Override

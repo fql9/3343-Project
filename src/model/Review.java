@@ -1,9 +1,5 @@
 package model;
 
-/**
- * Review entity class representing a buyer's review of a seller.
- * Contains rating and comment information for completed orders.
- */
 public class Review {
     private Long id;
     private Long orderId;
