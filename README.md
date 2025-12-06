@@ -14,10 +14,10 @@ This project is a complete second-hand trading platform application that provide
 
 ## Technology Stack
 
-- **Programming Language**: Java 25
-- **UI Framework**: JavaFX 23.0.1
+- **Programming Language**: Java 21
+- **UI Framework**: JavaFX 17.0.10
 - **Database**: SQLite 3.46.0.0
-- **Build Tool**: Gradle
+- **Build Tool**: Gradle 9.2.1
 - **Logging Framework**: SLF4J 2.0.16
 
 ## Project Structure
@@ -70,7 +70,7 @@ This project is a complete second-hand trading platform application that provide
 
 ## Requirements
 
-- **JDK**: Java 25 or higher
+- **JDK**: Java 21 or higher
 - **Gradle**: 6.4 or higher (Gradle Wrapper recommended)
 - **Operating System**: Windows / macOS / Linux
 
@@ -130,39 +130,22 @@ The system includes pre-initialized demo accounts with sample data. All accounts
 
 The database includes comprehensive demo data to showcase all platform features:
 
-**📦 Items (8 total)**
-- **Available (5 items)**:
-  - MacBook Pro 2021 ($8,999) - by alice
-  - Dell 27-inch 4K Monitor ($2,800) - by bob
-  - IKEA White Desk ($299) - by evan
-  - Nikon D750 DSLR Camera ($6,500) - by frank
-  - ThinkPad X1 Carbon ($5,999) - by frank
+**📦 Items (20 total)**
+- Categories: Electronics, Gaming, Furniture, Books, Sports
+- Various prices ranging from $50 to $8,999
+- All items include matching product images
 
-- **Sold (3 items)**:
-  - iPhone 13 Pro 256GB ($5,299) - sold by alice to charlie
-  - Sony WH-1000XM4 Headphones ($1,499) - sold by bob to diana
-  - Nintendo Switch ($1,899) - sold by henry to grace
+**💬 Messages (18 conversations)**
+- Multiple conversation threads between buyers and sellers
+- Inquiries about products, price negotiations, and delivery arrangements
 
-**💬 Messages (10 conversations)**
-- Charlie ↔ Alice: Negotiating MacBook price
-- Diana ↔ Bob: Discussing Sony headphones shipping
-- Grace ↔ Henry: Arranging Switch in-person meetup
-- Iris → Frank: Inquiring about camera condition
+**🛒 Orders (6 transactions)**
+- Various order statuses: completed, shipped, paid
+- Orders include complete shipping addresses in the US
 
-**🛒 Orders (3 transactions)**
-- Order #1: Diana purchased Sony headphones from Bob (✅ Completed)
-- Order #2: Grace purchased Nintendo Switch from Henry (🟡 Paid, awaiting delivery)
-- Order #3: Charlie purchased iPhone from Alice (✅ Completed)
-
-**⭐ Reviews (2 ratings)**
-- Diana → Bob: 5-star review for Sony headphones
-- Charlie → Alice: 5-star review for iPhone
-
-**❤️ Favorites (8 items)**
-- Charlie favorited: MacBook, Sony headphones
-- Diana favorited: iPhone, IKEA desk
-- Grace favorited: Dell monitor, Nintendo Switch
-- Iris favorited: Nikon camera, ThinkPad
+**❤️ Favorites (30 items)**
+- Distributed across all buyer accounts
+- Multiple favorites per user for testing
 
 ### Initializing Demo Data
 
@@ -336,13 +319,20 @@ The database is automatically created on first run. Schema migrations are handle
 Run the following utility class to view all users and their information:
 
 ```bash
-# Run in IDE
-src/util/ShowUserPasswords.java
+# View all users with password hashes and roles
+java -cp "build/classes/java/main;lib/*" util.QueryUsers
+
+# Or run directly in IDE: src/util/QueryUsers.java
 ```
 
 ### Export User Data
+Export all user information to a text file:
+
 ```bash
-# Run the corresponding task or utility class in IDE
+# Export users to users_export.txt
+java -cp "build/classes/java/main;lib/*" util.ExportUsers
+
+# Or run directly in IDE: src/util/ExportUsers.java
 ```
 
 ## Troubleshooting
@@ -380,4 +370,4 @@ This project is for educational purposes only.
 
 ---
 
-**Note**: This project is a course assignment and should not be used for commercial purposes.
+**Note**: This project is a course assignment of CS3343 and should not be used for commercial purposes.
