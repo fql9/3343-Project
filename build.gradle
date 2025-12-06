@@ -11,7 +11,7 @@ version = '1.0-SNAPSHOT'
 
 repositories {
     mavenCentral()
-    maven { url "https://maven.aliyun.com/repository/public" } // 镜像
+    maven { url = "https://maven.aliyun.com/repository/public" } // 镜像
 }
 
 configurations.all {
@@ -127,6 +127,7 @@ java {
 // Set encoding to UTF-8 for all Java compilation tasks
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
+    options.compilerArgs += ['-Xlint:unchecked']
 }
 
 // Explicitly configure toolchain repositories if the foojay plugin is not sufficient or applied in settings.gradle
