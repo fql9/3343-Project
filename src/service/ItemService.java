@@ -39,6 +39,11 @@ public class ItemService {
      */
     public String publishItem(Long sellerId, String title, String description, 
                               double price, String category, String imageUrl) {
+        // Validate sellerId
+        if (sellerId == null) {
+            return "Seller ID cannot be null. Please log in first.";
+        }
+        
         // Validate title
         if (!ValidationUtils.isNotEmpty(title)) {
             return "Item title cannot be empty";
@@ -53,15 +58,26 @@ public class ItemService {
         Item item = new Item();
         item.setSellerId(sellerId);
         item.setTitle(title);
-        item.setDescription(description);
+        // Ensure description is not null
+        item.setDescription(description != null ? description : "");
         item.setPrice(price);
-        item.setCategory(category);
-        item.setImageUrl(imageUrl);
+        // Ensure category is not null
+        item.setCategory(category != null ? category : "Other");
+        // Ensure imageUrl is not null
+        item.setImageUrl(imageUrl != null && !imageUrl.trim().isEmpty() ? imageUrl : null);
         item.setActive(true);
         item.setCreatedTime(LocalDateTime.now().format(DATE_FORMATTER));
         
-        itemDao.save(item);
-        return null; // Success returns null
+        try {
+            System.out.println("Attempting to save item: title=" + title + ", sellerId=" + sellerId);
+            itemDao.save(item);
+            System.out.println("Item saved successfully");
+            return null; // Success returns null
+        } catch (RuntimeException e) {
+            System.err.println("Error saving item: " + e.getMessage());
+            e.printStackTrace();
+            return "Failed to publish item: " + e.getMessage();
+        }
     }
     
     /**
