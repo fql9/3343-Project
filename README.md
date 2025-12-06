@@ -344,7 +344,7 @@ If you encounter Gradle download issues:
 - Disable Gradle Wrapper in VS Code settings: `java.import.gradle.wrapper.enabled = false`
 
 ### 2. JavaFX Runtime Error
-Ensure Java 25 is properly installed and JavaFX modules are configured.
+Ensure Java 21 is properly installed and JavaFX modules are configured.
 
 ### 3. Missing Database File
 After deleting the `secondhand.db` file, restart the program to automatically create a new database.
