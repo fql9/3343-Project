@@ -235,38 +235,40 @@ rm secondhand.db
 The project follows a mixed testing approach combining unit tests and integration tests:
 
 #### Unit Tests (with Mockito)
-- Location: `test/unit/`
+- Location: `src/test/java/unit/`
 - Services tested with mocked dependencies:
   - `ItemServiceTest` (17 test cases)
   - `FavoriteServiceTest` (11 test cases)
+  - `ImageUtilsTest` (15 test cases for image processing)
   - `ValidationUtilsTest`, `PasswordUtilsTest`
 
 #### Integration Tests (with real SQLite database)
-- Location: `test/integration/`
+- Location: `src/test/java/integration/`
 - Components tested:
-  - **DAO Layer**: `UserDaoImplTest`, `ItemDaoImplTest`, `MessageDaoImplTest`, `FavoriteDaoImplTest`
-  - **Service Layer**: `UserServiceTest`, `MessageServiceTest`, `OrderServiceTest`, `ReviewServiceTest`, `NotificationServiceTest`
-  - **Config**: `DatabaseConfigTest`
+  - **DAO Layer**: `UserDaoImplTest`, `ItemDaoImplTest` (11 search tests), `MessageDaoImplTest`, `FavoriteDaoImplTest`, `OrderDaoImplTest` (10 test cases)
+  - **Service Layer**: `UserServiceTest`, `MessageServiceTest`, `OrderServiceTest`, `ReviewServiceTest` (comprehensive review system tests), `NotificationServiceTest`
+  - **Config**: `DatabaseConfigTest`, `DemoDataInitializerTest`
   - **Utilities**: `ExportUsersTest`
 
 ### Test Coverage Report (JaCoCo)
 
 **Overall Coverage:**
-- **Line Coverage**: 87% (3,378 of 3,877 instructions)
-- **Branch Coverage**: 71% (205 of 287 branches)
-- **Method Coverage**: 100% (all 267 methods)
-- **Class Coverage**: 100% (all 26 classes)
+- **Instruction Coverage**: 92% (4,929 of 5,318 instructions)
+- **Branch Coverage**: 80% (296 of 367 branches)
+- **Method Coverage**: 95% (272 of 286 methods)
+- **Class Coverage**: 100% (all 28 classes)
+- **Line Coverage**: 91% (1,104 of 1,215 lines)
 
 **By Package:**
-| Package | Line Coverage | Branch Coverage | Methods |
-|---------|---------------|-----------------|---------|
+| Package | Instruction Coverage | Branch Coverage | Methods |
+|---------|---------------------|-----------------|---------|
 | model | 99% | n/a | 110/110 |
-| util | 92% | 100% | 16/16 |
-| service | 89% | 80% | 79/79 |
-| dao.impl | 83% | 55% | 56/56 |
-| config | 77% | 75% | 6/6 |
+| config | 94% | 75% | 18/18 |
+| dao.impl | 92% | 76% | 56/56 |
+| service | 90% | 80% | 79/79 |
+| util | 88% | 96% | 23/23 |
 
-**Total Test Cases**: 231 (all passing ✅)
+**Total Test Cases**: 271 (all passing ✅)
 
 ### Running Tests
 
@@ -287,17 +289,22 @@ The project follows a mixed testing approach combining unit tests and integratio
 # Open: build/jacocoHtml/index.html in browser
 ```
 
-### Test Coverage Roadmap
+### Test Coverage Achievements
 
-**Current Status**: 231 test cases, 87% code coverage
+**Current Status**: 271 test cases, 92% instruction coverage, 80% branch coverage ✅
 
-**Planned Improvements**:
-1. **Service Unit Tests** (Planned): Add unit tests for MessageService, OrderService, ReviewService, NotificationService with mocked dependencies (~40-50 cases)
-2. **DAO Integration Tests** (Planned): Add tests for ReviewDaoImpl, NotificationDaoImpl, OrderDaoImpl (~15-20 cases)
-3. **Controller Integration Tests** (Planned): Add integration tests for critical Controllers with mocked Services (~30-50 cases)
-   - LoginController, BoardController, CheckoutController, OrderHistoryController, etc.
+**Recent Improvements** (Test branch → Master):
+1. ✅ **Enhanced DAO Tests**: Added comprehensive tests for `ItemDaoImpl.searchItems()` (11 cases) and `OrderDaoImpl` (10 cases)
+2. ✅ **Service Integration Tests**: Comprehensive testing for `ReviewService`, `OrderService`, `NotificationService`
+3. ✅ **Utility Tests**: Added `ImageUtilsTest` with 15 test cases for image processing
+4. ✅ **Configuration Tests**: `DemoDataInitializerTest` for data initialization validation
+5. ✅ **Database Safety**: Fixed critical database isolation bug preventing production data loss
 
-**Target Coverage**: 95%+
+**Next Steps** (Optional enhancements):
+- Controller Integration Tests: Add tests for UI Controllers with mocked Services (~30-50 cases)
+- Edge Case Coverage: Improve branch coverage in complex error handling scenarios
+
+**Target**: Maintain 90%+ coverage with continued refactoring
 
 ## Database
 
