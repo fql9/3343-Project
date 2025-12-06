@@ -38,7 +38,7 @@ public class ItemService {
      * @return Publish result message
      */
     public String publishItem(Long sellerId, String title, String description, 
-                              double price, String category, String imageUrl) {
+                              double price, String category, String imageUrl) {  
         // Validate sellerId
         if (sellerId == null) {
             return "Seller ID cannot be null. Please log in first.";
