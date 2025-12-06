@@ -1,0 +1,129 @@
+@startuml Pattern_Dependency_Injection
+
+title Design Pattern - Dependency Injection Pattern
+
+' ========== Classic Blue Style (Matching Sequence Diagrams) ==========
+skinparam backgroundColor White
+skinparam roundcorner 0
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+
+skinparam class {
+    BackgroundColor #58d2f9
+    BorderColor #282828
+    FontColor Black
+    FontStyle bold
+    FontName Arial
+    AttributeFontName Arial
+    AttributeFontColor Black
+    ArrowColor #282828
+}
+
+skinparam interface {
+    BackgroundColor #58d2f9
+    BorderColor #282828
+    FontColor Black
+    FontStyle bold
+    FontName Arial
+}
+
+skinparam package {
+    BackgroundColor White
+    BorderColor #282828
+    FontColor Black
+    FontStyle bold
+    FontName Arial
+}
+
+skinparam note {
+    BackgroundColor #58d2f9
+    BorderColor #282828
+    FontName Arial
+}
+
+skinparam classAttributeIconSize 0
+
+package "Service Layer" {
+    class ItemService {
+        - itemDao : ItemDao
+        ==
+        **Constructor Injection**
+        ..
+        + ItemService()
+        + ItemService(ItemDao itemDao)
+        --
+        + getItemById(Long) : Item
+        + publishItem(...) : String
+        + getAllActiveItems() : List<Item>
+    }
+}
+
+package "DAO Layer" {
+    interface ItemDao <<interface>> {
+        + findById(Long) : Item
+        + findAll() : List<Item>
+        + save(Item) : void
+        + update(Item) : void
+        + delete(Long) : void
+    }
+    
+    class ItemDaoImpl {
+        + findById(Long) : Item
+        + findAll() : List<Item>
+        + save(Item) : void
+        + update(Item) : void
+        + delete(Long) : void
+    }
+}
+
+package "Test" {
+    class ItemServiceTest <<JUnit>> {
+        - mockItemDao : ItemDao
+        - itemService : ItemService
+        --
+        + setUp() : void
+        + testGetItemById() : void
+        + testPublishItem() : void
+    }
+    
+    class MockItemDao <<Mock>> {
+        Mocked behavior
+        for testing
+    }
+}
+
+' Relationships
+ItemService --> ItemDao : depends on interface
+ItemDaoImpl ..|> ItemDao : implements
+
+ItemServiceTest --> ItemService : tests
+ItemServiceTest --> MockItemDao : injects
+MockItemDao ..|> ItemDao : implements
+
+note right of ItemService
+  **Production Use:**
+  new ItemService()
+  → creates ItemDaoImpl internally
+  
+  **Test Use:**
+  new ItemService(mockItemDao)
+  → injects mock for testing
+end note
+
+note bottom of ItemServiceTest
+  **Unit Test with Mock:**
+  @Mock ItemDao mockItemDao;
+  itemService = new ItemService(mockItemDao);
+  when(mockItemDao.findById(1L))
+    .thenReturn(mockItem);
+end note
+
+note left of ItemDao
+  **Interface enables:**
+  - Loose coupling
+  - Easy mocking
+  - Substitution
+end note
+
+@enduml
+

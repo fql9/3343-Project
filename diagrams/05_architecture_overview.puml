@@ -1,0 +1,199 @@
+@startuml Architecture_Overview
+
+title System Architecture Overview
+
+' ========== Classic Blue Style (Matching Sequence Diagrams) ==========
+skinparam backgroundColor White
+skinparam roundcorner 0
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+
+skinparam component {
+    BackgroundColor #58d2f9
+    BorderColor #282828
+    FontColor Black
+    FontStyle bold
+    FontName Arial
+    ArrowColor #282828
+}
+
+skinparam interface {
+    BackgroundColor #58d2f9
+    BorderColor #282828
+    FontColor Black
+    FontName Arial
+}
+
+skinparam database {
+    BackgroundColor #58d2f9
+    BorderColor #282828
+    FontColor Black
+    FontName Arial
+}
+
+skinparam package {
+    BackgroundColor White
+    BorderColor #282828
+    FontColor Black
+    FontStyle bold
+    FontName Arial
+}
+
+skinparam note {
+    BackgroundColor #58d2f9
+    BorderColor #282828
+    FontName Arial
+}
+
+skinparam packageStyle rectangle
+
+package "View Layer" {
+    package "view.controller" {
+        [MainApp] as MA
+        [LoginController] as LC
+        [MainController] as MC
+        [BoardController] as BC
+        [ItemDetailController] as IDC
+        [CheckoutController] as CC
+        [MyItemsController] as MIC
+        [OrderHistoryController] as OHC
+        [SalesHistoryController] as SHC
+        [FavoritesController] as FC
+        [MessageController] as MsgC
+        [NotificationController] as NC
+        [UserProfileController] as UPC
+        [UserManagementController] as UMC
+    }
+    
+    package "view.util" {
+        [DialogUtils] as DU
+    }
+}
+
+package "Service Layer" {
+    package "service" {
+        [UserService] as US
+        [ItemService] as IS
+        [OrderService] as OS
+        [MessageService] as MS
+        [NotificationService] as NS
+        [ReviewService] as RS
+        [FavoriteService] as FS
+    }
+}
+
+package "DAO Layer" {
+    package "dao" {
+        interface UserDao as UD
+        interface ItemDao as ID
+        interface OrderDao as OD
+        interface MessageDao as MD
+        interface NotificationDao as ND
+        interface ReviewDao as RD
+        interface FavoriteDao as FD
+    }
+    
+    package "dao.impl" {
+        [UserDaoImpl] as UDI
+        [ItemDaoImpl] as IDI
+        [OrderDaoImpl] as ODI
+        [MessageDaoImpl] as MDI
+        [NotificationDaoImpl] as NDI
+        [ReviewDaoImpl] as RDI
+        [FavoriteDaoImpl] as FDI
+    }
+}
+
+package "Model Layer" {
+    package "model" {
+        [User] as U
+        [Item] as I
+        [Order] as O
+        [Message] as Msg
+        [Notification] as N
+        [Review] as R
+        [Favorite] as F
+        [UserRole] as UR
+    }
+}
+
+package "Config & Util" {
+    package "config" {
+        [DatabaseConfig] as DC
+    }
+    
+    package "util" {
+        [PasswordUtils] as PU
+        [ValidationUtils] as VU
+    }
+}
+
+database "SQLite\nDatabase" as DB
+
+' Inter-layer relationships
+MA --> LC
+LC --> MC
+MC --> BC
+MC --> MIC
+MC --> OHC
+MC --> SHC
+MC --> FC
+MC --> MsgC
+MC --> NC
+MC --> UPC
+MC --> UMC
+
+BC --> IS
+IDC --> IS
+MIC --> IS
+OHC --> OS
+SHC --> OS
+FC --> FS
+MsgC --> MS
+NC --> NS
+UPC --> US
+UMC --> US
+LC --> US
+CC --> OS
+
+US --> UD
+IS --> ID
+OS --> OD
+MS --> MD
+NS --> ND
+RS --> RD
+FS --> FD
+
+UDI ..|> UD
+IDI ..|> ID
+ODI ..|> OD
+MDI ..|> MD
+NDI ..|> ND
+RDI ..|> RD
+FDI ..|> FD
+
+UDI --> DC
+IDI --> DC
+ODI --> DC
+MDI --> DC
+NDI --> DC
+RDI --> DC
+FDI --> DC
+
+DC --> DB
+
+US ..> PU
+US ..> VU
+IS ..> VU
+
+note right of DB
+  SQLite Database
+  Stores all entity data
+end note
+
+note top of MA
+  Application Entry Point
+  JavaFX Application
+end note
+
+@enduml

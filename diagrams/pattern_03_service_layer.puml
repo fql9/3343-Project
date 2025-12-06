@@ -1,0 +1,127 @@
+@startuml Pattern_Service_Layer
+
+title Design Pattern - Service Layer Pattern
+
+' ========== Classic Blue Style (Matching Sequence Diagrams) ==========
+skinparam backgroundColor White
+skinparam roundcorner 0
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+
+skinparam class {
+    BackgroundColor #58d2f9
+    BorderColor #282828
+    FontColor Black
+    FontStyle bold
+    FontName Arial
+    AttributeFontName Arial
+    AttributeFontColor Black
+    ArrowColor #282828
+}
+
+skinparam interface {
+    BackgroundColor #58d2f9
+    BorderColor #282828
+    FontColor Black
+    FontStyle bold
+    FontName Arial
+}
+
+skinparam package {
+    BackgroundColor White
+    BorderColor #282828
+    FontColor Black
+    FontStyle bold
+    FontName Arial
+}
+
+skinparam note {
+    BackgroundColor #58d2f9
+    BorderColor #282828
+    FontName Arial
+}
+
+skinparam classAttributeIconSize 0
+
+package "Controller Layer" {
+    class CheckoutController {
+        - orderService : OrderService
+        --
+        + handlePurchase() : void
+    }
+    
+    class OrderHistoryController {
+        - orderService : OrderService
+        --
+        + loadOrders() : void
+        + updateStatus(Order) : void
+    }
+}
+
+package "Service Layer" {
+    class OrderService {
+        - orderDao : OrderDao
+        - itemDao : ItemDao
+        - notificationService : NotificationService
+        --
+        + createOrder(Long, Long, String) : String
+        + updateOrderStatus(Long, String, Long) : String
+        + getOrdersByBuyer(Long) : List<Order>
+        + getOrdersBySeller(Long) : List<Order>
+    }
+    
+    class NotificationService {
+        - notificationDao : NotificationDao
+        --
+        + createNotification(Long, String, String) : void
+        + getUserNotifications(Long) : List<Notification>
+    }
+}
+
+package "DAO Layer" {
+    interface OrderDao <<interface>> {
+        + save(Order) : void
+        + update(Order) : void
+        + findById(Long) : Order
+        + findByBuyerId(Long) : List<Order>
+        + findBySellerId(Long) : List<Order>
+    }
+    
+    interface ItemDao <<interface>> {
+        + findById(Long) : Item
+        + update(Item) : void
+    }
+    
+    interface NotificationDao <<interface>> {
+        + save(Notification) : void
+    }
+}
+
+' Relationships
+CheckoutController --> OrderService : uses
+OrderHistoryController --> OrderService : uses
+OrderService --> OrderDao : uses
+OrderService --> ItemDao : uses
+OrderService --> NotificationService : uses
+NotificationService --> NotificationDao : uses
+
+note right of OrderService
+  **Service Layer Responsibilities:**
+  1. Validate business rules
+  2. Coordinate multiple DAOs
+  3. Handle transactions
+  4. Trigger notifications
+  5. Return error messages
+end note
+
+note bottom of OrderService
+  **createOrder() workflow:**
+  1. Validate item exists & active
+  2. Check buyer != seller
+  3. Create Order via OrderDao
+  4. Update Item via ItemDao
+  5. Notify via NotificationService
+end note
+
+@enduml
+

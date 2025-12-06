@@ -1,0 +1,142 @@
+@startuml Pattern_Utility_Helper
+
+title Design Pattern - Utility/Helper Pattern
+
+' ========== Classic Blue Style (Matching Sequence Diagrams) ==========
+skinparam backgroundColor White
+skinparam roundcorner 0
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+
+skinparam class {
+    BackgroundColor #58d2f9
+    BorderColor #282828
+    FontColor Black
+    FontStyle bold
+    FontName Arial
+    AttributeFontName Arial
+    AttributeFontColor Black
+    ArrowColor #282828
+}
+
+skinparam package {
+    BackgroundColor White
+    BorderColor #282828
+    FontColor Black
+    FontStyle bold
+    FontName Arial
+}
+
+skinparam note {
+    BackgroundColor #58d2f9
+    BorderColor #282828
+    FontName Arial
+}
+
+skinparam classAttributeIconSize 0
+
+package "util" {
+    class PasswordUtils <<utility>> {
+        - {static} ALGORITHM : String = "SHA-256"
+        ==
+        **Static Methods Only**
+        ..
+        + {static} hashPassword(String) : String
+        + {static} verifyPassword(String, String) : boolean
+        + {static} generateRandomPassword(int) : String
+    }
+    
+    class ValidationUtils <<utility>> {
+        - {static} EMAIL_PATTERN : Pattern
+        - {static} USERNAME_PATTERN : Pattern
+        ==
+        **Static Methods Only**
+        ..
+        + {static} isValidUsername(String) : boolean
+        + {static} isValidPassword(String) : boolean
+        + {static} isValidEmail(String) : boolean
+        + {static} isValidPrice(double) : boolean
+        + {static} isNotEmpty(String) : boolean
+        + {static} getUsernameValidationMessage() : String
+        + {static} getPasswordValidationMessage() : String
+    }
+    
+    class DialogUtils <<utility>> {
+        ==
+        **Static Methods Only**
+        ..
+        + {static} showInfo(String, String) : void
+        + {static} showWarning(String, String) : void
+        + {static} showError(String, String) : void
+        + {static} showSuccess(String) : void
+        + {static} showConfirm(String, String) : boolean
+    }
+    
+    class ImageUtils <<utility>> {
+        ==
+        **Static Methods Only**
+        ..
+        + {static} loadImage(String) : Image
+        + {static} saveImage(File, String) : String
+        + {static} getImageView(String, double, double) : ImageView
+    }
+}
+
+package "Clients (Usage Examples)" {
+    class UserService {
+        + register(...) : String
+        + login(...) : String
+        + changePassword(...) : String
+    }
+    
+    class ItemService {
+        + publishItem(...) : String
+        + updateItem(...) : String
+    }
+    
+    class LoginController {
+        - handleLogin() : void
+        - handleRegister() : void
+    }
+}
+
+' Relationships
+UserService ..> PasswordUtils : uses
+UserService ..> ValidationUtils : uses
+ItemService ..> ValidationUtils : uses
+LoginController ..> DialogUtils : uses
+LoginController ..> ValidationUtils : uses
+
+note right of PasswordUtils
+  **Password Handling:**
+  - SHA-256 hashing
+  - Never store plaintext
+  - Consistent algorithm
+end note
+
+note right of ValidationUtils
+  **Input Validation:**
+  - Username: 3-20 chars
+  - Password: min 6 chars
+  - Email: regex pattern
+  - Price: > 0
+end note
+
+note right of DialogUtils
+  **User Feedback:**
+  - Info dialogs
+  - Warning dialogs
+  - Error dialogs
+  - Confirmation dialogs
+end note
+
+note bottom of UserService
+  **Usage Example:**
+  if (!ValidationUtils.isValidUsername(username)) {
+    return ValidationUtils.getUsernameValidationMessage();
+  }
+  user.setPasswordHash(PasswordUtils.hashPassword(password));
+end note
+
+@enduml
+

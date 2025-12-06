@@ -1,0 +1,287 @@
+@startuml Controller_Layer
+
+title View Controller Layer - UI Controllers
+
+' ========== Classic Blue Style (Matching Sequence Diagrams) ==========
+skinparam backgroundColor White
+skinparam roundcorner 0
+skinparam defaultFontName Arial
+skinparam defaultFontSize 10
+
+skinparam class {
+    BackgroundColor #58d2f9
+    BorderColor #282828
+    FontColor Black
+    FontStyle bold
+    FontName Arial
+    AttributeFontName Arial
+    AttributeFontColor Black
+    ArrowColor #282828
+}
+
+skinparam package {
+    BackgroundColor White
+    BorderColor #282828
+    FontColor Black
+    FontStyle bold
+    FontName Arial
+}
+
+skinparam classAttributeIconSize 0
+
+package "view.controller" {
+    
+    class MainApp {
+        + start(Stage) : void
+        + {static} main(String[]) : void
+    }
+    
+    class LoginController {
+        - primaryStage : Stage
+        - userService : UserService
+        - usernameField : TextField
+        - passwordField : PasswordField
+        - emailField : TextField
+        --
+        + LoginController(Stage)
+        + showLoginView() : void
+        + showRegisterView() : void
+        - handleLogin() : void
+        - handleRegister() : void
+    }
+    
+    class MainController {
+        - primaryStage : Stage
+        - userService : UserService
+        - messageService : MessageService
+        - notificationService : NotificationService
+        - mainLayout : BorderPane
+        - unreadCountLabel : Label
+        - notificationCountLabel : Label
+        - notificationPoller : Timeline
+        --
+        + MainController(Stage)
+        + showMainView() : void
+        + updateUnreadCount() : void
+        - startNotificationPoller() : void
+        - createTopBar() : HBox
+        - createLeftMenu() : VBox
+        - showBoard() : void
+        - showMyItems() : void
+        - showMyOrders() : void
+        - showMySales() : void
+        - showFavorites() : void
+        - showMessages() : void
+        - showNotifications() : void
+        - showProfile() : void
+        - showUserManagement() : void
+        - handleLogout() : void
+    }
+    
+    class BoardController {
+        - mainLayout : BorderPane
+        - itemService : ItemService
+        - itemListContainer : VBox
+        - searchField : TextField
+        - categoryComboBox : ComboBox
+        - sortBox : ComboBox
+        --
+        + BoardController(BorderPane)
+        + showBoardView() : void
+        - createTopBar() : HBox
+        - createSearchSection() : VBox
+        - loadItems() : void
+        - handleSearch() : void
+        - createItemCard(Item) : HBox
+        - showItemDetail(Item) : void
+        - showPublishDialog() : void
+    }
+    
+    class ItemDetailController {
+        - mainLayout : BorderPane
+        - item : Item
+        - favoriteService : FavoriteService
+        - userService : UserService
+        - reviewService : ReviewService
+        - favoriteButton : Button
+        --
+        + ItemDetailController(BorderPane, Item)
+        + showItemDetailView() : void
+        - handleFavorite() : void
+        - handleContactSeller() : void
+        - handleBuyNow() : void
+        - goBack() : void
+    }
+    
+    class CheckoutController {
+        - mainLayout : BorderPane
+        - item : Item
+        - orderService : OrderService
+        --
+        + CheckoutController(BorderPane, Item)
+        + showCheckoutView() : void
+        - handlePayment(String) : void
+        - goBack() : void
+    }
+    
+    class MyItemsController {
+        - mainLayout : BorderPane
+        - itemService : ItemService
+        - itemListContainer : VBox
+        --
+        + MyItemsController(BorderPane)
+        + showMyItemsView() : void
+        - createTopBar() : HBox
+        - loadMyItems() : void
+        - createItemCard(Item) : HBox
+        - showPublishDialog() : void
+        - showEditDialog(Item) : void
+        - handleToggleActive(Item) : void
+        - handleDelete(Item) : void
+    }
+    
+    class OrderHistoryController {
+        - mainLayout : BorderPane
+        - orderService : OrderService
+        - itemService : ItemService
+        - reviewService : ReviewService
+        - orderListContainer : VBox
+        --
+        + OrderHistoryController(BorderPane)
+        + showOrderHistoryView() : void
+        - loadOrders() : void
+        - createOrderCard(Order) : HBox
+        - handleConfirmReceipt(Order) : void
+        - showReviewDialog(Order) : void
+    }
+    
+    class SalesHistoryController {
+        - mainLayout : BorderPane
+        - orderService : OrderService
+        - itemService : ItemService
+        - userService : UserService
+        - orderListContainer : VBox
+        --
+        + SalesHistoryController(BorderPane)
+        + showSalesHistoryView() : void
+        - loadSales() : void
+        - createSaleCard(Order) : HBox
+        - handleShipOrder(Order) : void
+    }
+    
+    class FavoritesController {
+        - mainLayout : BorderPane
+        - favoriteService : FavoriteService
+        - itemService : ItemService
+        - itemListContainer : VBox
+        --
+        + FavoritesController(BorderPane)
+        + showFavoritesView() : void
+        - createTopBar() : HBox
+        - loadFavorites() : void
+        - createItemCard(Item) : HBox
+        - handleRemoveFavorite(Item) : void
+    }
+    
+    class MessageController {
+        - mainLayout : BorderPane
+        - messageService : MessageService
+        - userService : UserService
+        - mainController : MainController
+        - messageListView : ListView
+        - conversationBox : VBox
+        - selectedUserId : Long
+        --
+        + MessageController(BorderPane, MainController)
+        + showMessagesView() : void
+        + openConversation(Long) : void
+        - createMessageListPanel() : VBox
+        - loadMessageList() : void
+        - showConversation(Long) : void
+        - handleSendMessage(Long, String) : void
+    }
+    
+    class NotificationController {
+        - mainLayout : BorderPane
+        - notificationService : NotificationService
+        - mainController : MainController
+        --
+        + NotificationController(BorderPane, MainController)
+        + showNotificationView() : void
+        - createNotificationCard(Notification) : VBox
+    }
+    
+    class UserProfileController {
+        - mainLayout : BorderPane
+        - userService : UserService
+        - avatarView : ImageView
+        - currentAvatarUrl : String
+        --
+        + UserProfileController(BorderPane)
+        + showUserProfileView() : void
+        - updateAvatarDisplay() : void
+        - handleUploadAvatar() : void
+        - handleUpdateProfile(String, String) : void
+        - handleChangePassword(String, String, String) : void
+    }
+    
+    class UserManagementController {
+        - mainLayout : BorderPane
+        - userService : UserService
+        - userTable : TableView
+        --
+        + UserManagementController(BorderPane)
+        + showUserManagementView() : void
+        - createTopBar() : HBox
+        - createUserTable() : TableView
+        - loadUsers() : void
+        - handleBanUser() : void
+        - handleUnbanUser() : void
+        - handleDeleteUser() : void
+        - handleViewDetails() : void
+    }
+}
+
+package "view.util" {
+    class DialogUtils {
+        + {static} showInfo(String, String) : void
+        + {static} showWarning(String, String) : void
+        + {static} showError(String, String) : void
+        + {static} showConfirm(String, String) : boolean
+        + {static} showInput(String, String, String) : String
+        + {static} showSuccess(String) : void
+    }
+}
+
+' Navigation relationships
+MainApp --> LoginController : creates
+LoginController --> MainController : navigates to
+
+MainController --> BoardController : creates
+MainController --> MyItemsController : creates
+MainController --> OrderHistoryController : creates
+MainController --> SalesHistoryController : creates
+MainController --> FavoritesController : creates
+MainController --> MessageController : creates
+MainController --> NotificationController : creates
+MainController --> UserProfileController : creates
+MainController --> UserManagementController : creates
+
+BoardController --> ItemDetailController : creates
+ItemDetailController --> CheckoutController : creates
+ItemDetailController --> MessageController : creates
+
+' Uses DialogUtils
+LoginController ..> DialogUtils
+BoardController ..> DialogUtils
+ItemDetailController ..> DialogUtils
+CheckoutController ..> DialogUtils
+MyItemsController ..> DialogUtils
+OrderHistoryController ..> DialogUtils
+SalesHistoryController ..> DialogUtils
+FavoritesController ..> DialogUtils
+MessageController ..> DialogUtils
+UserProfileController ..> DialogUtils
+UserManagementController ..> DialogUtils
+
+@enduml

@@ -1,0 +1,196 @@
+@startuml View_Notifications_Sequence
+
+title View and Manage Notifications Sequence Diagram
+
+' ========== Classic Blue Style ==========
+skinparam backgroundColor White
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+skinparam maxMessageSize 200
+skinparam BoxPadding 20
+skinparam roundcorner 0
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+
+skinparam participant {
+    BackgroundColor #58d2f9
+    BorderColor #282828
+    FontColor Black
+    FontStyle bold
+    FontName Arial
+}
+
+skinparam actor {
+    BackgroundColor White
+    BorderColor #282828
+    FontName Arial
+}
+
+skinparam database {
+    BackgroundColor #58d2f9
+    BorderColor #282828
+    FontColor Black
+    FontName Arial
+}
+
+skinparam sequence {
+    ArrowColor #282828
+    ArrowFontColor #282828
+    ArrowFontName Arial
+    LifeLineBorderColor #282828
+    LifeLineBackgroundColor #58d2f9
+    GroupBackgroundColor White
+    GroupBorderColor #282828
+    GroupFontName Arial
+    DividerBackgroundColor White
+    DividerBorderColor #282828
+    DividerFontName Arial
+}
+
+skinparam note {
+    BackgroundColor #58d2f9
+    BorderColor #282828
+    FontName Arial
+}
+
+actor ":User" as User
+participant ":MainController" as MC
+participant ":NotificationController" as NC
+participant ":NotificationService" as NS
+participant ":NotificationDaoImpl" as ND
+database ":Database" as DB
+
+autonumber
+
+== Phase 1: Update Unread Count Badge ==
+
+MC -> NS: getUnreadNotifications(userId: Long): List<Notification>
+activate MC
+activate NS
+NS -> ND: findUnreadByUserId(userId: Long): List<Notification>
+activate ND
+ND -> DB: <<SQL>> SELECT * FROM notifications \nWHERE user_id = ? AND is_read = 0 \nORDER BY created_time DESC
+activate DB
+DB --> ND: ResultSet
+deactivate DB
+ND --> NS: notifications: List<Notification>
+deactivate ND
+NS --> MC: unreadNotifications: List<Notification>
+deactivate NS
+
+MC -> MC: unreadCount = unreadNotifications.size()
+MC -> MC: updateNotificationBadge(unreadCount)
+MC --> User: <<display>> Navigation Bar with Badge
+deactivate MC
+
+== Phase 2: View Notification List ==
+
+User -> MC: click Notification Icon
+activate MC
+MC -> NC: <<create>> NotificationController(mainLayout, mainController)
+activate NC
+MC -> NC: showNotificationView()
+
+NC -> NS: getUserNotifications(userId: Long): List<Notification>
+activate NS
+NS -> ND: findByUserId(userId: Long): List<Notification>
+activate ND
+ND -> DB: <<SQL>> SELECT * FROM notifications \nWHERE user_id = ? \nORDER BY created_time DESC
+activate DB
+DB --> ND: ResultSet
+deactivate DB
+ND --> NS: notifications: List<Notification>
+deactivate ND
+NS --> NC: notifications: List<Notification>
+deactivate NS
+
+note right of NC: Display notifications with different styles\nUnread: light green background\nRead: white background
+
+loop for each notification
+    NC -> NC: createNotificationCard(notification)
+    alt notification.isRead() == false
+        NC -> NC: card.setStyle(unreadStyle)
+        NC -> NC: card.setOnMouseClicked(markAsRead)
+    else notification.isRead() == true
+        NC -> NC: card.setStyle(readStyle)
+    end
+end
+
+NC --> User: <<display>> Notification List
+deactivate MC
+
+== Phase 3: Mark Single Notification as Read ==
+
+User -> NC: click on unread notification card
+activate NC
+
+NC -> NS: markAsRead(notificationId: Long): void
+activate NS
+NS -> ND: markAsRead(notificationId: Long): void
+activate ND
+ND -> DB: <<SQL>> UPDATE notifications \nSET is_read = 1 WHERE id = ?
+activate DB
+DB --> ND: rowsAffected: int
+deactivate DB
+ND --> NS: void
+deactivate ND
+NS --> NC: void
+deactivate NS
+
+NC -> NC: showNotificationView()
+NC --> User: <<display>> Updated Notification List
+
+NC -> MC: updateUnreadCount()
+activate MC
+MC -> NS: getUnreadNotifications(userId: Long): List<Notification>
+activate NS
+NS --> MC: unreadNotifications: List<Notification>
+deactivate NS
+MC -> MC: updateNotificationBadge(newCount)
+deactivate MC
+
+deactivate NC
+
+== Phase 4: Mark All Notifications as Read ==
+
+User -> NC: click "Mark All as Read" button
+activate NC
+
+NC -> NS: markAllAsRead(userId: Long): void
+activate NS
+NS -> ND: markAllAsRead(userId: Long): void
+activate ND
+ND -> DB: <<SQL>> UPDATE notifications \nSET is_read = 1 WHERE user_id = ?
+activate DB
+DB --> ND: rowsAffected: int
+deactivate DB
+ND --> NS: void
+deactivate ND
+NS --> NC: void
+deactivate NS
+
+NC -> NC: showNotificationView()
+NC --> User: <<display>> All Notifications Marked as Read
+
+NC -> MC: updateUnreadCount()
+activate MC
+MC -> MC: updateNotificationBadge(0)
+deactivate MC
+
+deactivate NC
+
+== Postcondition: Notifications viewed and marked as read ==
+
+@enduml
+
+
+
+
+
+
+
+
+
+
+
+

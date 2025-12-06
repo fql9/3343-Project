@@ -1,0 +1,248 @@
+@startuml Model_Entities
+
+title Model Layer - Entity Classes
+
+' ========== Classic Blue Style (Matching Sequence Diagrams) ==========
+skinparam backgroundColor White
+skinparam roundcorner 0
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+
+skinparam class {
+    BackgroundColor #58d2f9
+    BorderColor #282828
+    FontColor Black
+    FontStyle bold
+    FontName Arial
+    AttributeFontName Arial
+    AttributeFontColor Black
+    ArrowColor #282828
+}
+
+skinparam enum {
+    BackgroundColor #58d2f9
+    BorderColor #282828
+    FontColor Black
+    FontStyle bold
+    FontName Arial
+}
+
+skinparam package {
+    BackgroundColor White
+    BorderColor #282828
+    FontColor Black
+    FontStyle bold
+    FontName Arial
+}
+
+skinparam classAttributeIconSize 0
+
+package "model" {
+    
+    enum UserRole <<enumeration>> {
+        BUYER
+        SELLER
+        ADMIN
+    }
+    
+    class User {
+        - id : Long
+        - username : String
+        - passwordHash : String
+        - email : String
+        - role : UserRole
+        - active : boolean
+        - avatarUrl : String
+        - bio : String
+        - createdTime : String
+        --
+        + getId() : Long
+        + setId(Long) : void
+        + getUsername() : String
+        + setUsername(String) : void
+        + getPasswordHash() : String
+        + setPasswordHash(String) : void
+        + getEmail() : String
+        + setEmail(String) : void
+        + getRole() : UserRole
+        + setRole(UserRole) : void
+        + isActive() : boolean
+        + setActive(boolean) : void
+        + getAvatarUrl() : String
+        + setAvatarUrl(String) : void
+        + getBio() : String
+        + setBio(String) : void
+        + getCreatedTime() : String
+        + setCreatedTime(String) : void
+    }
+    
+    class Item {
+        - id : Long
+        - sellerId : Long
+        - title : String
+        - description : String
+        - price : double
+        - category : String
+        - imageUrl : String
+        - active : boolean
+        - createdTime : String
+        --
+        + getId() : Long
+        + setId(Long) : void
+        + getSellerId() : Long
+        + setSellerId(Long) : void
+        + getTitle() : String
+        + setTitle(String) : void
+        + getDescription() : String
+        + setDescription(String) : void
+        + getPrice() : double
+        + setPrice(double) : void
+        + getCategory() : String
+        + setCategory(String) : void
+        + getImageUrl() : String
+        + setImageUrl(String) : void
+        + isActive() : boolean
+        + setActive(boolean) : void
+        + getCreatedTime() : String
+        + setCreatedTime(String) : void
+    }
+    
+    class Order {
+        - id : Long
+        - orderNo : String
+        - buyerId : Long
+        - sellerId : Long
+        - itemId : Long
+        - amount : double
+        - status : String
+        - shippingAddress : String
+        - createdTime : String
+        --
+        + getId() : Long
+        + setId(Long) : void
+        + getOrderNo() : String
+        + setOrderNo(String) : void
+        + getBuyerId() : Long
+        + setBuyerId(Long) : void
+        + getSellerId() : Long
+        + setSellerId(Long) : void
+        + getItemId() : Long
+        + setItemId(Long) : void
+        + getAmount() : double
+        + setAmount(double) : void
+        + getStatus() : String
+        + setStatus(String) : void
+        + getShippingAddress() : String
+        + setShippingAddress(String) : void
+        + getCreatedTime() : String
+        + setCreatedTime(String) : void
+    }
+    
+    class Message {
+        - id : Long
+        - fromUserId : Long
+        - toUserId : Long
+        - content : String
+        - createdTime : String
+        - read : boolean
+        --
+        + getId() : Long
+        + setId(Long) : void
+        + getFromUserId() : Long
+        + setFromUserId(Long) : void
+        + getToUserId() : Long
+        + setToUserId(Long) : void
+        + getContent() : String
+        + setContent(String) : void
+        + getCreatedTime() : String
+        + setCreatedTime(String) : void
+        + isRead() : boolean
+        + setRead(boolean) : void
+    }
+    
+    class Notification {
+        - id : Long
+        - userId : Long
+        - title : String
+        - content : String
+        - isRead : boolean
+        - createdTime : String
+        --
+        + getId() : Long
+        + setId(Long) : void
+        + getUserId() : Long
+        + setUserId(Long) : void
+        + getTitle() : String
+        + setTitle(String) : void
+        + getContent() : String
+        + setContent(String) : void
+        + isRead() : boolean
+        + setRead(boolean) : void
+        + getCreatedTime() : String
+        + setCreatedTime(String) : void
+    }
+    
+    class Review {
+        - id : Long
+        - orderId : Long
+        - reviewerId : Long
+        - revieweeId : Long
+        - itemId : Long
+        - rating : int
+        - comment : String
+        - createdTime : String
+        --
+        + getId() : Long
+        + setId(Long) : void
+        + getOrderId() : Long
+        + setOrderId(Long) : void
+        + getReviewerId() : Long
+        + setReviewerId(Long) : void
+        + getRevieweeId() : Long
+        + setRevieweeId(Long) : void
+        + getItemId() : Long
+        + setItemId(Long) : void
+        + getRating() : int
+        + setRating(int) : void
+        + getComment() : String
+        + setComment(String) : void
+        + getCreatedTime() : String
+        + setCreatedTime(String) : void
+    }
+    
+    class Favorite {
+        - id : Long
+        - userId : Long
+        - itemId : Long
+        - createdTime : String
+        --
+        + getId() : Long
+        + setId(Long) : void
+        + getUserId() : Long
+        + setUserId(Long) : void
+        + getItemId() : Long
+        + setItemId(Long) : void
+        + getCreatedTime() : String
+        + setCreatedTime(String) : void
+    }
+}
+
+' Relationships
+User --> UserRole : has
+
+User "1" -- "*" Item : sells >
+User "1" -- "*" Order : buys >
+User "1" -- "*" Order : sells >
+User "1" -- "*" Message : sends >
+User "1" -- "*" Message : receives >
+User "1" -- "*" Notification : receives >
+User "1" -- "*" Review : writes >
+User "1" -- "*" Favorite : has >
+
+Item "1" -- "*" Order : ordered in >
+Item "1" -- "*" Review : reviewed in >
+Item "1" -- "*" Favorite : favorited in >
+
+Order "1" -- "0..1" Review : has >
+
+@enduml

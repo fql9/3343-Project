@@ -1,0 +1,236 @@
+@startuml Message_Chat_Sequence
+
+title Database-based Messaging Sequence Diagram
+
+' ========== Classic Blue Style ==========
+skinparam backgroundColor White
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+skinparam maxMessageSize 200
+skinparam BoxPadding 20
+skinparam roundcorner 0
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+
+skinparam participant {
+    BackgroundColor #58d2f9
+    BorderColor #282828
+    FontColor Black
+    FontStyle bold
+    FontName Arial
+}
+
+skinparam actor {
+    BackgroundColor White
+    BorderColor #282828
+    FontName Arial
+}
+
+skinparam database {
+    BackgroundColor #58d2f9
+    BorderColor #282828
+    FontColor Black
+    FontName Arial
+}
+
+skinparam sequence {
+    ArrowColor #282828
+    ArrowFontColor #282828
+    ArrowFontName Arial
+    LifeLineBorderColor #282828
+    LifeLineBackgroundColor #58d2f9
+    GroupBackgroundColor White
+    GroupBorderColor #282828
+    GroupFontName Arial
+    DividerBackgroundColor White
+    DividerBorderColor #282828
+    DividerFontName Arial
+}
+
+skinparam note {
+    BackgroundColor #58d2f9
+    BorderColor #282828
+    FontName Arial
+}
+
+actor ":UserA" as UserA
+participant ":MessageController" as MC
+participant ":MessageService" as MS
+participant ":MessageDaoImpl" as MD
+participant ":UserService" as US
+participant ":DialogUtils" as DU
+database ":Database" as DB
+actor ":UserB" as UserB
+
+autonumber
+
+== Phase 1: Open Messages View ==
+
+UserA -> MC: <<create>> MessageController(mainLayout: BorderPane, \nmainController: MainController)
+activate MC
+MC -> MC: showMessagesView()
+
+note right of MC: Load message list grouped by sender
+MC -> MC: loadMessageList()
+MC -> MS: getInbox(userId: Long): List<Message>
+activate MS
+MS -> MD: findInbox(userId: Long): List<Message>
+activate MD
+MD -> DB: <<SQL>> SELECT * FROM messages \nWHERE to_user_id = ? \nORDER BY created_time DESC
+activate DB
+DB --> MD: ResultSet
+deactivate DB
+MD --> MS: messages: List<Message>
+deactivate MD
+MS --> MC: messages: List<Message>
+deactivate MS
+
+note right of MC: Group messages by sender\nShow latest message per user
+MC -> MC: latestMessages = groupBySender(messages)
+
+loop for each sender in latestMessages
+    MC -> US: getUserById(senderId: Long): User
+    activate US
+    US --> MC: user: User
+    deactivate US
+    MC -> MC: add MessageItem to listView
+end
+
+MC --> UserA: <<display>> Message List Panel
+deactivate MC
+
+== Phase 2: View Conversation ==
+
+UserA -> MC: showConversation(otherUserId: Long)
+activate MC
+
+MC -> US: getUserById(otherUserId: Long): User
+activate US
+US --> MC: otherUser: User
+deactivate US
+
+MC -> MS: getConversation(user1: Long, user2: Long): List<Message>
+activate MS
+MS -> MD: findConversation(user1: Long, user2: Long): List<Message>
+activate MD
+MD -> DB: <<SQL>> SELECT * FROM messages \nWHERE (from_user_id = ? AND to_user_id = ?) \nOR (from_user_id = ? AND to_user_id = ?) \nORDER BY created_time ASC
+activate DB
+DB --> MD: ResultSet
+deactivate DB
+MD --> MS: messages: List<Message>
+deactivate MD
+MS --> MC: messages: List<Message>
+deactivate MS
+
+note right of MC: Display messages as chat bubbles
+loop for each message in conversation
+    MC -> MC: createMessageBubble(message, isFromMe)
+end
+
+MC --> UserA: <<display>> Conversation View
+
+note right of MC: Mark messages as read
+MC -> MS: markConversationAsRead(currentUserId: Long, \nfromUserId: Long): void
+activate MS
+MS -> MD: markRead(messageId: Long): void
+activate MD
+MD -> DB: <<SQL>> UPDATE messages \nSET is_read = 1 WHERE id = ?
+activate DB
+DB --> MD: rowsAffected: int
+deactivate DB
+MD --> MS: void
+deactivate MD
+MS --> MC: void
+deactivate MS
+
+MC -> MC: loadMessageList()
+deactivate MC
+
+== Phase 3: Send Message ==
+
+UserA -> MC: handleSendMessage(toUserId: Long, content: String)
+activate MC
+
+MC -> MS: sendMessage(fromUserId: Long, \ntoUserId: Long, content: String): String
+activate MS
+
+alt content == null || content.trim().isEmpty()
+    MS --> MC: "Message content cannot be empty"
+    MC -> DU: showError("Send Failed", error: String)
+    activate DU
+    DU --> UserA: <<display>> Error Dialog
+    deactivate DU
+else if fromUserId.equals(toUserId)
+    MS --> MC: "Cannot send message to yourself"
+    MC -> DU: showError("Send Failed", error: String)
+    activate DU
+    DU --> UserA: <<display>> Error Dialog
+    deactivate DU
+else validation passed
+    note right of MS: Create Message object
+    MS -> MS: message = new Message()
+    MS -> MS: message.setFromUserId(fromUserId)
+    MS -> MS: message.setToUserId(toUserId)
+    MS -> MS: message.setContent(content)
+    MS -> MS: message.setCreatedTime(now())
+    MS -> MS: message.setRead(false)
+    
+    MS -> MD: save(message: Message): void
+    activate MD
+    MD -> DB: <<SQL>> INSERT INTO messages \n(from_user_id, to_user_id, content, \ncreated_time, is_read) \nVALUES (?, ?, ?, ?, 0)
+    activate DB
+    DB --> MD: rowsAffected: int
+    deactivate DB
+    MD --> MS: void
+    deactivate MD
+    
+    MS --> MC: null
+    deactivate MS
+    
+    note right of MC: Refresh conversation view
+    MC -> MC: showConversation(toUserId)
+    MC --> UserA: <<display>> Updated Conversation
+end
+
+deactivate MC
+
+== Phase 4: UserB Views Messages (Poll/Refresh) ==
+
+note over UserB: UserB opens messages view\nor refreshes to see new messages
+
+UserB -> MC: showMessagesView()
+activate MC
+MC -> MC: loadMessageList()
+MC -> MS: getInbox(userId: Long): List<Message>
+activate MS
+MS -> MD: findInbox(userId: Long): List<Message>
+activate MD
+MD -> DB: <<SQL>> SELECT * FROM messages \nWHERE to_user_id = ?
+activate DB
+DB --> MD: ResultSet
+deactivate DB
+MD --> MS: messages: List<Message>
+deactivate MD
+MS --> MC: messages: List<Message>
+deactivate MS
+
+MC --> UserB: <<display>> Message List with \nUserA's message (unread badge)
+deactivate MC
+
+UserB -> MC: showConversation(userAId: Long)
+activate MC
+MC -> MS: getConversation(userBId: Long, userAId: Long): List<Message>
+activate MS
+MS --> MC: messages: List<Message>
+deactivate MS
+
+MC --> UserB: <<display>> Conversation with UserA
+MC -> MS: markConversationAsRead(userBId: Long, userAId: Long)
+activate MS
+MS --> MC: void
+deactivate MS
+deactivate MC
+
+== Postcondition: Messages persisted in database ==
+
+@enduml

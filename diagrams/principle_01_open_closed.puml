@@ -1,0 +1,134 @@
+@startuml Principle_Open_Closed
+
+title Design Principle - Open-Closed Principle (OCP)
+
+' ========== Classic Blue Style (Matching Sequence Diagrams) ==========
+skinparam backgroundColor White
+skinparam roundcorner 0
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+
+skinparam class {
+    BackgroundColor #58d2f9
+    BorderColor #282828
+    FontColor Black
+    FontStyle bold
+    FontName Arial
+    AttributeFontName Arial
+    AttributeFontColor Black
+    ArrowColor #282828
+}
+
+skinparam interface {
+    BackgroundColor #58d2f9
+    BorderColor #282828
+    FontColor Black
+    FontStyle bold
+    FontName Arial
+}
+
+skinparam package {
+    BackgroundColor White
+    BorderColor #282828
+    FontColor Black
+    FontStyle bold
+    FontName Arial
+}
+
+skinparam note {
+    BackgroundColor #58d2f9
+    BorderColor #282828
+    FontName Arial
+}
+
+skinparam classAttributeIconSize 0
+
+package "Closed for Modification" {
+    interface ItemDao <<interface>> {
+        + findById(Long) : Item
+        + findAll() : List<Item>
+        + findBySellerId(Long) : List<Item>
+        + search(String) : List<Item>
+        + save(Item) : void
+        + update(Item) : void
+        + delete(Long) : void
+    }
+}
+
+package "Open for Extension" {
+    class ItemDaoImpl <<current>> {
+        + findById(Long) : Item
+        + findAll() : List<Item>
+        + findBySellerId(Long) : List<Item>
+        + search(String) : List<Item>
+        + save(Item) : void
+        + update(Item) : void
+        + delete(Long) : void
+        --
+        - mapRow(ResultSet) : Item
+    }
+    
+    class ItemDaoMySqlImpl <<future extension>> {
+        + findById(Long) : Item
+        + findAll() : List<Item>
+        + findBySellerId(Long) : List<Item>
+        + search(String) : List<Item>
+        + save(Item) : void
+        + update(Item) : void
+        + delete(Long) : void
+        --
+        - mapRow(ResultSet) : Item
+    }
+    
+    class ItemDaoMongoImpl <<future extension>> {
+        + findById(Long) : Item
+        + findAll() : List<Item>
+        + findBySellerId(Long) : List<Item>
+        + search(String) : List<Item>
+        + save(Item) : void
+        + update(Item) : void
+        + delete(Long) : void
+        --
+        - mapDocument(Document) : Item
+    }
+}
+
+package "Client (Unaffected)" {
+    class ItemService {
+        - itemDao : ItemDao
+        --
+        + getItemById(Long) : Item
+        + getAllActiveItems() : List<Item>
+        + publishItem(...) : String
+    }
+}
+
+' Relationships
+ItemDaoImpl ..|> ItemDao : implements
+ItemDaoMySqlImpl ..|> ItemDao : implements
+ItemDaoMongoImpl ..|> ItemDao : implements
+ItemService --> ItemDao : uses interface
+
+note top of ItemDao
+  **CLOSED for Modification**
+  Interface contract remains stable
+  No changes needed when adding
+  new database implementations
+end note
+
+note bottom of ItemDaoMySqlImpl
+  **OPEN for Extension**
+  New implementations can be
+  added without modifying
+  existing code
+end note
+
+note right of ItemService
+  **Client Unchanged**
+  Service layer only depends
+  on interface, not affected
+  by new implementations
+end note
+
+@enduml
+

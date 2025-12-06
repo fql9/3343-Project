@@ -1,0 +1,213 @@
+@startuml DAO_Layer
+
+title DAO Layer - Data Access Objects
+
+' ========== Classic Blue Style (Matching Sequence Diagrams) ==========
+skinparam backgroundColor White
+skinparam roundcorner 0
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+
+skinparam class {
+    BackgroundColor #58d2f9
+    BorderColor #282828
+    FontColor Black
+    FontStyle bold
+    FontName Arial
+    AttributeFontName Arial
+    AttributeFontColor Black
+    ArrowColor #282828
+}
+
+skinparam interface {
+    BackgroundColor #58d2f9
+    BorderColor #282828
+    FontColor Black
+    FontStyle bold
+    FontName Arial
+}
+
+skinparam package {
+    BackgroundColor White
+    BorderColor #282828
+    FontColor Black
+    FontStyle bold
+    FontName Arial
+}
+
+skinparam classAttributeIconSize 0
+
+package "dao" {
+    
+    interface UserDao <<interface>> {
+        + findByUsername(String) : User
+        + findById(Long) : User
+        + findAll() : List<User>
+        + save(User) : void
+        + update(User) : void
+        + delete(Long) : void
+    }
+    
+    interface ItemDao <<interface>> {
+        + findById(Long) : Item
+        + findAll() : List<Item>
+        + findBySellerId(Long) : List<Item>
+        + search(String) : List<Item>
+        + searchItems(String, Double, Double, String, String) : List<Item>
+        + save(Item) : void
+        + update(Item) : void
+        + delete(Long) : void
+    }
+    
+    interface OrderDao <<interface>> {
+        + save(Order) : void
+        + update(Order) : void
+        + findById(Long) : Order
+        + findByOrderNo(String) : Order
+        + findByBuyerId(Long) : List<Order>
+        + findBySellerId(Long) : List<Order>
+    }
+    
+    interface MessageDao <<interface>> {
+        + findById(Long) : Message
+        + findConversation(Long, Long) : List<Message>
+        + findInbox(Long) : List<Message>
+        + save(Message) : void
+        + markRead(Long) : void
+        + delete(Long) : void
+    }
+    
+    interface NotificationDao <<interface>> {
+        + save(Notification) : void
+        + findByUserId(Long) : List<Notification>
+        + findUnreadByUserId(Long) : List<Notification>
+        + markAsRead(Long) : void
+        + markAllAsRead(Long) : void
+    }
+    
+    interface ReviewDao <<interface>> {
+        + save(Review) : void
+        + findBySellerId(Long) : List<Review>
+        + findByOrderId(Long) : Review
+        + getAverageRating(Long) : double
+    }
+    
+    interface FavoriteDao <<interface>> {
+        + findById(Long) : Favorite
+        + findByUserId(Long) : List<Favorite>
+        + findByItemId(Long) : List<Favorite>
+        + exists(Long, Long) : boolean
+        + save(Favorite) : void
+        + delete(Long) : void
+        + deleteByUserAndItem(Long, Long) : void
+    }
+}
+
+package "dao.impl" {
+    
+    class UserDaoImpl {
+        + findByUsername(String) : User
+        + findById(Long) : User
+        + findAll() : List<User>
+        + save(User) : void
+        + update(User) : void
+        + delete(Long) : void
+        --
+        - mapRow(ResultSet) : User
+    }
+    
+    class ItemDaoImpl {
+        + findById(Long) : Item
+        + findAll() : List<Item>
+        + findBySellerId(Long) : List<Item>
+        + search(String) : List<Item>
+        + searchItems(String, Double, Double, String, String) : List<Item>
+        + save(Item) : void
+        + update(Item) : void
+        + delete(Long) : void
+        --
+        - mapRow(ResultSet) : Item
+    }
+    
+    class OrderDaoImpl {
+        + save(Order) : void
+        + update(Order) : void
+        + findById(Long) : Order
+        + findByOrderNo(String) : Order
+        + findByBuyerId(Long) : List<Order>
+        + findBySellerId(Long) : List<Order>
+        --
+        - mapRow(ResultSet) : Order
+    }
+    
+    class MessageDaoImpl {
+        + findById(Long) : Message
+        + findConversation(Long, Long) : List<Message>
+        + findInbox(Long) : List<Message>
+        + save(Message) : void
+        + markRead(Long) : void
+        + delete(Long) : void
+        --
+        - mapRow(ResultSet) : Message
+    }
+    
+    class NotificationDaoImpl {
+        + save(Notification) : void
+        + findByUserId(Long) : List<Notification>
+        + findUnreadByUserId(Long) : List<Notification>
+        + markAsRead(Long) : void
+        + markAllAsRead(Long) : void
+        --
+        - mapRow(ResultSet) : Notification
+    }
+    
+    class ReviewDaoImpl {
+        + save(Review) : void
+        + findBySellerId(Long) : List<Review>
+        + findByOrderId(Long) : Review
+        + getAverageRating(Long) : double
+        --
+        - mapRow(ResultSet) : Review
+    }
+    
+    class FavoriteDaoImpl {
+        + findById(Long) : Favorite
+        + findByUserId(Long) : List<Favorite>
+        + findByItemId(Long) : List<Favorite>
+        + exists(Long, Long) : boolean
+        + save(Favorite) : void
+        + delete(Long) : void
+        + deleteByUserAndItem(Long, Long) : void
+        --
+        - mapRow(ResultSet) : Favorite
+    }
+}
+
+package "config" {
+    class DatabaseConfig {
+        - {static} DB_URL : String
+        --
+        + {static} initDatabase() : void
+        + {static} getConnection() : Connection
+    }
+}
+
+' Implementation relationships
+UserDaoImpl ..|> UserDao
+ItemDaoImpl ..|> ItemDao
+OrderDaoImpl ..|> OrderDao
+MessageDaoImpl ..|> MessageDao
+NotificationDaoImpl ..|> NotificationDao
+ReviewDaoImpl ..|> ReviewDao
+FavoriteDaoImpl ..|> FavoriteDao
+
+' Dependency relationships
+UserDaoImpl ..> DatabaseConfig
+ItemDaoImpl ..> DatabaseConfig
+OrderDaoImpl ..> DatabaseConfig
+MessageDaoImpl ..> DatabaseConfig
+NotificationDaoImpl ..> DatabaseConfig
+ReviewDaoImpl ..> DatabaseConfig
+FavoriteDaoImpl ..> DatabaseConfig
+
+@enduml

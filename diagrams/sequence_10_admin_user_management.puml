@@ -1,0 +1,281 @@
+@startuml Admin_User_Management_Sequence
+
+title Admin User Management Sequence Diagram
+
+' ========== Classic Blue Style ==========
+skinparam backgroundColor White
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+skinparam maxMessageSize 200
+skinparam BoxPadding 20
+skinparam roundcorner 0
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+
+skinparam participant {
+    BackgroundColor #58d2f9
+    BorderColor #282828
+    FontColor Black
+    FontStyle bold
+    FontName Arial
+}
+
+skinparam actor {
+    BackgroundColor White
+    BorderColor #282828
+    FontName Arial
+}
+
+skinparam database {
+    BackgroundColor #58d2f9
+    BorderColor #282828
+    FontColor Black
+    FontName Arial
+}
+
+skinparam sequence {
+    ArrowColor #282828
+    ArrowFontColor #282828
+    ArrowFontName Arial
+    LifeLineBorderColor #282828
+    LifeLineBackgroundColor #58d2f9
+    GroupBackgroundColor White
+    GroupBorderColor #282828
+    GroupFontName Arial
+    DividerBackgroundColor White
+    DividerBorderColor #282828
+    DividerFontName Arial
+}
+
+skinparam note {
+    BackgroundColor #58d2f9
+    BorderColor #282828
+    FontName Arial
+}
+
+actor ":Admin" as Admin
+participant ":UserManagementController" as UMC
+participant ":UserService" as US
+participant ":UserDaoImpl" as UD
+participant ":DialogUtils" as DU
+database ":Database" as DB
+
+autonumber
+
+== Phase 1: View All Users ==
+
+Admin -> UMC: <<create>> UserManagementController(mainLayout: BorderPane)
+activate UMC
+UMC -> UMC: showUserManagementView()
+
+UMC -> UMC: loadUsers()
+UMC -> US: getAllUsers(): List<User>
+activate US
+US -> UD: findAll(): List<User>
+activate UD
+UD -> DB: <<SQL>> SELECT * FROM users
+activate DB
+DB --> UD: ResultSet
+deactivate DB
+UD --> US: users: List<User>
+deactivate UD
+US --> UMC: users: List<User>
+deactivate US
+
+note right of UMC: Display users in TableView\nColumns: ID, Username, Email, Role, Status
+
+UMC --> Admin: <<display>> User Management Table
+deactivate UMC
+
+== Phase 2: Ban User ==
+
+Admin -> UMC: select user from table
+Admin -> UMC: handleBanUser()
+activate UMC
+
+UMC -> UMC: selectedUser = userTable.getSelectionModel().getSelectedItem()
+
+alt selectedUser == null
+    UMC -> DU: showWarning("No User Selected", \n"Please select a user to ban first")
+    activate DU
+    DU --> Admin: <<display>> Warning Dialog
+    deactivate DU
+else if !selectedUser.isActive()
+    UMC -> DU: showWarning("Operation Failed", \n"This user is already banned")
+    activate DU
+    DU --> Admin: <<display>> Warning Dialog
+    deactivate DU
+else if selectedUser.getId().equals(currentUser.getId())
+    UMC -> DU: showWarning("Operation Failed", \n"You cannot ban yourself")
+    activate DU
+    DU --> Admin: <<display>> Warning Dialog
+    deactivate DU
+else validation passed
+    UMC -> DU: showConfirm("Confirm Ban", \n"Are you sure you want to ban user " + username + "?")
+    activate DU
+    DU --> Admin: <<display>> Confirm Dialog
+    deactivate DU
+    
+    alt Admin clicks Cancel
+        Admin --> UMC: false
+    else Admin clicks Confirm
+        Admin --> UMC: true
+        
+        UMC -> US: setUserActive(userId: Long, active: boolean): void
+        activate US
+        US -> UD: findById(userId: Long): User
+        activate UD
+        UD -> DB: <<SQL>> SELECT * FROM users \nWHERE id = ?
+        activate DB
+        DB --> UD: ResultSet
+        deactivate DB
+        UD --> US: user: User
+        deactivate UD
+        
+        US -> US: user.setActive(false)
+        US -> UD: update(user: User): void
+        activate UD
+        UD -> DB: <<SQL>> UPDATE users \nSET active = 0 WHERE id = ?
+        activate DB
+        DB --> UD: rowsAffected: int
+        deactivate DB
+        UD --> US: void
+        deactivate UD
+        US --> UMC: void
+        deactivate US
+        
+        UMC -> DU: showSuccess("User has been banned")
+        activate DU
+        DU --> Admin: <<display>> Success Dialog
+        deactivate DU
+        
+        UMC -> UMC: loadUsers()
+        UMC --> Admin: <<display>> Updated User List
+    end
+end
+
+deactivate UMC
+
+== Phase 3: Unban User ==
+
+Admin -> UMC: select banned user from table
+Admin -> UMC: handleUnbanUser()
+activate UMC
+
+UMC -> UMC: selectedUser = userTable.getSelectionModel().getSelectedItem()
+
+alt selectedUser == null
+    UMC -> DU: showWarning("No User Selected", \n"Please select a user to unban first")
+    activate DU
+    DU --> Admin: <<display>> Warning Dialog
+    deactivate DU
+else if selectedUser.isActive()
+    UMC -> DU: showWarning("Operation Failed", \n"This user is not banned")
+    activate DU
+    DU --> Admin: <<display>> Warning Dialog
+    deactivate DU
+else validation passed
+    UMC -> DU: showConfirm("Confirm Unban", \n"Are you sure you want to unban user " + username + "?")
+    activate DU
+    DU --> Admin: <<display>> Confirm Dialog
+    deactivate DU
+    Admin --> UMC: true
+    
+    UMC -> US: setUserActive(userId: Long, true): void
+    activate US
+    US -> UD: findById(userId: Long): User
+    activate UD
+    UD --> US: user: User
+    deactivate UD
+    US -> US: user.setActive(true)
+    US -> UD: update(user: User): void
+    activate UD
+    UD -> DB: <<SQL>> UPDATE users \nSET active = 1 WHERE id = ?
+    activate DB
+    DB --> UD: rowsAffected: int
+    deactivate DB
+    UD --> US: void
+    deactivate UD
+    US --> UMC: void
+    deactivate US
+    
+    UMC -> DU: showSuccess("User has been unbanned")
+    activate DU
+    DU --> Admin: <<display>> Success Dialog
+    deactivate DU
+    
+    UMC -> UMC: loadUsers()
+    UMC --> Admin: <<display>> Updated User List
+end
+
+deactivate UMC
+
+== Phase 4: Delete User ==
+
+Admin -> UMC: select user from table
+Admin -> UMC: handleDeleteUser()
+activate UMC
+
+UMC -> UMC: selectedUser = userTable.getSelectionModel().getSelectedItem()
+
+alt selectedUser == null
+    UMC -> DU: showWarning("No User Selected", \n"Please select a user to delete first")
+    activate DU
+    DU --> Admin: <<display>> Warning Dialog
+    deactivate DU
+else if selectedUser.getId().equals(currentUser.getId())
+    UMC -> DU: showWarning("Operation Failed", \n"You cannot delete yourself")
+    activate DU
+    DU --> Admin: <<display>> Warning Dialog
+    deactivate DU
+else validation passed
+    UMC -> DU: showConfirm("Confirm Delete", \n"Are you sure you want to delete user " + username + "?\nThis action cannot be undone!")
+    activate DU
+    DU --> Admin: <<display>> Confirm Dialog (Warning)
+    deactivate DU
+    
+    alt Admin clicks Cancel
+        Admin --> UMC: false
+    else Admin clicks Confirm
+        Admin --> UMC: true
+        
+        UMC -> US: deleteUser(userId: Long): void
+        activate US
+        US -> UD: delete(userId: Long): void
+        activate UD
+        UD -> DB: <<SQL>> DELETE FROM users \nWHERE id = ?
+        activate DB
+        DB --> UD: rowsAffected: int
+        deactivate DB
+        UD --> US: void
+        deactivate UD
+        US --> UMC: void
+        deactivate US
+        
+        UMC -> DU: showSuccess("User has been deleted")
+        activate DU
+        DU --> Admin: <<display>> Success Dialog
+        deactivate DU
+        
+        UMC -> UMC: loadUsers()
+        UMC --> Admin: <<display>> Updated User List
+    end
+end
+
+deactivate UMC
+
+== Postcondition: User status updated or user deleted ==
+
+@enduml
+
+
+
+
+
+
+
+
+
+
+
+

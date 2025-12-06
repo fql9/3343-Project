@@ -73,15 +73,65 @@ tasks.register('integrationTest', Test) {
     classpath = sourceSets.test.runtimeClasspath
     // Integration tests: all DAO, service (except ItemService/FavoriteService), config, ExportUsers
     filter {
-        includeTestsMatching 'config.DatabaseConfigTest'
-        includeTestsMatching 'dao.impl.*'
-        includeTestsMatching 'service.UserServiceTest'
-        includeTestsMatching 'service.MessageServiceTest'
-        includeTestsMatching 'service.OrderServiceTest'
-        includeTestsMatching 'service.ReviewServiceTest'
-        includeTestsMatching 'service.NotificationServiceTest'
-        includeTestsMatching 'util.ExportUsersTest'
+        includeTestsMatching 'integration.config.DatabaseConfigTest'
+        includeTestsMatching 'integration.dao.impl.*'
+        includeTestsMatching 'integration.service.UserServiceTest'
+        includeTestsMatching 'integration.service.MessageServiceTest'
+        includeTestsMatching 'integration.service.OrderServiceTest'
+        includeTestsMatching 'integration.service.ReviewServiceTest'
+        includeTestsMatching 'integration.service.NotificationServiceTest'
+        includeTestsMatching 'integration.util.ExportUsersTest'
     }
+    jvmArgs '--add-opens', 'java.base/java.lang=ALL-UNNAMED',
+            '--add-opens', 'java.base/java.lang.invoke=ALL-UNNAMED',
+            '--add-opens', 'java.base/java.lang.reflect=ALL-UNNAMED',
+            '--add-opens', 'java.base/java.util=ALL-UNNAMED',
+            '--add-opens', 'java.base/java.io=ALL-UNNAMED',
+            '--add-opens', 'java.base/sun.nio.ch=ALL-UNNAMED',
+            '-XX:+EnableDynamicAgentLoading',
+            '-Dnet.bytebuddy.experimental=true'
+}
+
+// Task to run system tests (end-to-end scenarios)
+tasks.register('systemTest', Test) {
+    description = 'Runs system tests (end-to-end scenarios).'
+    group = 'verification'
+    useJUnitPlatform()
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    filter {
+        includeTestsMatching 'system.*'
+    }
+    jvmArgs '--add-opens', 'java.base/java.lang=ALL-UNNAMED',
+            '--add-opens', 'java.base/java.lang.invoke=ALL-UNNAMED',
+            '--add-opens', 'java.base/java.lang.reflect=ALL-UNNAMED',
+            '--add-opens', 'java.base/java.util=ALL-UNNAMED',
+            '--add-opens', 'java.base/java.io=ALL-UNNAMED',
+            '--add-opens', 'java.base/sun.nio.ch=ALL-UNNAMED',
+            '-XX:+EnableDynamicAgentLoading',
+            '-Dnet.bytebuddy.experimental=true'
+}
+
+// Task to run all tests in Modified Top-Down order
+tasks.register('testTopDown', Test) {
+    description = 'Runs all tests in Modified Top-Down order: System -> Integration -> Unit.'
+    group = 'verification'
+    useJUnitPlatform()
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    
+    // 按照 Modified Top-Down 顺序运行测试
+    doFirst {
+        println '╔════════════════════════════════════════════════════════════════╗'
+        println '║   Modified Top-Down Test Strategy Execution                   ║'
+        println '╠════════════════════════════════════════════════════════════════╣'
+        println '║ Level 1: System Tests (End-to-End Scenarios)                  ║'
+        println '║ Level 2: Service Integration Tests                            ║'
+        println '║ Level 3: DAO Integration Tests                                ║'
+        println '║ Level 4: Unit Tests                                           ║'
+        println '╚════════════════════════════════════════════════════════════════╝'
+    }
+    
     jvmArgs '--add-opens', 'java.base/java.lang=ALL-UNNAMED',
             '--add-opens', 'java.base/java.lang.invoke=ALL-UNNAMED',
             '--add-opens', 'java.base/java.lang.reflect=ALL-UNNAMED',

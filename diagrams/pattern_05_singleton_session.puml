@@ -1,0 +1,136 @@
+@startuml Pattern_Singleton_Session
+
+title Design Pattern - Singleton Pattern (Session Management)
+
+' ========== Classic Blue Style (Matching Sequence Diagrams) ==========
+skinparam backgroundColor White
+skinparam roundcorner 0
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+
+skinparam class {
+    BackgroundColor #58d2f9
+    BorderColor #282828
+    FontColor Black
+    FontStyle bold
+    FontName Arial
+    AttributeFontName Arial
+    AttributeFontColor Black
+    ArrowColor #282828
+}
+
+skinparam package {
+    BackgroundColor White
+    BorderColor #282828
+    FontColor Black
+    FontStyle bold
+    FontName Arial
+}
+
+skinparam note {
+    BackgroundColor #58d2f9
+    BorderColor #282828
+    FontName Arial
+}
+
+skinparam classAttributeIconSize 0
+
+package "Service Layer" {
+    class UserService {
+        - userDao : UserDao
+        - orderService : OrderService
+        ==
+        **Singleton-like Session**
+        ..
+        - {static} currentUser : User
+        --
+        + login(String, String) : String
+        + logout() : void
+        ..
+        + {static} getCurrentUser() : User
+        + {static} isLoggedIn() : boolean
+        + {static} isAdmin() : boolean
+        ..
+        + register(...) : String
+        + changePassword(...) : String
+        + updateProfile(...) : String
+    }
+}
+
+package "Model" {
+    class User {
+        - id : Long
+        - username : String
+        - passwordHash : String
+        - email : String
+        - role : UserRole
+        - active : boolean
+        - avatarUrl : String
+        - bio : String
+    }
+    
+    enum UserRole {
+        BUYER
+        SELLER
+        ADMIN
+    }
+}
+
+package "Controller Layer" {
+    class LoginController {
+        - userService : UserService
+        --
+        - handleLogin() : void
+    }
+    
+    class MainController {
+        --
+        + showMainView() : void
+        - checkPermissions() : void
+    }
+    
+    class UserManagementController {
+        --
+        + loadUsers() : void
+        - checkAdminAccess() : void
+    }
+}
+
+' Relationships
+UserService --> User : stores as static
+User --> UserRole : has
+
+LoginController --> UserService : calls login()
+MainController ..> UserService : calls getCurrentUser()
+UserManagementController ..> UserService : calls isAdmin()
+
+note right of UserService
+  **Static Session Storage:**
+  Only ONE user logged in
+  at a time (per JVM)
+  
+  **Login Flow:**
+  1. Validate credentials
+  2. currentUser = user
+  
+  **Logout Flow:**
+  1. currentUser = null
+end note
+
+note bottom of MainController
+  **Access Control:**
+  User user = UserService.getCurrentUser();
+  if (UserService.isAdmin()) {
+    showAdminPanel();
+  }
+end note
+
+note left of UserRole
+  **Role-Based Access:**
+  BUYER - Can purchase
+  SELLER - Can list items
+  ADMIN - Full access
+end note
+
+@enduml
+
