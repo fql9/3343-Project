@@ -154,16 +154,41 @@ public class ItemDaoImpl implements ItemDao {
 
             ps.setLong(1, item.getSellerId());
             ps.setString(2, item.getTitle());
-            ps.setString(3, item.getDescription());
+            // Handle null description
+            if (item.getDescription() != null) {
+                ps.setString(3, item.getDescription());
+            } else {
+                ps.setNull(3, java.sql.Types.VARCHAR);
+            }
             ps.setDouble(4, item.getPrice());
-            ps.setString(5, item.getCategory());
+            // Handle null category
+            if (item.getCategory() != null) {
+                ps.setString(5, item.getCategory());
+            } else {
+                ps.setNull(5, java.sql.Types.VARCHAR);
+            }
             ps.setInt(6, item.isActive() ? 1 : 0);
             ps.setString(7, item.getCreatedTime());
-            ps.setString(8, item.getImageUrl());
+            // Handle null imageUrl
+            if (item.getImageUrl() != null && !item.getImageUrl().trim().isEmpty()) {
+                ps.setString(8, item.getImageUrl());
+            } else {
+                ps.setNull(8, java.sql.Types.VARCHAR);
+            }
 
-            ps.executeUpdate();
+            int rowsAffected = ps.executeUpdate();
+            if (rowsAffected == 0) {
+                throw new RuntimeException("Failed to save item: No rows affected");
+            }
 
-        } catch (SQLException e) { e.printStackTrace(); }
+        } catch (SQLException e) {
+            System.err.println("SQL Error saving item: " + e.getMessage());
+            System.err.println("Item details: sellerId=" + item.getSellerId() + 
+                             ", title=" + item.getTitle() + 
+                             ", price=" + item.getPrice());
+            e.printStackTrace();
+            throw new RuntimeException("Failed to save item: " + e.getMessage(), e);
+        }
     }
 
     @Override
