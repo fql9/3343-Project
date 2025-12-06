@@ -73,4 +73,11 @@ Desktop.ini
 *.ear
 *.zip
 *.tar.gz
-*.rar
+*.rarbin/
+item_images/
+
+# Build output
+bin/
+
+# Test images
+item_images/

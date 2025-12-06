@@ -13,10 +13,12 @@ public class DatabaseConfig {
     
     /**
      * 设置为测试模式，使用独立的测试数据库
+     * 这个方法会同步更新 isTestMode 标志和数据库 URL
      */
-    public static void setTestMode(boolean testMode) {
+    public static synchronized void setTestMode(boolean testMode) {
         isTestMode = testMode;
         DB_URL = testMode ? TEST_DB_URL : DEFAULT_DB_URL;
+        System.out.println("⚙ DatabaseConfig: testMode=" + testMode + ", DB_URL=" + DB_URL);
     }
     
     /**
@@ -31,6 +33,19 @@ public class DatabaseConfig {
      */
     public static String getDatabaseUrl() {
         return DB_URL;
+    }
+    
+    /**
+     * 验证数据库状态一致性
+     * 确保 isTestMode 和 DB_URL 匹配
+     */
+    private static void validateDatabaseState() {
+        boolean urlIsTest = DB_URL.contains("test_");
+        if (isTestMode != urlIsTest) {
+            throw new IllegalStateException(
+                String.format("❌ 数据库状态不一致! isTestMode=%s, DB_URL=%s", isTestMode, DB_URL)
+            );
+        }
     }
     
     // 初始化数据库（程序启动时执行）
@@ -180,6 +195,9 @@ public class DatabaseConfig {
 
     // 单例 Connection
     public static Connection getConnection() {
+        // 验证数据库状态一致性
+        validateDatabaseState();
+        
         // 防御:只允许 SQLite URL,避免意外的驱动或无效协议悄悄成功
         if (DB_URL == null || !DB_URL.startsWith("jdbc:sqlite:")) {
             throw new RuntimeException("Invalid database URL: " + DB_URL);
@@ -193,12 +211,23 @@ public class DatabaseConfig {
         }
     }
 
+    /**
+     * @deprecated 不要直接设置 URL，使用 setTestMode() 代替
+     * 直接修改 URL 会导致状态不一致
+     */
+    @Deprecated
     public static synchronized void setDbUrlForTest(String url) {
+        System.err.println("⚠️ WARNING: setDbUrlForTest is deprecated, use setTestMode() instead");
         DB_URL = url;
     }
 
-    /** for tests only */
+    /**
+     * @deprecated 不要直接重置 URL，使用 setTestMode(false) 代替
+     * 直接修改 URL 会导致状态不一致
+     */
+    @Deprecated
     public static synchronized void resetDbUrl() {
+        System.err.println("⚠️ WARNING: resetDbUrl is deprecated, use setTestMode(false) instead");
         DB_URL = DEFAULT_DB_URL;
     }
 }
