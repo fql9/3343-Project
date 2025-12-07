@@ -2,7 +2,51 @@
 
 A JavaFX-based second-hand goods trading platform system that supports user registration, item posting, favorites, messaging, and more.
 
-## Project Overview
+---
+
+## 🚀 Quick Start (No Environment Setup Required)
+
+### Option 1: Download Pre-built Release (Recommended)
+
+1. Go to [Releases](https://github.com/fql9/3343-Project/releases) page
+2. Download the latest `3343-Project-1.0-SNAPSHOT-all.jar`
+3. Download and extract `item_images.zip` (contains sample product images)
+4. Make sure you have **Java 21+** installed ([Download here](https://adoptium.net/temurin/releases/?version=21))
+5. Run the application:
+   ```bash
+   java -jar 3343-Project-1.0-SNAPSHOT-all.jar
+   ```
+
+### Option 2: Build from Source
+
+```bash
+# Clone the repository
+git clone https://github.com/fql9/3343-Project.git
+cd 3343-Project
+
+# Build and run (Windows)
+.\gradlew.bat fatJar
+java -jar build\libs\3343-Project-1.0-SNAPSHOT-all.jar
+
+# Build and run (macOS/Linux)
+./gradlew fatJar
+java -jar build/libs/3343-Project-1.0-SNAPSHOT-all.jar
+```
+
+### Demo Accounts
+
+All accounts use password: **`password123`**
+
+| Username | Role   | Description |
+|----------|--------|-------------|
+| admin    | ADMIN  | Full system access |
+| alice    | SELLER | Has sold items |
+| bob      | SELLER | Active seller |
+| charlie  | BUYER  | Regular buyer |
+
+---
+
+## 📋 Project Overview
 
 This project is a complete second-hand trading platform application that provides the following core features:
 - User registration and login (supports buyer and admin roles)
@@ -12,13 +56,26 @@ This project is a complete second-hand trading platform application that provide
 - Internal messaging system
 - User management (admin feature)
 
-## Technology Stack
+## 💻 System Requirements
 
-- **Programming Language**: Java 21
-- **UI Framework**: JavaFX 17.0.10
-- **Database**: SQLite 3.46.0.0
-- **Build Tool**: Gradle 9.2.1
-- **Logging Framework**: SLF4J 2.0.16
+| Component | Minimum | Recommended |
+|-----------|---------|-------------|
+| Java      | JDK 21  | JDK 21+     |
+| RAM       | 512 MB  | 1 GB+       |
+| Disk Space| 100 MB  | 200 MB      |
+| OS        | Windows 10 / macOS 10.14 / Linux | Latest version |
+
+## 🔧 Technology Stack
+
+| Component | Version | Description |
+|-----------|---------|-------------|
+| Java      | 21      | Programming language |
+| JavaFX    | 23.0.1  | UI framework |
+| SQLite    | 3.46.0.0| Embedded database |
+| Gradle    | 9.2.1   | Build tool |
+| SLF4J     | 2.0.16  | Logging framework |
+| JUnit 5   | 5.10.2  | Testing framework |
+| Mockito   | 5.14.2  | Mocking framework |
 
 ## Project Structure
 
@@ -68,34 +125,70 @@ This project is a complete second-hand trading platform application that provide
 └── README.md                        # Project documentation
 ```
 
-## Requirements
+## 🛠️ Environment Setup
 
-- **JDK**: Java 21 or higher
-- **Gradle**: 6.4 or higher (Gradle Wrapper recommended)
-- **Operating System**: Windows / macOS / Linux
+### Step 1: Install Java 21
 
-## Installation and Running
+Choose one of the following options:
 
-### 1. Clone the Repository
+#### Windows
+1. Download [Adoptium Temurin JDK 21](https://adoptium.net/temurin/releases/?version=21&os=windows)
+2. Run the installer (.msi file)
+3. **Important**: Check "Set JAVA_HOME variable" during installation
+4. Verify installation:
+   ```powershell
+   java -version
+   # Should show: openjdk version "21.x.x"
+   ```
+
+#### macOS
+```bash
+# Using Homebrew
+brew install openjdk@21
+
+# Add to PATH
+echo 'export PATH="/opt/homebrew/opt/openjdk@21/bin:$PATH"' >> ~/.zshrc
+source ~/.zshrc
+
+# Verify
+java -version
+```
+
+#### Linux (Ubuntu/Debian)
+```bash
+sudo apt update
+sudo apt install openjdk-21-jdk
+
+# Verify
+java -version
+```
+
+### Step 2: Verify JavaFX Support
+
+This project uses JavaFX 23.0.1 which is bundled in the FAT JAR. No additional JavaFX installation is required.
+
+---
+
+## 📦 Installation and Running
+
+### Method 1: Run from FAT JAR (Recommended)
 
 ```bash
+# Clone the repository
 git clone https://github.com/fql9/3343-Project.git
 cd 3343-Project
+
+# Build FAT JAR (Windows)
+.\gradlew.bat fatJar
+
+# Build FAT JAR (macOS/Linux)
+./gradlew fatJar
+
+# Run the application
+java -jar build/libs/3343-Project-1.0-SNAPSHOT-all.jar
 ```
 
-### 2. Build the Project
-
-Build the project using Gradle Wrapper:
-
-```bash
-# Windows
-.\gradlew.bat build
-
-# macOS/Linux
-./gradlew build
-```
-
-### 3. Run the Application
+### Method 2: Run with Gradle
 
 ```bash
 # Windows
@@ -105,7 +198,68 @@ Build the project using Gradle Wrapper:
 ./gradlew run
 ```
 
-Alternatively, run `MainApp.java` directly in your IDE (IntelliJ IDEA or VS Code).
+### Method 3: Run in IDE
+
+1. Open project in IntelliJ IDEA or VS Code
+2. Run `src/MainApp.java`
+
+---
+
+## 📤 Building Executable Packages
+
+### Create FAT JAR (All-in-one executable)
+
+```bash
+# Windows
+.\gradlew.bat fatJar
+
+# macOS/Linux
+./gradlew fatJar
+```
+
+Output: `build/libs/3343-Project-1.0-SNAPSHOT-all.jar`
+
+### Create Platform-Specific Launchers
+
+```bash
+# Create all launchers (Windows .bat + Unix .sh)
+.\gradlew.bat createExecutables
+
+# Windows only
+.\gradlew.bat createWindowsExecutable
+
+# Unix only
+./gradlew createUnixExecutable
+```
+
+This creates:
+- `3343-Project.bat` - Windows launcher (double-click to run)
+- `3343-Project.sh` - Linux/macOS launcher
+
+### Build Without Tests (Faster)
+
+```bash
+.\gradlew.bat fatJar -x test
+```
+
+---
+
+## 📁 Required Files for Distribution
+
+When distributing the application, include these files/folders:
+
+```
+📦 Distribution Package
+├── 3343-Project-1.0-SNAPSHOT-all.jar  # Main executable
+├── secondhand.db                       # Database (auto-created if missing)
+├── item_images/                        # Product images folder
+│   ├── bike.jpg
+│   ├── laptop.jpg
+│   └── ... (other images)
+└── README.md                           # This documentation
+```
+
+**Note**: The `item_images/` folder must be in the same directory as the JAR file for images to display correctly.
 
 ## Default User Accounts
 
@@ -342,19 +496,100 @@ java -cp "build/classes/java/main;lib/*" util.ExportUsers
 # Or run directly in IDE: src/util/ExportUsers.java
 ```
 
-## Troubleshooting
+## ❓ Troubleshooting
 
-### 1. Gradle Download Failure
-If you encounter Gradle download issues:
-- Manually download Gradle and configure `GRADLE_HOME`
-- Use locally installed Gradle
-- Disable Gradle Wrapper in VS Code settings: `java.import.gradle.wrapper.enabled = false`
+### 1. "java is not recognized" or "java: command not found"
 
-### 2. JavaFX Runtime Error
-Ensure Java 21 is properly installed and JavaFX modules are configured.
+**Problem**: Java is not installed or not in system PATH.
 
-### 3. Missing Database File
-After deleting the `secondhand.db` file, restart the program to automatically create a new database.
+**Solution**:
+```bash
+# Check if Java is installed
+java -version
+
+# If not found, install Java 21:
+# Windows: Download from https://adoptium.net/temurin/releases/?version=21
+# macOS: brew install openjdk@21
+# Linux: sudo apt install openjdk-21-jdk
+```
+
+### 2. "JavaFX runtime components are missing"
+
+**Problem**: Running with wrong Java version or missing JavaFX.
+
+**Solution**: Use the FAT JAR which includes JavaFX:
+```bash
+java -jar build/libs/3343-Project-1.0-SNAPSHOT-all.jar
+```
+
+### 3. Gradle Build Failure - "Unable to delete directory"
+
+**Problem**: Build directory is locked by another process (IDE, OneDrive sync, etc.)
+
+**Solution**:
+```bash
+# Windows PowerShell
+.\gradlew.bat --stop
+Remove-Item -Recurse -Force .\build
+.\gradlew.bat fatJar
+
+# macOS/Linux
+./gradlew --stop
+rm -rf build
+./gradlew fatJar
+```
+
+### 4. Gradle Download Failure
+
+**Problem**: Network issues downloading Gradle wrapper.
+
+**Solution**:
+- Check your internet connection
+- Try using a VPN
+- Or use locally installed Gradle:
+  ```bash
+  gradle fatJar
+  ```
+
+### 5. Images Not Displaying
+
+**Problem**: The `item_images/` folder is missing or not in the correct location.
+
+**Solution**: Ensure `item_images/` folder is in the same directory as the JAR file:
+```
+your-folder/
+├── 3343-Project-1.0-SNAPSHOT-all.jar
+├── secondhand.db
+└── item_images/
+    ├── bike.jpg
+    ├── laptop.jpg
+    └── ...
+```
+
+### 6. Database Connection Error
+
+**Problem**: Database file is corrupted or locked.
+
+**Solution**:
+```bash
+# Delete the database and reinitialize
+# Windows
+Remove-Item secondhand.db -Force
+.\gradlew.bat initDemoData
+
+# macOS/Linux
+rm secondhand.db
+./gradlew initDemoData
+```
+
+### 7. Chinese Characters Display as Garbled Text
+
+**Problem**: System encoding mismatch.
+
+**Solution**: Run with UTF-8 encoding:
+```bash
+java -Dfile.encoding=UTF-8 -jar build/libs/3343-Project-1.0-SNAPSHOT-all.jar
+```
 
 ## Contributing
 
