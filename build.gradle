@@ -344,3 +344,179 @@ tasks.register('initDemoData', JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
     mainClass = 'InitializeDemoData'
 }
+
+// ===========================
+// Native Installer (jpackage)
+// ===========================
+
+// Prepare runtime image directory for jpackage
+tasks.register('preparePackageDir', Copy) {
+    group = 'distribution'
+    description = 'Prepare directory for jpackage'
+    dependsOn fatJar
+    
+    from("${buildDir}/libs") {
+        include '3343-Project-*-all.jar'
+        rename { '3343-Project.jar' }
+    }
+    into "${buildDir}/package/input"
+}
+
+// Copy resources for packaging
+tasks.register('copyPackageResources', Copy) {
+    group = 'distribution'
+    description = 'Copy resources for package'
+    dependsOn preparePackageDir
+    
+    from(projectDir) {
+        include 'item_images/**'
+        include 'secondhand.db'
+    }
+    into "${buildDir}/package/resources"
+}
+
+// Create Windows installer using jpackage
+tasks.register('jpackageWindows', Exec) {
+    group = 'distribution'
+    description = 'Create Windows installer (.exe) with bundled JRE - No Java installation required!'
+    dependsOn preparePackageDir, copyPackageResources
+    
+    def jpackageExe = "${System.getProperty('java.home')}/bin/jpackage"
+    def outputDir = "${buildDir}/installer"
+    def inputDir = "${buildDir}/package/input"
+    def resourceDir = "${buildDir}/package/resources"
+    
+    doFirst {
+        // Create output directory
+        file(outputDir).mkdirs()
+        
+        println "=========================================="
+        println "Creating Windows Installer with jpackage"
+        println "=========================================="
+        println "Input: ${inputDir}"
+        println "Output: ${outputDir}"
+    }
+    
+    commandLine jpackageExe,
+        '--type', 'exe',
+        '--name', 'SecondHandTrading',
+        '--description', 'CS3343 Second-Hand Trading Platform',
+        '--vendor', 'CS3343 Group 11',
+        '--app-version', '1.3',
+        '--input', inputDir,
+        '--main-jar', '3343-Project.jar',
+        '--main-class', 'MainApp',
+        '--dest', outputDir,
+        '--win-dir-chooser',
+        '--win-menu',
+        '--win-shortcut',
+        '--java-options', '-Dfile.encoding=UTF-8',
+        '--java-options', '--add-opens=java.base/java.lang=ALL-UNNAMED'
+    
+    doLast {
+        println ""
+        println "✓ Windows installer created at: ${outputDir}"
+        println "✓ Users can install without Java!"
+        println ""
+    }
+}
+
+// Create portable package (JAR + JRE + resources)
+tasks.register('createPortablePackage') {
+    group = 'distribution'
+    description = 'Create portable package with embedded JRE'
+    dependsOn fatJar
+    
+    doLast {
+        def portableDir = file("${buildDir}/portable/SecondHandTrading")
+        portableDir.mkdirs()
+        
+        // Copy JAR
+        copy {
+            from "${buildDir}/libs"
+            include '3343-Project-*-all.jar'
+            into portableDir
+            rename { '3343-Project.jar' }
+        }
+        
+        // Copy resources
+        copy {
+            from projectDir
+            include 'item_images/**'
+            include 'secondhand.db'
+            include 'launch.bat'
+            into portableDir
+        }
+        
+        // Create launcher script
+        def launcher = new File(portableDir, 'Start.bat')
+        launcher.text = '''@echo off
+chcp 65001 >nul
+cd /d "%~dp0"
+
+echo ========================================
+echo   Second-Hand Trading Platform
+echo ========================================
+echo.
+
+REM Try to find Java 21+
+set "JAVA_EXE="
+
+REM Check bundled JRE first
+if exist "jre\\bin\\java.exe" (
+    set "JAVA_EXE=jre\\bin\\java.exe"
+    goto :run
+)
+
+REM Check JAVA_HOME
+if defined JAVA_HOME (
+    if exist "%JAVA_HOME%\\bin\\java.exe" (
+        set "JAVA_EXE=%JAVA_HOME%\\bin\\java.exe"
+        goto :run
+    )
+)
+
+REM Check PATH
+where java >nul 2>&1
+if %errorlevel%==0 (
+    set "JAVA_EXE=java"
+    goto :run
+)
+
+echo [ERROR] Java not found!
+echo Please install Java 21+ from: https://adoptium.net/temurin/releases/?version=21
+pause
+exit /b 1
+
+:run
+echo Starting application...
+"%JAVA_EXE%" -Dfile.encoding=UTF-8 -jar 3343-Project.jar
+if %errorlevel% neq 0 pause
+'''
+        
+        println ""
+        println "✓ Portable package created at: ${portableDir}"
+        println "✓ Contents:"
+        println "  - 3343-Project.jar (main application)"
+        println "  - Start.bat (launcher)"
+        println "  - item_images/ (product images)"
+        println "  - secondhand.db (database)"
+        println ""
+    }
+}
+
+// Create distribution ZIP
+tasks.register('createDistZip', Zip) {
+    group = 'distribution'
+    description = 'Create distribution ZIP file'
+    dependsOn createPortablePackage
+    
+    archiveFileName = 'SecondHandTrading-Portable-v1.3.zip'
+    destinationDirectory = file("${buildDir}/dist")
+    
+    from("${buildDir}/portable")
+    
+    doLast {
+        println "✓ Distribution ZIP created: ${destinationDirectory.get()}/${archiveFileName.get()}"
+    }
+}
