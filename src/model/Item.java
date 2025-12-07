@@ -7,9 +7,9 @@ public class Item {
     private String description;
     private double price;
     private String category;
-    private String imageUrl;     // 图片URL或路径
-    private boolean active;      // 是否仍在售
-    private String createdTime;  // 可用 LocalDateTime
+    private String imageUrl;     
+    private boolean active;      
+    private String createdTime;  
 
     // Getter & Setter
     public Long getId() { return id; }

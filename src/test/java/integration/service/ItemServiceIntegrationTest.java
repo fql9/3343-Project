@@ -10,10 +10,6 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * ItemService 集成测试 - 补充边界条件和异常情况
- * 目标: 提升分支覆盖率
- */
 class ItemServiceIntegrationTest extends IntegrationTestBase {
 
     private ItemService itemService;

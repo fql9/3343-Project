@@ -23,10 +23,6 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * 针对 ReviewDaoImpl 分支覆盖率的增强测试
- * 目标: 将分支覆盖率从 64% 提升至 90%+
- */
 class ReviewDaoImplBranchCoverageTest extends IntegrationTestBase {
 
     private ReviewDao reviewDao;

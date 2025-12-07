@@ -13,10 +13,6 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * OrderService 补充测试 - 边界条件和异常分支
- * 目标: 提升分支覆盖率
- */
 class OrderServiceCoverageTest extends IntegrationTestBase {
 
     private OrderService orderService;

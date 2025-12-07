@@ -16,10 +16,6 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * 针对 UserDaoImpl 分支覆盖率的增强测试
- * 目标: 将分支覆盖率从 68% 提升至 90%+
- */
 class UserDaoImplBranchCoverageTest extends IntegrationTestBase {
 
     private UserDao userDao;

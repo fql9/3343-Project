@@ -10,10 +10,6 @@ import java.sql.Statement;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * DatabaseConfig 补充测试 - 边界条件
- * 目标: 提升分支覆盖率
- */
 class DatabaseConfigCoverageTest extends IntegrationTestBase {
 
     @Test

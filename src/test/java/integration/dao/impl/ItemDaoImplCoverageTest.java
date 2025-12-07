@@ -13,10 +13,6 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * ItemDaoImpl 补充测试 - 边界条件和异常情况
- * 目标: 提升分支覆盖率
- */
 class ItemDaoImplCoverageTest extends IntegrationTestBase {
 
     private ItemDao itemDao;

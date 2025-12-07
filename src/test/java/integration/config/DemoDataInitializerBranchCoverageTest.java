@@ -14,10 +14,7 @@ import java.sql.ResultSet;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * 针对 DemoDataInitializer 分支覆盖率的增强测试
- * 目标: 将分支覆盖率从 76% 提升至 90%+
- */
+
 class DemoDataInitializerBranchCoverageTest extends IntegrationTestBase {
 
     @BeforeEach

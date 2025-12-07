@@ -18,10 +18,6 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * 针对 FavoriteDaoImpl 分支覆盖率的增强测试
- * 目标: 将分支覆盖率从 70% 提升至 90%+
- */
 class FavoriteDaoImplBranchCoverageTest extends IntegrationTestBase {
 
     private FavoriteDao favoriteDao;

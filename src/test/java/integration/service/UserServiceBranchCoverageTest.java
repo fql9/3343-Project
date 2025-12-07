@@ -18,10 +18,6 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * 针对 UserService 分支覆盖率的增强测试
- * 目标: 将分支覆盖率从 58% 提升至 90%+
- */
 class UserServiceBranchCoverageTest extends IntegrationTestBase {
 
     private UserService userService;
