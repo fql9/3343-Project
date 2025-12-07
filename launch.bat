@@ -9,23 +9,33 @@ echo.
 
 :: Get script directory
 set "SCRIPT_DIR=%~dp0"
-set "JAR_FILE=%SCRIPT_DIR%build\libs\3343-Project-1.0-SNAPSHOT-all.jar"
+set "JAR_FILE="
 
-:: Check if JAR exists in build/libs
-if not exist "%JAR_FILE%" (
+:: Check for JAR in multiple locations with different names
+if exist "%SCRIPT_DIR%3343-Project.jar" (
+    set "JAR_FILE=%SCRIPT_DIR%3343-Project.jar"
+    goto :jar_found
+)
+if exist "%SCRIPT_DIR%3343-Project-1.0-SNAPSHOT-all.jar" (
     set "JAR_FILE=%SCRIPT_DIR%3343-Project-1.0-SNAPSHOT-all.jar"
+    goto :jar_found
+)
+if exist "%SCRIPT_DIR%build\libs\3343-Project-1.0-SNAPSHOT-all.jar" (
+    set "JAR_FILE=%SCRIPT_DIR%build\libs\3343-Project-1.0-SNAPSHOT-all.jar"
+    goto :jar_found
 )
 
-:: Check if JAR exists in current directory
-if not exist "%JAR_FILE%" (
-    echo [ERROR] Cannot find JAR file!
-    echo Expected locations:
-    echo   - %SCRIPT_DIR%build\libs\3343-Project-1.0-SNAPSHOT-all.jar
-    echo   - %SCRIPT_DIR%3343-Project-1.0-SNAPSHOT-all.jar
-    echo.
-    pause
-    exit /b 1
-)
+:: JAR not found
+echo [ERROR] Cannot find JAR file!
+echo.
+echo Please ensure one of these files exists in the same folder as this script:
+echo   - 3343-Project.jar
+echo   - 3343-Project-1.0-SNAPSHOT-all.jar
+echo.
+pause
+exit /b 1
+
+:jar_found
 
 echo [INFO] Found JAR: %JAR_FILE%
 echo.
