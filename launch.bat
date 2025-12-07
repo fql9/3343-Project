@@ -9,133 +9,79 @@ echo.
 
 :: Get script directory
 set "SCRIPT_DIR=%~dp0"
-set "JAR_FILE="
 
-:: Check for JAR in multiple locations with different names
+:: Check for JAR
 if exist "%SCRIPT_DIR%3343-Project.jar" (
     set "JAR_FILE=%SCRIPT_DIR%3343-Project.jar"
-    goto :jar_found
-)
-if exist "%SCRIPT_DIR%3343-Project-1.0-SNAPSHOT-all.jar" (
+) else if exist "%SCRIPT_DIR%3343-Project-1.0-SNAPSHOT-all.jar" (
     set "JAR_FILE=%SCRIPT_DIR%3343-Project-1.0-SNAPSHOT-all.jar"
-    goto :jar_found
+) else (
+    echo [ERROR] Cannot find JAR file!
+    pause
+    exit /b 1
 )
-if exist "%SCRIPT_DIR%build\libs\3343-Project-1.0-SNAPSHOT-all.jar" (
-    set "JAR_FILE=%SCRIPT_DIR%build\libs\3343-Project-1.0-SNAPSHOT-all.jar"
-    goto :jar_found
-)
-
-:: JAR not found
-echo [ERROR] Cannot find JAR file!
-echo.
-echo Please ensure one of these files exists in the same folder as this script:
-echo   - 3343-Project.jar
-echo   - 3343-Project-1.0-SNAPSHOT-all.jar
-echo.
-pause
-exit /b 1
-
-:jar_found
 
 echo [INFO] Found JAR: %JAR_FILE%
-echo.
 
-:: Initialize JAVA_EXE
+:: Try common Java 21+ locations
 set "JAVA_EXE="
-set "JAVA_VERSION=0"
 
-:: Check 1: JAVA_HOME environment variable
+:: Check Adoptium JDK 23
+if exist "C:\Program Files\Eclipse Adoptium\jdk-23.0.2.7-hotspot\bin\java.exe" (
+    set "JAVA_EXE=C:\Program Files\Eclipse Adoptium\jdk-23.0.2.7-hotspot\bin\java.exe"
+    goto :found_java
+)
+
+:: Check Adoptium JDK 25
+if exist "C:\Program Files\Eclipse Adoptium\jdk-25.0.1.8-hotspot\bin\java.exe" (
+    set "JAVA_EXE=C:\Program Files\Eclipse Adoptium\jdk-25.0.1.8-hotspot\bin\java.exe"
+    goto :found_java
+)
+
+:: Check JAVA_HOME
 if defined JAVA_HOME (
     if exist "%JAVA_HOME%\bin\java.exe" (
-        call :check_java_version "%JAVA_HOME%\bin\java.exe"
-        if !JAVA_VERSION! GEQ 21 (
-            set "JAVA_EXE=%JAVA_HOME%\bin\java.exe"
-            echo [INFO] Using JAVA_HOME: !JAVA_EXE! ^(Java !JAVA_VERSION!^)
-            goto :run_app
-        )
+        set "JAVA_EXE=%JAVA_HOME%\bin\java.exe"
+        goto :found_java
     )
 )
 
-:: Check 2: java in PATH
+:: Check PATH
 where java >nul 2>&1
 if %errorlevel%==0 (
-    for /f "tokens=*" %%i in ('where java') do (
-        call :check_java_version "%%i"
-        if !JAVA_VERSION! GEQ 21 (
-            set "JAVA_EXE=%%i"
-            echo [INFO] Using PATH java: !JAVA_EXE! ^(Java !JAVA_VERSION!^)
-            goto :run_app
-        )
+    for /f "tokens=*" %%i in ('where java 2^>nul') do (
+        set "JAVA_EXE=%%i"
+        goto :found_java
     )
 )
 
-:: Check 3: Common installation paths
-echo [INFO] Searching for Java 21+ in common locations...
-
-set "SEARCH_PATHS="
-set "SEARCH_PATHS=!SEARCH_PATHS! C:\Program Files\Eclipse Adoptium"
-set "SEARCH_PATHS=!SEARCH_PATHS! C:\Program Files\Java"
-set "SEARCH_PATHS=!SEARCH_PATHS! C:\Program Files\Microsoft"
-set "SEARCH_PATHS=!SEARCH_PATHS! C:\Program Files\Zulu"
-set "SEARCH_PATHS=!SEARCH_PATHS! C:\Program Files\BellSoft"
-set "SEARCH_PATHS=!SEARCH_PATHS! C:\Program Files\Amazon Corretto"
-
-for %%p in (!SEARCH_PATHS!) do (
-    if exist "%%p" (
-        for /d %%d in ("%%p\*") do (
-            if exist "%%d\bin\java.exe" (
-                call :check_java_version "%%d\bin\java.exe"
-                if !JAVA_VERSION! GEQ 21 (
-                    set "JAVA_EXE=%%d\bin\java.exe"
-                    echo [INFO] Found: !JAVA_EXE! ^(Java !JAVA_VERSION!^)
-                    goto :run_app
-                )
-            )
-        )
-    )
-)
-
-:: No suitable Java found
+:: Java not found
 echo.
-echo ========================================
 echo [ERROR] Java 21 or higher is required!
-echo ========================================
 echo.
-echo Your current Java version is not compatible.
 echo Please download and install Java 21 from:
-echo.
 echo   https://adoptium.net/temurin/releases/?version=21
-echo.
-echo After installation, run this script again.
 echo.
 pause
 exit /b 1
 
-:run_app
+:found_java
+echo [INFO] Using Java: %JAVA_EXE%
 echo.
 echo [INFO] Starting application...
 echo ========================================
 echo.
 
-:: Run the application
-"%JAVA_EXE%" -Dfile.encoding=UTF-8 -jar "%JAR_FILE%"
+:: Run with Launcher if available (for JavaFX compatibility)
+cd /d "%SCRIPT_DIR%"
+if exist "Launcher.class" (
+    "%JAVA_EXE%" -Dfile.encoding=UTF-8 -cp ".;3343-Project.jar" Launcher
+) else (
+    "%JAVA_EXE%" -Dfile.encoding=UTF-8 -jar "%JAR_FILE%"
+)
 
 if %errorlevel% neq 0 (
     echo.
     echo [ERROR] Application exited with error code %errorlevel%
     pause
 )
-exit /b 0
-
-:check_java_version
-:: Extract Java version from java -version output
-set "JAVA_VERSION=0"
-for /f "tokens=3" %%v in ('"%~1" -version 2^>^&1 ^| findstr /i "version"') do (
-    set "ver=%%v"
-    set "ver=!ver:"=!"
-    for /f "tokens=1 delims=." %%a in ("!ver!") do (
-        set "JAVA_VERSION=%%a"
-    )
-)
-exit /b 0
-

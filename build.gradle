@@ -122,7 +122,8 @@ application {
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+        // 为了与便携包内置的 JBR17 兼容，这里暂时降低到 Java 17
+        languageVersion = JavaLanguageVersion.of(17)
     }
 }
 

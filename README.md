@@ -4,32 +4,47 @@ A JavaFX-based second-hand goods trading platform system that supports user regi
 
 ---
 
-## 🚀 Quick Start (No Environment Setup Required)
+## Quick Start
 
-### Option 1: Download Pre-built Release (Recommended)
+### Option 1: Download Portable Package (Recommended)
 
 1. Go to [Releases](https://github.com/fql9/3343-Project/releases) page
-2. Download the latest `3343-Project-1.0-SNAPSHOT-all.jar`
-3. Download and extract `item_images.zip` (contains sample product images)
-4. Make sure you have **Java 21+** installed ([Download here](https://adoptium.net/temurin/releases/?version=21))
-5. Run the application:
-   ```bash
-   java -jar 3343-Project-1.0-SNAPSHOT-all.jar
-   ```
+2. Download `SecondHandTrading-v1.4.zip` (~24 MB)
+3. Extract to any folder
+4. **Prerequisite**: Install [Java 21+](https://adoptium.net/temurin/releases/?version=21) if not already installed
+5. Double-click `Start.bat` (Windows) to run
 
-### Option 2: Build from Source
+**Package Contents:**
+```
+SecondHandTrading/
+├── 3343-Project.jar     # Main application
+├── Launcher.class       # JavaFX compatibility layer
+├── Start.bat            # Smart launcher script
+├── secondhand.db        # Demo database
+└── item_images/         # Product images
+```
+
+### Option 2: Run JAR Directly
+
+```bash
+# Requires Java 21+
+java -jar 3343-Project.jar
+```
+
+### Option 3: Build from Source
 
 ```bash
 # Clone the repository
 git clone https://github.com/fql9/3343-Project.git
 cd 3343-Project
 
-# Build and run (Windows)
+# Build FAT JAR (Windows)
 .\gradlew.bat fatJar
-java -jar build\libs\3343-Project-1.0-SNAPSHOT-all.jar
 
-# Build and run (macOS/Linux)
+# Build FAT JAR (macOS/Linux)
 ./gradlew fatJar
+
+# Run
 java -jar build/libs/3343-Project-1.0-SNAPSHOT-all.jar
 ```
 
@@ -517,10 +532,16 @@ java -version
 
 **Problem**: Running with wrong Java version or missing JavaFX.
 
-**Solution**: Use the FAT JAR which includes JavaFX:
+**Solution**: Use the portable package with the Launcher:
 ```bash
-java -jar build/libs/3343-Project-1.0-SNAPSHOT-all.jar
+# Download the portable package and run
+cd SecondHandTrading
+java -cp ".;3343-Project.jar" Launcher
 ```
+
+Or use `Start.bat` which handles this automatically.
+
+**Note**: You may see a warning `Unsupported JavaFX configuration: classes were loaded from 'unnamed module'`. This is expected and does not affect functionality.
 
 ### 3. Gradle Build Failure - "Unable to delete directory"
 
