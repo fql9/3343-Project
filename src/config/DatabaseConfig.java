@@ -1,15 +1,77 @@
 package config;
 
+import java.io.File;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.Statement;
 
 public class DatabaseConfig {
 
-    private static final String DEFAULT_DB_URL = "jdbc:sqlite:secondhand.db";
-    private static final String TEST_DB_URL = "jdbc:sqlite:test_secondhand.db";
-    private static String DB_URL = DEFAULT_DB_URL;
+    private static final String DB_NAME = "secondhand.db";
+    private static final String TEST_DB_NAME = "test_secondhand.db";
+    private static String DB_URL;
     private static boolean isTestMode = false;
+    
+    static {
+        // Initialize database path at class load time
+        DB_URL = "jdbc:sqlite:" + getAppDataPath(DB_NAME);
+    }
+    
+    /**
+     * Get the application data directory path for storing database and images.
+     * Priority: 1) JAR directory, 2) User home directory
+     */
+    private static String getAppDataPath(String filename) {
+        try {
+            // Try to get the directory where the JAR/class is located
+            String jarPath = DatabaseConfig.class.getProtectionDomain()
+                    .getCodeSource().getLocation().toURI().getPath();
+            
+            // On Windows, remove leading slash from path like /C:/...
+            if (jarPath.matches("^/[A-Za-z]:.*")) {
+                jarPath = jarPath.substring(1);
+            }
+            
+            File jarFile = new File(jarPath);
+            File appDir;
+            
+            if (jarFile.isFile()) {
+                // Running from JAR
+                appDir = jarFile.getParentFile();
+            } else {
+                // Running from classes directory (IDE)
+                appDir = new File(System.getProperty("user.dir"));
+            }
+            
+            // Check if the directory is writable
+            File testFile = new File(appDir, ".write_test");
+            try {
+                if (testFile.createNewFile()) {
+                    testFile.delete();
+                    String dbPath = new File(appDir, filename).getAbsolutePath();
+                    System.out.println("Database path: " + dbPath);
+                    return dbPath;
+                }
+            } catch (Exception e) {
+                // Directory is not writable, fall through to user home
+            }
+            
+            // Fallback to user home directory
+            String userHome = System.getProperty("user.home");
+            File userDataDir = new File(userHome, ".secondhand-trading");
+            if (!userDataDir.exists()) {
+                userDataDir.mkdirs();
+            }
+            String dbPath = new File(userDataDir, filename).getAbsolutePath();
+            System.out.println("Database path (user home): " + dbPath);
+            return dbPath;
+            
+        } catch (Exception e) {
+            // Ultimate fallback to current directory
+            System.err.println("Warning: Could not determine app directory, using current directory");
+            return filename;
+        }
+    }
     
     /**
      * 设置为测试模式，使用独立的测试数据库
@@ -17,8 +79,8 @@ public class DatabaseConfig {
      */
     public static synchronized void setTestMode(boolean testMode) {
         isTestMode = testMode;
-        DB_URL = testMode ? TEST_DB_URL : DEFAULT_DB_URL;
-        System.out.println("⚙ DatabaseConfig: testMode=" + testMode + ", DB_URL=" + DB_URL);
+        DB_URL = "jdbc:sqlite:" + getAppDataPath(testMode ? TEST_DB_NAME : DB_NAME);
+        System.out.println("DatabaseConfig: testMode=" + testMode + ", DB_URL=" + DB_URL);
     }
     
     /**
@@ -228,6 +290,6 @@ public class DatabaseConfig {
     @Deprecated
     public static synchronized void resetDbUrl() {
         System.err.println("⚠️ WARNING: resetDbUrl is deprecated, use setTestMode(false) instead");
-        DB_URL = DEFAULT_DB_URL;
+        DB_URL = "jdbc:sqlite:" + getAppDataPath(DB_NAME);
     }
 }

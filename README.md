@@ -8,33 +8,22 @@ A JavaFX-based second-hand goods trading platform system that supports user regi
 
 ### Option 1: Windows Installer (.exe) — No Java required
 1. Go to [Releases](https://github.com/fql9/3343-Project/releases)
-2. Download `SecondHandTrading-1.4.exe` (~84 MB)
+2. Download `SecondHandTrading-1.5.1.exe` (~117 MB)
 3. Run the installer and launch from Start Menu / Desktop shortcut
 
-### Option 2: Portable Package (requires Java 21+)
-1. Download `SecondHandTrading-v1.4.zip` (~24 MB)
+### Option 2: Portable Version — No Java required
+1. Download `SecondHandTrading-Portable-v1.5.1.zip` (~116 MB)
 2. Extract to any folder
-3. Ensure [Java 21+](https://adoptium.net/temurin/releases/?version=21) is installed
-4. Double-click `Start.bat` (Windows) or run:
-   ```bash
-   java -cp ".;3343-Project.jar" Launcher
-   ```
+3. Run `SecondHandTrading.exe`
 
 **Package Contents:**
 ```
 SecondHandTrading/
-├── 3343-Project.jar     # Main application
-├── Launcher.class       # JavaFX compatibility layer
-├── Start.bat            # Smart launcher script
-├── secondhand.db        # Demo database
-└── item_images/         # Product images
-```
-
-### Option 2: Run JAR Directly
-
-```bash
-# Requires Java 21+
-java -jar 3343-Project.jar
+├── SecondHandTrading.exe   # Main executable
+├── runtime/                # Bundled Java 21 + JavaFX
+├── app/                    # Application JAR and resources
+├── secondhand.db           # Demo database
+└── item_images/            # Product images
 ```
 
 ### Option 3: Build from Source
