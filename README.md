@@ -1,46 +1,53 @@
 # CS3343 Group 11 - Second-Hand Trading Platform
 
-A JavaFX-based second-hand goods trading platform system that supports user registration, item posting, favorites, messaging, and more.
+A JavaFX + SQLite based second-hand trading platform that supports user registration, item posting, favorites, messaging, orders, reviews and admin management.
 
 ---
 
 ## Quick Start
 
-### Option 1: Windows Installer (.exe) — No Java required
-1. Go to [Releases](https://github.com/fql9/3343-Project/releases)
-2. Download `SecondHandTrading-1.5.1.exe` (~117 MB)
-3. Run the installer and launch from Start Menu / Desktop shortcut
+### Option 1: Windows Installer (.exe) — No Java required (Recommended)
 
-### Option 2: Portable Version — No Java required
-1. Download `SecondHandTrading-Portable-v1.5.1.zip` (~116 MB)
-2. Extract to any folder
-3. Run `SecondHandTrading.exe`
+1. Go to the project **Releases** page and download the latest installer, for example  
+   `SecondHandTrading-1.6.1.exe` (or the newest `SecondHandTrading-*.exe`).
+2. Double-click the installer and follow the wizard to complete installation.
+3. Launch **SecondHandTrading** from the **Start Menu** or the **Desktop shortcut**.
 
-**Package Contents:**
-```
-SecondHandTrading/
-├── SecondHandTrading.exe   # Main executable
-├── runtime/                # Bundled Java 21 + JavaFX
-├── app/                    # Application JAR and resources
-├── secondhand.db           # Demo database
-└── item_images/            # Product images
-```
+> The installer bundles **JDK 21 + JavaFX 23**, so the target machine does **not** need Java pre-installed.
 
-### Option 3: Build from Source
+---
+
+### Option 2: Windows Portable Version (no installation, USB friendly)
+
+1. Download or build the portable package locally (see **Building Executable Packages** → `jpackagePortable`).
+2. After extraction, the folder structure looks like:
+
+   ```
+   SecondHandTrading/
+   ├── SecondHandTrading.exe   # Main executable (double-click to run)
+   ├── runtime/                # Bundled JDK 21 + JavaFX
+   └── item_images/            # Product images (sample + user uploads)
+   ```
+
+3. Double-click `SecondHandTrading.exe` to run the app.
+
+> At runtime the database is created automatically under  
+> `C:\Users\<username>\.secondhand-trading\secondhand.db`, so you **do not** need to ship a `.db` file with the app.
+
+---
+
+### Option 3: Run from Source (requires local JDK 21+)
 
 ```bash
 # Clone the repository
 git clone https://github.com/fql9/3343-Project.git
 cd 3343-Project
 
-# Build FAT JAR (Windows)
-.\gradlew.bat fatJar
+# Windows
+.\gradlew.bat run
 
-# Build FAT JAR (macOS/Linux)
-./gradlew fatJar
-
-# Run
-java -jar build/libs/3343-Project-1.0-SNAPSHOT-all.jar
+# macOS / Linux
+./gradlew run
 ```
 
 ### Demo Accounts
@@ -135,9 +142,12 @@ This project is a complete second-hand trading platform application that provide
 └── README.md                        # Project documentation
 ```
 
-## 🛠️ Environment Setup
+## 🛠️ Environment Setup (for developers)
 
-### Step 1: Install Java 21
+If you only use the installer or portable version, you can skip this section.  
+This is only required when developing from source or building packages yourself.
+
+### Step 1: Install Java 21+
 
 Choose one of the following options:
 
@@ -173,103 +183,93 @@ sudo apt install openjdk-21-jdk
 java -version
 ```
 
-### Step 2: Verify JavaFX Support
-
-This project uses JavaFX 23.0.1 which is bundled in the FAT JAR. No additional JavaFX installation is required.
+> JavaFX 23.0.1 is managed via Gradle dependencies and jpackage tasks. No separate installation is needed.
 
 ---
 
-## 📦 Installation and Running
+## 📦 Installation & Running (from source)
 
-### Method 1: Run from FAT JAR (Recommended)
-
-```bash
-# Clone the repository
-git clone https://github.com/fql9/3343-Project.git
-cd 3343-Project
-
-# Build FAT JAR (Windows)
-.\gradlew.bat fatJar
-
-# Build FAT JAR (macOS/Linux)
-./gradlew fatJar
-
-# Run the application
-java -jar build/libs/3343-Project-1.0-SNAPSHOT-all.jar
-```
-
-### Method 2: Run with Gradle
+### Run directly with Gradle
 
 ```bash
 # Windows
 .\gradlew.bat run
 
-# macOS/Linux
+# macOS / Linux
 ./gradlew run
 ```
 
-### Method 3: Run in IDE
-
-1. Open project in IntelliJ IDEA or VS Code
-2. Run `src/MainApp.java`
-
----
-
-## 📤 Building Executable Packages
-
-### Create FAT JAR (All-in-one executable)
+### Build FAT JAR (for development / debugging)
 
 ```bash
 # Windows
 .\gradlew.bat fatJar
 
-# macOS/Linux
+# macOS / Linux
 ./gradlew fatJar
+
+# Run
+java -jar build/libs/3343-Project-1.0-SNAPSHOT-all.jar
 ```
 
-Output: `build/libs/3343-Project-1.0-SNAPSHOT-all.jar`
+> Note: The Gradle Wrapper is included, so you **do not** need a local Gradle installation.
 
-### Create Platform-Specific Launchers
+---
+
+## 📤 Building Executable Packages (Windows)
+
+This project uses **jpackage** to generate a Windows installer and portable build, both bundling **Liberica JDK 21 Full + JavaFX**:
+
+- All commands are run from the project root: `cd 3343-Project`
+- On first run, Gradle will automatically download Liberica JDK Full (~200 MB), so internet access is required
+
+### 1. Build Windows Installer (.exe)
 
 ```bash
-# Create all launchers (Windows .bat + Unix .sh)
-.\gradlew.bat createExecutables
-
-# Windows only
-.\gradlew.bat createWindowsExecutable
-
-# Unix only
-./gradlew createUnixExecutable
+.\gradlew.bat jpackageWindows
 ```
 
-This creates:
-- `3343-Project.bat` - Windows launcher (double-click to run)
-- `3343-Project.sh` - Linux/macOS launcher
+Output:
 
-### Build Without Tests (Faster)
+- Installer: `build/installer/SecondHandTrading-1.6.1.exe`
+- Behavior: installs to `C:\Program Files\SecondHandTrading` and creates Start Menu / Desktop shortcuts
+
+### 2. Build Windows Portable Version (app-image, no installation)
+
+```bash
+.\gradlew.bat jpackagePortable
+```
+
+Output directory:
+
+```
+build/jpackage/app-image/SecondHandTrading/
+├── SecondHandTrading.exe   # Main executable
+├── runtime/                # Bundled runtime (Liberica JDK 21 + JavaFX)
+└── item_images/            # Product images
+```
+
+Zip the whole `SecondHandTrading` directory and share it with users.  
+After extraction they can simply double-click `SecondHandTrading.exe` to run.
+
+### 3. Skip tests when building (faster)
 
 ```bash
 .\gradlew.bat fatJar -x test
 ```
 
+> For release builds, it is recommended to run the full test suite first: `.\gradlew.bat test`.
+
 ---
 
-## 📁 Required Files for Distribution
+## 📁 Distribution Summary
 
-When distributing the application, include these files/folders:
+Recommended distribution options:
 
-```
-📦 Distribution Package
-├── 3343-Project-1.0-SNAPSHOT-all.jar  # Main executable
-├── secondhand.db                       # Database (auto-created if missing)
-├── item_images/                        # Product images folder
-│   ├── bike.jpg
-│   ├── laptop.jpg
-│   └── ... (other images)
-└── README.md                           # This documentation
-```
-
-**Note**: The `item_images/` folder must be in the same directory as the JAR file for images to display correctly.
+- **Windows Installer**: `build/installer/SecondHandTrading-1.6.1.exe`
+  - Best for end users; one-click installation with automatic shortcuts
+- **Windows Portable Version**: `build/jpackage/app-image/SecondHandTrading/`
+  - Best for USB / “green software” style; unzip and run `SecondHandTrading.exe` directly
 
 ## Default User Accounts
 
@@ -313,42 +313,45 @@ The database includes comprehensive demo data to showcase all platform features:
 
 ### Initializing Demo Data
 
-⚠️ **Important**: Running `.\gradlew.bat clean build` will NOT delete your database or demo data. The `clean` command only removes build artifacts (compiled classes). Your `secondhand.db` database file remains intact.
+- On first launch, if the database is empty, the app **automatically initializes demo data**, including:
+  - 15 users (1 admin, multiple SELLER / BUYER accounts)
+  - 20 items
+  - 18 messages
+  - 6 orders
+  - 30 favorites
+- All accounts use **`password123`** by default.
 
-To populate the database with comprehensive sample data, use the Gradle task:
+Default database path:
+
+- Windows: `C:\Users\<username>\.secondhand-trading\secondhand.db`
+- macOS / Linux: `~/.secondhand-trading/secondhand.db`
+
+#### Manually re-initialize demo data (for development / debugging)
 
 ```bash
 # Windows
 .\gradlew.bat initDemoData
 
-# macOS/Linux
+# macOS / Linux
 ./gradlew initDemoData
 ```
 
-This will create:
-- **15 users**: 1 admin (admin), 7 sellers (alice, charlie, evan, grace, iris, kevin, mike), 7 buyers (bob, diana, frank, henry, julia, laura, nathan)
-- **20 items**: Electronics, Gaming, Furniture, Books, and Sports categories
-- **18 messages**: Multiple conversation threads between users
-- **6 orders**: Orders with various statuses and delivery addresses
-- **30 favorites**: Distributed across all buyers
-- All accounts use password: **`password123`**
+To completely reset the database (delete all data and recreate demo data):
 
-**If you want to reset the database** (delete all data and start fresh):
 ```bash
 # Windows
-Remove-Item secondhand.db -Force
+Remove-Item "$env:USERPROFILE\.secondhand-trading\secondhand.db" -Force
 .\gradlew.bat initDemoData
 
-# macOS/Linux
-rm secondhand.db
+# macOS / Linux
+rm ~/.secondhand-trading/secondhand.db
 ./gradlew initDemoData
 ```
 
-**Image Storage**: 
-- Images are stored in the `item_images/` folder
-- All users can see the images as they reference the same local folder
-- The database stores the image file paths (not the actual image data)
-- Sample images are already provided in the `item_images/` folder
+**Image Storage**:
+- Sample and uploaded images are stored under the `item_images/` directory
+- The database stores **image paths only**, not binary image data
+- For the portable build, `item_images/` is packaged together with the app
 
 **Note**: All accounts use `password123` for easy testing. Change passwords in production environments.
 

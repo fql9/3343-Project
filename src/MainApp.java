@@ -1,4 +1,5 @@
 import config.DatabaseConfig;
+import config.DemoDataInitializer;
 import controller.LoginController;
 import javafx.application.Application;
 import javafx.stage.Stage;
@@ -13,6 +14,9 @@ public class MainApp extends Application {
         try {
             // Initialize database structure
             DatabaseConfig.initDatabase();
+            
+            // Initialize demo data if database is empty
+            DemoDataInitializer.initializeIfNeeded();
             
             // Set window properties
             primaryStage.setTitle("Second-hand Trading Platform");

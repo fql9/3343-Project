@@ -122,8 +122,8 @@ application {
 
 java {
     toolchain {
-        // ‰∏∫‰∫Ü‰∏é‰æøÊê∫ÂåÖÂÜÖÁΩÆÁöÑ JBR17 ÂÖºÂÆπÔºåËøôÈáåÊöÇÊó∂Èôç‰ΩéÂà∞ Java 17
-        languageVersion = JavaLanguageVersion.of(17)
+        // JavaFX 23.0.1 requires Java 21+
+        languageVersion = JavaLanguageVersion.of(21)
     }
 }
 
@@ -220,8 +220,8 @@ tasks.register('fatJar', Jar) {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     
     doLast {
-        println "‚úì FAT JAR created at: ${archiveFile.get()}"
-        println "‚úì Run with: java -jar ${archiveFile.get()}"
+        println "‚ú?FAT JAR created at: ${archiveFile.get()}"
+        println "‚ú?Run with: java -jar ${archiveFile.get()}"
     }
 }
 
@@ -267,8 +267,8 @@ echo Expected location: build\\libs\\3343-Project-*-all.jar
 pause
 endlocal
 '''
-        println "‚úì Windows batch script created: 3343-Project.bat"
-        println "‚úì Double-click to run the application"
+        println "‚ú?Windows batch script created: 3343-Project.bat"
+        println "‚ú?Double-click to run the application"
     }
 }
 
@@ -310,8 +310,8 @@ java -jar "$JAR_FILE"
         // Make the script executable
         shFile.setExecutable(true)
         
-        println "‚úì Unix shell script created: 3343-Project.sh"
-        println "‚úì Run with: chmod +x 3343-Project.sh && ./3343-Project.sh"
+        println "‚ú?Unix shell script created: 3343-Project.sh"
+        println "‚ú?Run with: chmod +x 3343-Project.sh && ./3343-Project.sh"
     }
 }
 
@@ -323,7 +323,7 @@ tasks.register('createExecutables') {
     doLast {
         println ""
         println "========================================"
-        println "‚úì All executable files created!"
+        println "‚ú?All executable files created!"
         println "========================================"
         println ""
         println "Windows Users:"
@@ -363,29 +363,75 @@ tasks.register('preparePackageDir', Copy) {
     into "${buildDir}/package/input"
 }
 
-// Copy resources for packaging
-tasks.register('copyPackageResources', Copy) {
+// Copy resources for packaging (item_images to input directory for jpackage)
+tasks.register('copyPackageResources') {
     group = 'distribution'
     description = 'Copy resources for package'
     dependsOn preparePackageDir
     
-    from(projectDir) {
-        include 'item_images/**'
-        include 'secondhand.db'
+    doLast {
+        // Copy item_images to jpackage input directory
+        copy {
+            from(projectDir) {
+                include 'item_images/**'
+            }
+            into "${buildDir}/package/input"
+        }
+        // Also copy to resources for other packaging methods
+        copy {
+            from(projectDir) {
+                include 'item_images/**'
+                include 'secondhand.db'
+            }
+            into "${buildDir}/package/resources"
+        }
+        println "‚ú?Resources copied to package directories"
     }
-    into "${buildDir}/package/resources"
+}
+
+// Download Liberica JDK Full (includes JavaFX) for jpackage
+tasks.register('downloadLibericaJDK') {
+    group = 'distribution'
+    description = 'Download Liberica JDK Full with JavaFX for packaging'
+    
+    def libericaDir = file("${buildDir}/liberica-full")
+    def libericaZip = file("${buildDir}/liberica-full.zip")
+    def libericaUrl = "https://download.bell-sw.com/java/21.0.5+11/bellsoft-jdk21.0.5+11-windows-amd64-full.zip"
+    
+    outputs.dir(libericaDir)
+    
+    doLast {
+        if (!file("${libericaDir}/jdk-21.0.5-full").exists()) {
+            println "Downloading Liberica JDK Full (with JavaFX)..."
+            
+            if (!libericaZip.exists()) {
+                ant.get(src: libericaUrl, dest: libericaZip)
+            }
+            
+            println "Extracting..."
+            copy {
+                from zipTree(libericaZip)
+                into libericaDir
+            }
+            println "‚ú?Liberica JDK Full ready"
+        } else {
+            println "‚ú?Liberica JDK Full already exists"
+        }
+    }
 }
 
 // Create Windows installer using jpackage
 tasks.register('jpackageWindows', Exec) {
     group = 'distribution'
     description = 'Create Windows installer (.exe) with bundled JRE - No Java installation required!'
-    dependsOn preparePackageDir, copyPackageResources
+    dependsOn preparePackageDir, copyPackageResources, downloadLibericaJDK
     
-    def jpackageExe = "${System.getProperty('java.home')}/bin/jpackage"
+    def libericaHome = "${buildDir}/liberica-full/jdk-21.0.5-full"
+    def jpackageExe = "${libericaHome}/bin/jpackage"
     def outputDir = "${buildDir}/installer"
     def inputDir = "${buildDir}/package/input"
     def resourceDir = "${buildDir}/package/resources"
+    def iconFile = file("${projectDir}/resources/icon.ico")
     
     doFirst {
         // Create output directory
@@ -394,16 +440,19 @@ tasks.register('jpackageWindows', Exec) {
         println "=========================================="
         println "Creating Windows Installer with jpackage"
         println "=========================================="
+        println "Using Liberica JDK: ${libericaHome}"
         println "Input: ${inputDir}"
         println "Output: ${outputDir}"
+        println "Icon: ${iconFile.exists() ? iconFile : 'Not found (using default)'}"
     }
     
-    commandLine jpackageExe,
+    def cmdArgs = [
+        jpackageExe,
         '--type', 'exe',
         '--name', 'SecondHandTrading',
         '--description', 'CS3343 Second-Hand Trading Platform',
         '--vendor', 'CS3343 Group 11',
-        '--app-version', '1.3',
+        '--app-version', '1.6.1',
         '--input', inputDir,
         '--main-jar', '3343-Project.jar',
         '--main-class', 'MainApp',
@@ -411,18 +460,86 @@ tasks.register('jpackageWindows', Exec) {
         '--win-dir-chooser',
         '--win-menu',
         '--win-shortcut',
+        // Add JavaFX modules to runtime (Liberica Full includes JavaFX)
+        '--add-modules', 'javafx.controls,javafx.fxml,javafx.graphics,javafx.base,java.sql',
         '--java-options', '-Dfile.encoding=UTF-8',
         '--java-options', '--add-opens=java.base/java.lang=ALL-UNNAMED'
+    ]
+    
+    // Add icon if exists
+    if (iconFile.exists()) {
+        cmdArgs += ['--icon', iconFile.absolutePath]
+    }
+    
+    commandLine cmdArgs
     
     doLast {
         println ""
-        println "‚úì Windows installer created at: ${outputDir}"
-        println "‚úì Users can install without Java!"
+        println "‚ú?Windows installer created at: ${outputDir}"
+        println "‚ú?Users can install without Java!"
         println ""
     }
 }
 
-// Create portable package (JAR + JRE + resources)
+// Create portable package using jpackage app-image (with embedded JRE)
+tasks.register('jpackagePortable', Exec) {
+    group = 'distribution'
+    description = 'Create portable app-image with bundled JRE using jpackage'
+    dependsOn preparePackageDir, copyPackageResources, downloadLibericaJDK
+    
+    def libericaHome = "${buildDir}/liberica-full/jdk-21.0.5-full"
+    def jpackageExe = "${libericaHome}/bin/jpackage"
+    def outputDir = "${buildDir}/jpackage/app-image"
+    def inputDir = "${buildDir}/package/input"
+    def iconFile = file("${projectDir}/resources/icon.ico")
+    
+    doFirst {
+        file(outputDir).mkdirs()
+        // Clean previous app-image
+        delete "${outputDir}/SecondHandTrading"
+        println "=========================================="
+        println "Creating Portable App Image with jpackage"
+        println "=========================================="
+        println "Using Liberica JDK: ${libericaHome}"
+    }
+    
+    def cmdArgs = [
+        jpackageExe,
+        '--type', 'app-image',
+        '--name', 'SecondHandTrading',
+        '--description', 'CS3343 Second-Hand Trading Platform',
+        '--vendor', 'CS3343 Group 11',
+        '--app-version', '1.6.1',
+        '--input', inputDir,
+        '--main-jar', '3343-Project.jar',
+        '--main-class', 'MainApp',
+        '--dest', outputDir,
+        // Add JavaFX modules to runtime (Liberica Full includes JavaFX)
+        '--add-modules', 'javafx.controls,javafx.fxml,javafx.graphics,javafx.base,java.sql',
+        '--java-options', '-Dfile.encoding=UTF-8',
+        '--java-options', '--add-opens=java.base/java.lang=ALL-UNNAMED'
+    ]
+    
+    if (iconFile.exists()) {
+        cmdArgs += ['--icon', iconFile.absolutePath]
+    }
+    
+    commandLine cmdArgs
+    
+    doLast {
+        // Copy item_images and database to the app directory
+        def appDir = file("${outputDir}/SecondHandTrading")
+        copy {
+            from projectDir
+            include 'item_images/**'
+            into appDir
+        }
+        println "‚ú?Portable app-image created at: ${appDir}"
+        println "‚ú?Item images copied to app directory"
+    }
+}
+
+// Create portable package (JAR + JRE + resources) - Legacy method
 tasks.register('createPortablePackage') {
     group = 'distribution'
     description = 'Create portable package with embedded JRE'
@@ -496,8 +613,8 @@ if %errorlevel% neq 0 pause
 '''
         
         println ""
-        println "‚úì Portable package created at: ${portableDir}"
-        println "‚úì Contents:"
+        println "‚ú?Portable package created at: ${portableDir}"
+        println "‚ú?Contents:"
         println "  - 3343-Project.jar (main application)"
         println "  - Start.bat (launcher)"
         println "  - item_images/ (product images)"
@@ -518,6 +635,6 @@ tasks.register('createDistZip', Zip) {
     from("${buildDir}/portable")
     
     doLast {
-        println "‚úì Distribution ZIP created: ${destinationDirectory.get()}/${archiveFileName.get()}"
+        println "‚ú?Distribution ZIP created: ${destinationDirectory.get()}/${archiveFileName.get()}"
     }
 }
