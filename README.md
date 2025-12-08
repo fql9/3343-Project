@@ -6,10 +6,10 @@ A JavaFX + SQLite based second-hand trading platform that supports user registra
 
 ## Quick Start
 
-### Option 1: Windows Installer (.exe) — No Java required (Recommended)
+### Option 1: Windows Installer (.exe) �?No Java required (Recommended)
 
 1. Go to the project [**Releases**](https://github.com/fql9/3343-Project/releases) page and download the latest installer:  
-   `SecondHandTrading-1.5.3.exe` (~57 MB)
+   `SecondHandTrading-1.5.4.exe` (~57 MB)
 2. Double-click the installer and follow the wizard to complete installation.
 3. Launch **SecondHandTrading** from the **Start Menu** or the **Desktop shortcut**.
 
@@ -19,7 +19,7 @@ A JavaFX + SQLite based second-hand trading platform that supports user registra
 
 ### Option 2: Windows Portable Version (no installation, USB friendly)
 
-1. Download or build the portable package locally (see **Building Executable Packages** → `jpackagePortable`).
+1. Download or build the portable package locally (see **Building Executable Packages** �?`jpackagePortable`).
 2. After extraction, the folder structure looks like:
 
    ```
@@ -99,50 +99,50 @@ This project is a complete second-hand trading platform application that provide
 ```
 3343-Project/
 ├── src/
-│   ├── MainApp.java                 # Application entry point
-│   ├── config/
-│   │   └── DatabaseConfig.java      # Database configuration
-│   ├── controller/                  # Controller layer
-│   │   ├── LoginController.java     # Login controller
-│   │   ├── MainController.java      # Main interface controller
-│   │   ├── BoardController.java     # Item list controller
-│   │   ├── ItemDetailController.java # Item detail controller
-│   │   ├── MyItemsController.java   # My items controller
-│   │   ├── FavoritesController.java # Favorites controller
-│   │   ├── MessageController.java   # Message controller
-│   │   ├── OrderHistoryController.java # Buyer order history
-│   │   ├── SalesHistoryController.java # Seller sales history
-│   │   ├── NotificationController.java # Notification center
-│   │   ├── UserProfileController.java # User profile center
-│   │   └── UserManagementController.java # User management controller
-│   ├── dao/                         # Data access layer
-│   │   └── impl/                    # DAO implementations
-│   ├── model/                       # Data models
-│   │   ├── User.java
-│   │   ├── Item.java
-│   │   ├── Message.java
-│   │   ├── Favorite.java
-│   │   ├── Order.java
-│   │   ├── Review.java
-│   │   └── Notification.java
-│   ├── service/                     # Business logic layer
-│   │   ├── UserService.java
-│   │   ├── ItemService.java
-│   │   ├── MessageService.java
-│   │   ├── FavoriteService.java
-│   │   ├── OrderService.java
-│   │   ├── ReviewService.java
-│   │   └── NotificationService.java
-│   └── util/                        # Utility classes
-│       ├── DialogUtils.java         # Dialog utilities
-│       ├── PasswordUtils.java       # Password encryption utilities
-│       └── ValidationUtils.java     # Validation utilities
+�?  ├── MainApp.java                 # Application entry point
+�?  ├── config/
+�?  �?  └── DatabaseConfig.java      # Database configuration
+�?  ├── controller/                  # Controller layer
+�?  �?  ├── LoginController.java     # Login controller
+�?  �?  ├── MainController.java      # Main interface controller
+�?  �?  ├── BoardController.java     # Item list controller
+�?  �?  ├── ItemDetailController.java # Item detail controller
+�?  �?  ├── MyItemsController.java   # My items controller
+�?  �?  ├── FavoritesController.java # Favorites controller
+�?  �?  ├── MessageController.java   # Message controller
+�?  �?  ├── OrderHistoryController.java # Buyer order history
+�?  �?  ├── SalesHistoryController.java # Seller sales history
+�?  �?  ├── NotificationController.java # Notification center
+�?  �?  ├── UserProfileController.java # User profile center
+�?  �?  └── UserManagementController.java # User management controller
+�?  ├── dao/                         # Data access layer
+�?  �?  └── impl/                    # DAO implementations
+�?  ├── model/                       # Data models
+�?  �?  ├── User.java
+�?  �?  ├── Item.java
+�?  �?  ├── Message.java
+�?  �?  ├── Favorite.java
+�?  �?  ├── Order.java
+�?  �?  ├── Review.java
+�?  �?  └── Notification.java
+�?  ├── service/                     # Business logic layer
+�?  �?  ├── UserService.java
+�?  �?  ├── ItemService.java
+�?  �?  ├── MessageService.java
+�?  �?  ├── FavoriteService.java
+�?  �?  ├── OrderService.java
+�?  �?  ├── ReviewService.java
+�?  �?  └── NotificationService.java
+�?  └── util/                        # Utility classes
+�?      ├── DialogUtils.java         # Dialog utilities
+�?      ├── PasswordUtils.java       # Password encryption utilities
+�?      └── ValidationUtils.java     # Validation utilities
 ├── build.gradle                     # Gradle build configuration
 ├── settings.gradle                  # Gradle settings
 └── README.md                        # Project documentation
 ```
 
-## 🛠️ Environment Setup (for developers)
+## 🛠�?Environment Setup (for developers)
 
 If you only use the installer or portable version, you can skip this section.  
 This is only required when developing from source or building packages yourself.
@@ -231,7 +231,7 @@ This project uses **jpackage** to generate a Windows installer and portable buil
 
 Output:
 
-- Installer: `build/installer/SecondHandTrading-1.5.3.exe`
+- Installer: `build/installer/SecondHandTrading-1.5.4.exe`
 - Behavior: installs to `C:\Program Files\SecondHandTrading` and creates Start Menu / Desktop shortcuts
 
 ### 2. Build Windows Portable Version (app-image, no installation)
@@ -266,10 +266,10 @@ After extraction they can simply double-click `SecondHandTrading.exe` to run.
 
 Recommended distribution options:
 
-- **Windows Installer**: `build/installer/SecondHandTrading-1.5.3.exe`
+- **Windows Installer**: `build/installer/SecondHandTrading-1.5.4.exe`
   - Best for end users; one-click installation with automatic shortcuts
 - **Windows Portable Version**: `build/jpackage/app-image/SecondHandTrading/`
-  - Best for USB / “green software” style; unzip and run `SecondHandTrading.exe` directly
+  - Best for USB / “green software�?style; unzip and run `SecondHandTrading.exe` directly
 
 ## Default User Accounts
 
@@ -435,7 +435,7 @@ The project follows a mixed testing approach combining unit tests and integratio
 | service | 90% | 80% | 79/79 |
 | util | 88% | 96% | 23/23 |
 
-**Total Test Cases**: 271 (all passing ✅)
+**Total Test Cases**: 271 (all passing �?
 
 ### Running Tests
 
@@ -458,9 +458,9 @@ The project follows a mixed testing approach combining unit tests and integratio
 
 ### Test Coverage Achievements
 
-**Current Status**: 271 test cases, 92% instruction coverage, 80% branch coverage ✅
+**Current Status**: 271 test cases, 92% instruction coverage, 80% branch coverage �?
 
-**Recent Improvements** (Test branch → Master):
+**Recent Improvements** (Test branch �?Master):
 1.  **Enhanced DAO Tests**: Added comprehensive tests for `ItemDaoImpl.searchItems()` (11 cases) and `OrderDaoImpl` (10 cases)
 2.  **Service Integration Tests**: Comprehensive testing for `ReviewService`, `OrderService`, `NotificationService`
 3.  **Utility Tests**: Added `ImageUtilsTest` with 15 test cases for image processing
@@ -509,7 +509,7 @@ java -cp "build/classes/java/main;lib/*" util.ExportUsers
 # Or run directly in IDE: src/util/ExportUsers.java
 ```
 
-## ❓ Troubleshooting
+## �?Troubleshooting
 
 ### 1. "java is not recognized" or "java: command not found"
 

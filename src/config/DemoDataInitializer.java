@@ -19,26 +19,43 @@ public class DemoDataInitializer {
             // Check if users exist
             ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM users");
             if (rs.next() && rs.getInt(1) > 0) {
-                // Database already has data, skip initialization
+                System.out.println("Database already has " + rs.getInt(1) + " users, skipping demo data initialization.");
                 return;
             }
             
             System.out.println("=".repeat(80));
             System.out.println("Initializing demo data...");
+            System.out.println("Database path: " + DatabaseConfig.getDatabaseUrl());
             System.out.println("=".repeat(80));
             
             initializeUsers();
-            initializeItems();
-            initializeMessages();
-            initializeOrders();
-            initializeFavorites();
+            System.out.println("  - Users created");
             
-            System.out.println("✓ Demo data initialized successfully!");
+            initializeItems();
+            System.out.println("  - Items created");
+            
+            initializeMessages();
+            System.out.println("  - Messages created");
+            
+            initializeOrders();
+            System.out.println("  - Orders created");
+            
+            initializeFavorites();
+            System.out.println("  - Favorites created");
+            
+            System.out.println("=".repeat(80));
+            System.out.println("Demo data initialized successfully!");
             System.out.println("=".repeat(80));
             
         } catch (Exception e) {
-            System.err.println("Warning: Failed to initialize demo data: " + e.getMessage());
-            // Don't fail the application, just log the error
+            System.err.println("=".repeat(80));
+            System.err.println("ERROR: Failed to initialize demo data!");
+            System.err.println("Error message: " + e.getMessage());
+            System.err.println("Database URL: " + DatabaseConfig.getDatabaseUrl());
+            e.printStackTrace();
+            System.err.println("=".repeat(80));
+            // Re-throw to make the error visible
+            throw new RuntimeException("Failed to initialize demo data", e);
         }
     }
     
