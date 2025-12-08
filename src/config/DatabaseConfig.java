@@ -18,52 +18,20 @@ public class DatabaseConfig {
     }
     
     /**
-     * Get the application data directory path for storing database and images.
-     * Priority: 1) JAR directory, 2) User home directory
+     * Get the application data directory path for storing database.
+     * Always uses user home directory for consistency between portable and installed versions.
      */
     private static String getAppDataPath(String filename) {
         try {
-            // Try to get the directory where the JAR/class is located
-            String jarPath = DatabaseConfig.class.getProtectionDomain()
-                    .getCodeSource().getLocation().toURI().getPath();
-            
-            // On Windows, remove leading slash from path like /C:/...
-            if (jarPath.matches("^/[A-Za-z]:.*")) {
-                jarPath = jarPath.substring(1);
-            }
-            
-            File jarFile = new File(jarPath);
-            File appDir;
-            
-            if (jarFile.isFile()) {
-                // Running from JAR
-                appDir = jarFile.getParentFile();
-            } else {
-                // Running from classes directory (IDE)
-                appDir = new File(System.getProperty("user.dir"));
-            }
-            
-            // Check if the directory is writable
-            File testFile = new File(appDir, ".write_test");
-            try {
-                if (testFile.createNewFile()) {
-                    testFile.delete();
-                    String dbPath = new File(appDir, filename).getAbsolutePath();
-                    System.out.println("Database path: " + dbPath);
-                    return dbPath;
-                }
-            } catch (Exception e) {
-                // Directory is not writable, fall through to user home
-            }
-            
-            // Fallback to user home directory
+            // Always use user home directory for database
+            // This ensures portable and installed versions share the same database
             String userHome = System.getProperty("user.home");
             File userDataDir = new File(userHome, ".secondhand-trading");
             if (!userDataDir.exists()) {
                 userDataDir.mkdirs();
             }
             String dbPath = new File(userDataDir, filename).getAbsolutePath();
-            System.out.println("Database path (user home): " + dbPath);
+            System.out.println("Database path: " + dbPath);
             return dbPath;
             
         } catch (Exception e) {
