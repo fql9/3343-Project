@@ -220,8 +220,8 @@ tasks.register('fatJar', Jar) {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     
     doLast {
-        println "âœ?FAT JAR created at: ${archiveFile.get()}"
-        println "âœ?Run with: java -jar ${archiveFile.get()}"
+        println "ï¿?FAT JAR created at: ${archiveFile.get()}"
+        println "ï¿?Run with: java -jar ${archiveFile.get()}"
     }
 }
 
@@ -267,8 +267,8 @@ echo Expected location: build\\libs\\3343-Project-*-all.jar
 pause
 endlocal
 '''
-        println "âœ?Windows batch script created: 3343-Project.bat"
-        println "âœ?Double-click to run the application"
+        println "ï¿?Windows batch script created: 3343-Project.bat"
+        println "ï¿?Double-click to run the application"
     }
 }
 
@@ -310,8 +310,8 @@ java -jar "$JAR_FILE"
         // Make the script executable
         shFile.setExecutable(true)
         
-        println "âœ?Unix shell script created: 3343-Project.sh"
-        println "âœ?Run with: chmod +x 3343-Project.sh && ./3343-Project.sh"
+        println "ï¿?Unix shell script created: 3343-Project.sh"
+        println "ï¿?Run with: chmod +x 3343-Project.sh && ./3343-Project.sh"
     }
 }
 
@@ -323,7 +323,7 @@ tasks.register('createExecutables') {
     doLast {
         println ""
         println "========================================"
-        println "âœ?All executable files created!"
+        println "ï¿?All executable files created!"
         println "========================================"
         println ""
         println "Windows Users:"
@@ -385,7 +385,7 @@ tasks.register('copyPackageResources') {
             }
             into "${buildDir}/package/resources"
         }
-        println "âœ?Resources copied to package directories"
+        println "ï¿?Resources copied to package directories"
     }
 }
 
@@ -413,9 +413,9 @@ tasks.register('downloadLibericaJDK') {
                 from zipTree(libericaZip)
                 into libericaDir
             }
-            println "âœ?Liberica JDK Full ready"
+            println "ï¿?Liberica JDK Full ready"
         } else {
-            println "âœ?Liberica JDK Full already exists"
+            println "ï¿?Liberica JDK Full already exists"
         }
     }
 }
@@ -452,7 +452,7 @@ tasks.register('jpackageWindows', Exec) {
         '--name', 'SecondHandTrading',
         '--description', 'CS3343 Second-Hand Trading Platform',
         '--vendor', 'CS3343 Group 11',
-        '--app-version', '1.6.1',
+        '--app-version', '1.5.2',
         '--input', inputDir,
         '--main-jar', '3343-Project.jar',
         '--main-class', 'MainApp',
@@ -463,7 +463,9 @@ tasks.register('jpackageWindows', Exec) {
         // Add JavaFX modules to runtime (Liberica Full includes JavaFX)
         '--add-modules', 'javafx.controls,javafx.fxml,javafx.graphics,javafx.base,java.sql',
         '--java-options', '-Dfile.encoding=UTF-8',
-        '--java-options', '--add-opens=java.base/java.lang=ALL-UNNAMED'
+        '--java-options', '--add-opens=java.base/java.lang=ALL-UNNAMED',
+        '--java-options', '-Duser.language=en',
+        '--java-options', '-Duser.country=US'
     ]
     
     // Add icon if exists
@@ -475,8 +477,8 @@ tasks.register('jpackageWindows', Exec) {
     
     doLast {
         println ""
-        println "âœ?Windows installer created at: ${outputDir}"
-        println "âœ?Users can install without Java!"
+        println "ï¿?Windows installer created at: ${outputDir}"
+        println "ï¿?Users can install without Java!"
         println ""
     }
 }
@@ -509,7 +511,7 @@ tasks.register('jpackagePortable', Exec) {
         '--name', 'SecondHandTrading',
         '--description', 'CS3343 Second-Hand Trading Platform',
         '--vendor', 'CS3343 Group 11',
-        '--app-version', '1.6.1',
+        '--app-version', '1.5.2',
         '--input', inputDir,
         '--main-jar', '3343-Project.jar',
         '--main-class', 'MainApp',
@@ -517,7 +519,9 @@ tasks.register('jpackagePortable', Exec) {
         // Add JavaFX modules to runtime (Liberica Full includes JavaFX)
         '--add-modules', 'javafx.controls,javafx.fxml,javafx.graphics,javafx.base,java.sql',
         '--java-options', '-Dfile.encoding=UTF-8',
-        '--java-options', '--add-opens=java.base/java.lang=ALL-UNNAMED'
+        '--java-options', '--add-opens=java.base/java.lang=ALL-UNNAMED',
+        '--java-options', '-Duser.language=en',
+        '--java-options', '-Duser.country=US'
     ]
     
     if (iconFile.exists()) {
@@ -534,8 +538,8 @@ tasks.register('jpackagePortable', Exec) {
             include 'item_images/**'
             into appDir
         }
-        println "âœ?Portable app-image created at: ${appDir}"
-        println "âœ?Item images copied to app directory"
+        println "ï¿?Portable app-image created at: ${appDir}"
+        println "ï¿?Item images copied to app directory"
     }
 }
 
@@ -613,8 +617,8 @@ if %errorlevel% neq 0 pause
 '''
         
         println ""
-        println "âœ?Portable package created at: ${portableDir}"
-        println "âœ?Contents:"
+        println "ï¿?Portable package created at: ${portableDir}"
+        println "ï¿?Contents:"
         println "  - 3343-Project.jar (main application)"
         println "  - Start.bat (launcher)"
         println "  - item_images/ (product images)"
@@ -635,6 +639,6 @@ tasks.register('createDistZip', Zip) {
     from("${buildDir}/portable")
     
     doLast {
-        println "âœ?Distribution ZIP created: ${destinationDirectory.get()}/${archiveFileName.get()}"
+        println "ï¿?Distribution ZIP created: ${destinationDirectory.get()}/${archiveFileName.get()}"
     }
 }

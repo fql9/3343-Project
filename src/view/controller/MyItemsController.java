@@ -131,14 +131,11 @@ public class MyItemsController {
         
         if (item.getImageUrl() != null && !item.getImageUrl().isEmpty()) {
             try {
-                String imageUrl = item.getImageUrl();
-                Image image;
-                if (imageUrl.startsWith("http")) {
-                    image = new Image(imageUrl, true);
-                } else {
-                    image = new Image(new File(imageUrl).toURI().toString());
+                String imageUri = util.ImageUtils.getImageUri(item.getImageUrl());
+                if (imageUri != null) {
+                    Image image = new Image(imageUri, true);
+                    imageView.setImage(image);
                 }
-                imageView.setImage(image);
             } catch (Exception e) {
                 // Failed to load image
             }

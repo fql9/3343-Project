@@ -117,20 +117,20 @@ public class DemoDataInitializer {
                 {"4K Monitor", "LG 27-inch 4K monitor, perfect for gaming", "2800", "Electronics", "item_images/monitor.jpg"},
                 {"DSLR Camera", "Canon EOS R6 mirrorless camera, includes lens kit", "8500", "Electronics", "item_images/camera.jpg"},
                 {"Gaming Laptop", "ROG Gaming Laptop, RTX 3060, 16GB RAM", "6500", "Electronics", "item_images/laptop.jpg"},
-                {"iPad Pro 11-inch", "2021 iPad Pro, 256GB, includes Apple Pencil", "3200", "Electronics", ""},
-                {"Samsung Galaxy Tab", "Samsung Galaxy Tab S8, with keyboard case", "2500", "Electronics", ""},
-                {"Mechanical Keyboard", "Corsair K70 RGB, Cherry MX Brown switches", "800", "Electronics", ""},
-                {"Wireless Mouse", "Logitech MX Master 3, ergonomic design", "450", "Electronics", ""},
+                {"iPad Pro 11-inch", "2021 iPad Pro, 256GB, includes Apple Pencil", "3200", "Electronics", "item_images/ipad.jpg"},
+                {"Samsung Galaxy Tab", "Samsung Galaxy Tab S8, with keyboard case", "2500", "Electronics", "item_images/tablet.jpg"},
+                {"Mechanical Keyboard", "Corsair K70 RGB, Cherry MX Brown switches", "800", "Electronics", "item_images/keyboard.jpg"},
+                {"Wireless Mouse", "Logitech MX Master 3, ergonomic design", "450", "Electronics", "item_images/mouse.jpg"},
                 {"Nintendo Switch", "Nintendo Switch with 5 game cartridges", "1800", "Gaming", "item_images/switch.jpg"},
-                {"PlayStation 5", "PS5 Digital Edition, includes 2 controllers", "4200", "Gaming", ""},
-                {"Xbox Series X", "Xbox Series X console, like new", "3800", "Gaming", ""},
+                {"PlayStation 5", "PS5 Digital Edition, includes 2 controllers", "4200", "Gaming", "item_images/ps5.jpg"},
+                {"Xbox Series X", "Xbox Series X console, like new", "3800", "Gaming", "item_images/xbox.jpg"},
                 {"Office Desk", "Modern solid wood desk, includes ergonomic chair", "800", "Furniture", "item_images/desk.jpg"},
-                {"Bookshelf", "5-tier wooden bookshelf, holds 100+ books", "350", "Furniture", ""},
-                {"Office Chair", "Herman Miller Aeron chair, perfect condition", "1500", "Furniture", ""},
-                {"Programming Books", "10 programming books: Java, Python, JavaScript", "200", "Books", ""},
-                {"Design Books", "Complete UX/UI design book set", "150", "Books", ""},
-                {"Road Bike", "Trek road bike, 21-speed, carbon frame", "2200", "Sports", ""},
-                {"Gym Equipment", "Home gym set: dumbbells, resistance bands, yoga mat", "600", "Sports", ""}
+                {"Bookshelf", "5-tier wooden bookshelf, holds 100+ books", "350", "Furniture", "item_images/bookshelf.jpg"},
+                {"Office Chair", "Herman Miller Aeron chair, perfect condition", "1500", "Furniture", "item_images/chair.jpg"},
+                {"Programming Books", "10 programming books: Java, Python, JavaScript", "200", "Books", "item_images/books.jpg"},
+                {"Design Books", "Complete UX/UI design book set", "150", "Books", "item_images/design.jpg"},
+                {"Road Bike", "Trek road bike, 21-speed, carbon frame", "2200", "Sports", "item_images/bike.jpg"},
+                {"Gym Equipment", "Home gym set: dumbbells, resistance bands, yoga mat", "600", "Sports", "item_images/gym.jpg"}
             };
             
             for (int j = 0; j < itemData.length && !sellerIds.isEmpty(); j++) {

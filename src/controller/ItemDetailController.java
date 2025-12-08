@@ -87,21 +87,22 @@ public class ItemDetailController {
         
         if (item.getImageUrl() != null && !item.getImageUrl().isEmpty()) {
             try {
-                String imageUrl = item.getImageUrl();
-                Image image;
-                if (imageUrl.startsWith("http")) {
-                    image = new Image(imageUrl, true); // Load in background
+                String imageUri = util.ImageUtils.getImageUri(item.getImageUrl());
+                if (imageUri != null) {
+                    Image image = new Image(imageUri, true); // Load in background
+                    ImageView imageView = new ImageView(image);
+                    
+                    // Bind image size to window size
+                    imageView.fitWidthProperty().bind(mainLayout.widthProperty().multiply(0.6)); // 60% of window width
+                    imageView.fitHeightProperty().bind(mainLayout.heightProperty().multiply(0.5)); // 50% of window height
+                    imageView.setPreserveRatio(true);
+                    
+                    imageBox.getChildren().add(imageView);
                 } else {
-                    image = new Image(new File(imageUrl).toURI().toString());
+                    Label errorLabel = new Label("Image not found");
+                    errorLabel.setStyle("-fx-text-fill: #95a5a6;");
+                    imageBox.getChildren().add(errorLabel);
                 }
-                ImageView imageView = new ImageView(image);
-                
-                // Bind image size to window size
-                imageView.fitWidthProperty().bind(mainLayout.widthProperty().multiply(0.6)); // 60% of window width
-                imageView.fitHeightProperty().bind(mainLayout.heightProperty().multiply(0.5)); // 50% of window height
-                imageView.setPreserveRatio(true);
-                
-                imageBox.getChildren().add(imageView);
             } catch (Exception e) {
                 Label errorLabel = new Label("Image failed to load");
                 errorLabel.setStyle("-fx-text-fill: #e74c3c;");

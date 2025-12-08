@@ -159,4 +159,121 @@ public class ImageUtils {
     public static String getImageDirectory() {
         return IMAGE_DIR;
     }
+    
+    /**
+     * Resolve image path to absolute file path.
+     * Handles both relative paths (item_images/xxx.jpg) and absolute paths.
+     * Searches multiple locations for the image file.
+     * @param imagePath The image path from database
+     * @return Resolved absolute file path, or null if not found
+     */
+    public static File resolveImageFile(String imagePath) {
+        if (imagePath == null || imagePath.isEmpty()) {
+            return null;
+        }
+        
+        // If it's a URL, return null (handled separately)
+        if (imagePath.startsWith("http://") || imagePath.startsWith("https://")) {
+            return null;
+        }
+        
+        // Try as absolute path first
+        File file = new File(imagePath);
+        if (file.isAbsolute() && file.exists()) {
+            return file;
+        }
+        
+        // Search locations for relative path
+        String[] searchPaths = getImageSearchPaths();
+        String filename = new File(imagePath).getName(); // Extract just the filename
+        
+        for (String basePath : searchPaths) {
+            // Try with full relative path
+            File candidate = new File(basePath, imagePath);
+            if (candidate.exists()) {
+                return candidate;
+            }
+            
+            // Try with just filename in item_images subdirectory
+            candidate = new File(basePath, "item_images/" + filename);
+            if (candidate.exists()) {
+                return candidate;
+            }
+            
+            // Try with just filename directly
+            candidate = new File(basePath, filename);
+            if (candidate.exists()) {
+                return candidate;
+            }
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Get list of directories to search for images
+     */
+    private static String[] getImageSearchPaths() {
+        try {
+            String jarPath = ImageUtils.class.getProtectionDomain()
+                    .getCodeSource().getLocation().toURI().getPath();
+            
+            // On Windows, remove leading slash
+            if (jarPath.matches("^/[A-Za-z]:.*")) {
+                jarPath = jarPath.substring(1);
+            }
+            
+            File jarFile = new File(jarPath);
+            File appDir;
+            
+            if (jarFile.isFile()) {
+                // Running from JAR - get parent directory
+                appDir = jarFile.getParentFile();
+            } else {
+                // Running from classes directory
+                appDir = new File(System.getProperty("user.dir"));
+            }
+            
+            return new String[] {
+                // Current working directory
+                System.getProperty("user.dir"),
+                // App/JAR directory
+                appDir.getAbsolutePath(),
+                // Parent of JAR directory (for jpackage app-image structure)
+                appDir.getParentFile() != null ? appDir.getParentFile().getAbsolutePath() : "",
+                // User data directory
+                new File(System.getProperty("user.home"), ".secondhand-trading").getAbsolutePath(),
+                // IMAGE_DIR
+                IMAGE_DIR
+            };
+        } catch (Exception e) {
+            return new String[] {
+                System.getProperty("user.dir"),
+                IMAGE_DIR
+            };
+        }
+    }
+    
+    /**
+     * Get image URI string for JavaFX Image loading
+     * @param imagePath The image path from database
+     * @return URI string for Image constructor, or null if not found
+     */
+    public static String getImageUri(String imagePath) {
+        if (imagePath == null || imagePath.isEmpty()) {
+            return null;
+        }
+        
+        // If it's already a URL, return as-is
+        if (imagePath.startsWith("http://") || imagePath.startsWith("https://")) {
+            return imagePath;
+        }
+        
+        File imageFile = resolveImageFile(imagePath);
+        if (imageFile != null && imageFile.exists()) {
+            return imageFile.toURI().toString();
+        }
+        
+        return null;
+    }
 }
