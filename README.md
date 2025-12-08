@@ -9,7 +9,7 @@ A JavaFX + SQLite based second-hand trading platform that supports user registra
 ### Option 1: Windows Installer (.exe) — No Java required (Recommended)
 
 1. Go to the project [**Releases**](https://github.com/fql9/3343-Project/releases) page and download the latest installer:  
-   `SecondHandTrading-1.5.2.exe` (~57 MB)
+   `SecondHandTrading-1.5.2.exe` 
 2. Double-click the installer and follow the wizard to complete installation.
 3. Launch **SecondHandTrading** from the **Start Menu** or the **Desktop shortcut**.
 
